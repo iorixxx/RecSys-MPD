@@ -31,6 +31,23 @@ public class Searcher implements Closeable {
     private final MPD challenge;
     private final IndexReader reader;
 
+    public void search(Format format) throws IOException, ParseException {
+
+        for (Playlist playlist : this.challenge.playlists) {
+
+            LinkedHashSet<String> submission;
+            if (playlist.tracks.length == 0) {
+                submission = titleOnly(playlist.name, playlist.pid);
+            } else {
+                submission = tracksOnly(playlist.tracks, playlist.pid);
+            }
+
+            if (Format.RecSys.equals(format))
+                ResSys(submission, playlist.pid);
+            else if (Format.TREC.equals(format))
+                TREC(submission, playlist.pid);
+        }
+    }
 
     public Searcher(Path indexPath, Path challengePath) throws IOException, ParseException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
@@ -45,14 +62,6 @@ public class Searcher implements Closeable {
         }
 
 
-        for (Playlist playlist : this.challenge.playlists) {
-
-            if (playlist.tracks.length == 0) {
-                titleOnly(playlist.name, playlist.pid);
-            } else {
-                tracksOnly(playlist.tracks, playlist.pid);
-            }
-        }
     }
 
     @Override
@@ -63,7 +72,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title only
      */
-    public void titleOnly(String title, int pId) throws ParseException, IOException {
+    public LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(new BM25Similarity());
@@ -77,11 +86,25 @@ public class Searcher implements Closeable {
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
+        /**
+         * Try with OR operator, relaxed mode.
+         */
         if (hits.length == 0) {
-            System.out.println("Zero result found for title : " + title);
-            return;
-        }
 
+            queryParser = new QueryParser("name", Indexer.analyzer());
+            queryParser.setDefaultOperator(QueryParser.Operator.OR);
+
+            query = queryParser.parse(QueryParserBase.escape(title));
+
+
+            hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+
+            if (hits.length == 0) {
+                System.out.println("Zero result found for title : " + title);
+                return new LinkedHashSet<>();
+            }
+
+        }
 
         boolean finish = false;
 
@@ -116,7 +139,7 @@ public class Searcher implements Closeable {
         if (submission.size() < 500)
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
-        TREC(submission, pId);
+        return submission;
 
 
     }
@@ -124,7 +147,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only
      */
-    public void tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
+    public LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(new BM25Similarity());
@@ -145,7 +168,7 @@ public class Searcher implements Closeable {
 
         if (hits.length == 0) {
             System.out.println("Zero result found for pId : " + pId);
-            return;
+            return new LinkedHashSet<>();
         }
 
         LinkedHashSet<String> submission = new LinkedHashSet<>(500);
@@ -178,25 +201,37 @@ public class Searcher implements Closeable {
         }
 
 
+        seeds.clear();
         if (submission.size() != 500)
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
-        TREC(submission, pId);
+        return submission;
 
 
     }
 
+    /**
+     * this is a sample submission for the recsys challenge
+     * all fields are comma separated. It is ok, but optional
+     * to have whitespace before and after the comma.
+     */
     void ResSys(LinkedHashSet<String> submission, int pId) {
+
+        if (submission.isEmpty()) return;
+
         System.out.print(pId);
 
         for (String s : submission)
-            System.out.print(' ' + s);
+            System.out.print(", " + s);
 
         System.out.println();
 
     }
 
     void TREC(LinkedHashSet<String> submission, int pId) {
+
+        if (submission.isEmpty()) return;
+
         int i = 0;
         for (String s : submission) {
 
@@ -215,8 +250,6 @@ public class Searcher implements Closeable {
             System.out.println();
 
         }
-
     }
-
 }
 

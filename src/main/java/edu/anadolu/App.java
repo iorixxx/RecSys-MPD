@@ -26,6 +26,8 @@ public class App {
         Path challenge = Paths.get("/Users/iorixxx/Downloads/challenge.v1/challenge_set.json");
         Searcher searcher = new Searcher(indexPath, challenge);
 
+        searcher.search(Format.TREC);
+
         searcher.close();
 
     }
