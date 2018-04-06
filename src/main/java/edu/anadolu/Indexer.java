@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -30,9 +31,9 @@ import java.util.stream.Stream;
  */
 public class Indexer {
 
-    private final Gson gson = new Gson();
+    static final Gson gson = new Gson();
 
-    private Analyzer analyzer() throws IOException {
+    static Analyzer analyzer() throws IOException {
 
         Map<String, Analyzer> analyzerPerField = new HashMap<>();
         analyzerPerField.put("name", anlyzr());
@@ -46,11 +47,10 @@ public class Indexer {
     private static Analyzer anlyzr() throws IOException {
 
         return CustomAnalyzer.builder()
-                .withTokenizer("standard")
+                .withTokenizer(ICUTokenizerFactory.class)
                 .addTokenFilter("lowercase")
                 .build();
     }
-
 
     int index(Path indexPath, Path mdp) throws IOException {
 
