@@ -40,8 +40,6 @@ public class Indexer {
         analyzerPerField.put("track_uris", new WhitespaceAnalyzer());
 
         return new PerFieldAnalyzerWrapper(anlyzr(), analyzerPerField);
-
-
     }
 
     private static Analyzer anlyzr() throws IOException {
@@ -52,8 +50,7 @@ public class Indexer {
                 .build();
     }
 
-    int index(Path indexPath, Path mdp) throws IOException {
-
+    public int index(Path indexPath, Path mdp) throws IOException {
         System.out.println("Indexing to directory '" + indexPath + "'...");
 
         Directory dir = FSDirectory.open(indexPath);
@@ -100,15 +97,12 @@ public class Indexer {
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
 
                     writer.addDocument(document);
-
                 }
 
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-
         });
-
 
         final int numIndexed = writer.maxDoc();
 
@@ -117,10 +111,8 @@ public class Indexer {
             writer.forceMerge(1);
         } finally {
             writer.close();
+            dir.close();
         }
-
-        dir.close();
-
 
         return numIndexed;
     }
