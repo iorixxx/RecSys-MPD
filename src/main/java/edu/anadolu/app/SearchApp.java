@@ -23,7 +23,6 @@ public class SearchApp {
             try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig)) {
                 searcher.search(format);
                 searcher.exportResultsToFile(resultPath);
-                searcher.close();
                 searcher.printPageCountMap();
             } catch (Exception e) {
                 e.printStackTrace();
