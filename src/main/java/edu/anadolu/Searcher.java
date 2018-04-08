@@ -68,12 +68,14 @@ public class Searcher implements Closeable {
             LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
                 submission = titleOnly(playlist.name, playlist.pid);
-            } else if (playlist.tracks[0].pos == 0) {
-
-                //TODO identify category 2,3,4,5,6,7 and 9: Predict tracks for a playlist given its first N tracks
-                submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanOR);
             } else {
-                submission = tracksOnly(playlist.tracks, playlist.pid);
+                Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
+
+                if (lastTrack.pos == playlist.tracks.length - 1) {
+                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanOR);
+                } else {
+                    submission = tracksOnly(playlist.tracks, playlist.pid);
+                }
             }
 
             if (submission.size() == RESULT_SIZE)
