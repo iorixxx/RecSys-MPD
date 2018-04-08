@@ -18,17 +18,14 @@ public class SearchApp {
             Path resultPath = Paths.get(args[2]);
             Format format = Format.valueOf(args[3]);
 
-            try {
-                Searcher searcher = new Searcher(indexPath, challengePath);
-
+            try (Searcher searcher = new Searcher(indexPath, challengePath)) {
                 searcher.search(format);
                 searcher.exportResultsToFile(resultPath);
                 searcher.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-        else {
+        } else {
             System.out.println("Index path, challenge path, result path and format should be given as arguments");
         }
     }

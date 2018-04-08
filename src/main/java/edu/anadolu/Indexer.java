@@ -1,19 +1,15 @@
 package edu.anadolu;
 
-import com.google.gson.Gson;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.search.similarities.*;
+import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -98,6 +94,7 @@ public class Indexer {
                     Document document = new Document();
                     document.add(new TextField("name", playlist.name, Field.Store.YES));
                     document.add(new StringField("id", Integer.toString(playlist.pid), Field.Store.YES));
+                    document.add(new IntPoint("num_tracks", playlist.num_tracks));
 
                     StringBuilder builder = new StringBuilder();
                     for (Track track : playlist.tracks) {

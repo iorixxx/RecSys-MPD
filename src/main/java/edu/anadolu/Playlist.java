@@ -7,4 +7,6 @@ public class Playlist {
     int pid;
 
     Track[] tracks;
+
+    int num_tracks;
 }

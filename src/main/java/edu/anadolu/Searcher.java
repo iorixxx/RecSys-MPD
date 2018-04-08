@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.regex.Pattern;
 
@@ -161,7 +161,7 @@ public class Searcher implements Closeable {
         QueryParser queryParser = new QueryParser("track_uris", Indexer.analyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
+        HashSet<String> seeds = new HashSet<>(100);
 
         StringBuilder builder = new StringBuilder();
         for (Track track : tracks) {
@@ -241,7 +241,7 @@ public class Searcher implements Closeable {
                     builder.append("BM25");
                     builder.append("\n");
 
-                    i ++;
+                    i++;
                 }
                 break;
         }
