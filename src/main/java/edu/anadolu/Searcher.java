@@ -1,8 +1,10 @@
 package edu.anadolu;
 
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
@@ -10,6 +12,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
@@ -62,6 +65,10 @@ public class Searcher implements Closeable {
             LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
                 submission = titleOnly(playlist.name, playlist.pid);
+            } else if (playlist.tracks[0].pos == 0) {
+
+                //TODO identify category 2,3,4,5,6,7 and 9: Predict tracks for a playlist given its first N tracks
+                submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanOR);
             } else {
                 submission = tracksOnly(playlist.tracks, playlist.pid);
             }
@@ -180,19 +187,21 @@ public class Searcher implements Closeable {
     }
 
     /**
-     * Predict tracks for a playlist given its tracks only
+     * Predict tracks for a playlist given its tracks only. Works best with random tracks category 8 and category 10
      */
     public LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(new BM25Similarity());
-        QueryParser queryParser = new QueryParser("track_uris", Indexer.analyzer());
+        QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
         HashSet<String> seeds = new HashSet<>(100);
 
         StringBuilder builder = new StringBuilder();
         for (Track track : tracks) {
+            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
+            if (seeds.contains(track.track_uri)) continue;
             builder.append(track.track_uri).append(' ');
             seeds.add(track.artist_uri);
         }
@@ -275,6 +284,91 @@ public class Searcher implements Closeable {
                 }
                 break;
         }
+    }
+
+    enum SpanType {
+        SpanOR,
+        SpanNear,
+    }
+
+    /**
+     * Predict tracks for a playlist given its title and the first N tracks. N here is 1, 5, 10, 25, 100
+     */
+    public LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws IOException {
+
+        IndexSearcher searcher = new IndexSearcher(reader);
+
+        HashSet<String> seeds = new HashSet<>(100);
+
+        SpanQuery[] clauses = new SpanQuery[tracks.length];
+
+        int j = 0;
+        for (Track track : tracks) {
+
+            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
+            if (seeds.contains(track.track_uri)) continue;
+
+            builder.append(track.track_uri).append(' ');
+            seeds.add(track.artist_uri);
+            clauses[j++] = new SpanTermQuery(new Term("track_uris", track.track_uri));
+        }
+
+        //TODO try to figure out n from tracks.length
+
+        int n;
+        if (tracks.length < 6)
+            n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
+        else if (tracks.length < 26)
+            n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
+        else
+            n = (int) (tracks.length * 1.25); // for n=100 use 125
+
+        SpanFirstQuery spanFirstQuery = SpanType.SpanOR.equals(type) ? new SpanFirstQuery(new SpanOrQuery(clauses), n) : new SpanFirstQuery(new SpanNearQuery(clauses, 10, false), n);
+
+        ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+
+        if (hits.length == 0) {
+            System.out.println("Zero result found for pId : " + pId);
+            return new LinkedHashSet<>();
+        }
+
+        LinkedHashSet<String> submission = new LinkedHashSet<>(500);
+
+        boolean finish = false;
+
+        for (int i = 0; i < hits.length; i++) {
+            int docId = hits[i].doc;
+            Document doc = searcher.doc(docId);
+            if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+            String trackURIs = doc.get("track_uris");
+
+
+            for (String t : whiteSpaceSplitter.split(trackURIs)) {
+
+                if (seeds.contains(t)) continue;
+
+                if (submission.size() < RESULT_SIZE) {
+                    submission.add(t);
+                } else {
+                    finish = true;
+                    break;
+                }
+
+            }
+
+            incrementPageCountMap(i);
+
+            if (finish) break;
+
+        }
+
+        seeds.clear();
+
+        if (submission.size() != RESULT_SIZE)
+            System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing N");
+
+        return submission;
     }
 }
 
