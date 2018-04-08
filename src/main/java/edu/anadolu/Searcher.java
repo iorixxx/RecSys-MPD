@@ -12,6 +12,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
@@ -38,15 +39,17 @@ public class Searcher implements Closeable {
     private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
+    private final SimilarityConfig similarityConfig;
 
     private final StringBuilder builder = new StringBuilder();
 
-    public Searcher(Path indexPath, Path challengePath) throws IOException, ParseException {
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws IOException, ParseException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
 
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+        this.similarityConfig = similarityConfig;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = MPD.GSON.fromJson(reader, MPD.class);
@@ -97,7 +100,7 @@ public class Searcher implements Closeable {
     public LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(new BM25Similarity());
+        searcher.setSimilarity(similarityConfig.getSimilarity());
         QueryParser queryParser = new QueryParser("name", Indexer.analyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
@@ -192,7 +195,7 @@ public class Searcher implements Closeable {
     public LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(new BM25Similarity());
+        searcher.setSimilarity(similarityConfig.getSimilarity());
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 

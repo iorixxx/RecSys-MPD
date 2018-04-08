@@ -15,10 +15,10 @@ public class IndexApp {
             Path indexPath = Paths.get(args[0]);
             Path mpdPath = Paths.get(args[1]);
 
-            Indexer indexer = new Indexer(indexPath, mpdPath);
+            Indexer indexer = new Indexer();
 
             try {
-                int indexSize = indexer.index();
+                int indexSize = indexer.index(indexPath, mpdPath);
 
                 System.out.println(indexSize + " documents are indexed");
             } catch (Exception e) {

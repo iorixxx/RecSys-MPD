@@ -27,15 +27,6 @@ import java.util.stream.Stream;
  */
 public class Indexer {
 
-    private Path indexPath;
-
-    private Path mpdPath;
-
-    public Indexer(Path indexPath, Path mpdPath) {
-        this.indexPath = indexPath;
-        this.mpdPath = mpdPath;
-    }
-
     static Analyzer analyzer() throws IOException {
 
         Map<String, Analyzer> analyzerPerField = new HashMap<>();
@@ -53,7 +44,7 @@ public class Indexer {
                 .build();
     }
 
-    public int index() throws IOException {
+    public int index(Path indexPath, Path mpdPath) throws IOException {
         System.out.println("Indexing to directory '" + indexPath + "'...");
 
         Directory dir = FSDirectory.open(indexPath);
@@ -61,9 +52,6 @@ public class Indexer {
         IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new BM25Similarity());
-        //iwc.setSimilarity(new IBSimilarity(new DistributionLL(), new LambdaDF(), new NormalizationH2()));
-        //iwc.setSimilarity(new DFISimilarity(new IndependenceChiSquared()));
-
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         iwc.setUseCompoundFile(false);
         iwc.setMergeScheduler(new ConcurrentMergeScheduler());
