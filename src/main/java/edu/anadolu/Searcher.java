@@ -174,8 +174,8 @@ public class Searcher implements Closeable {
 
     public void printPageCountMap() {
         pageCount.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .filter(o -> o.getValue() > 0)
+                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
     }
 
