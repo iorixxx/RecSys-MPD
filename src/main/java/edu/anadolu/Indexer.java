@@ -13,7 +13,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -31,7 +31,14 @@ import java.util.stream.Stream;
  */
 public class Indexer {
 
-    static final Gson gson = new Gson();
+    private Path indexPath;
+
+    private Path mpdPath;
+
+    public Indexer(Path indexPath, Path mpdPath) {
+        this.indexPath = indexPath;
+        this.mpdPath = mpdPath;
+    }
 
     static Analyzer analyzer() throws IOException {
 
@@ -50,7 +57,7 @@ public class Indexer {
                 .build();
     }
 
-    public int index(Path indexPath, Path mdp) throws IOException {
+    public int index() throws IOException {
         System.out.println("Indexing to directory '" + indexPath + "'...");
 
         Directory dir = FSDirectory.open(indexPath);
@@ -58,6 +65,9 @@ public class Indexer {
         IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new BM25Similarity());
+        //iwc.setSimilarity(new IBSimilarity(new DistributionLL(), new LambdaDF(), new NormalizationH2()));
+        //iwc.setSimilarity(new DFISimilarity(new IndependenceChiSquared()));
+
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         iwc.setUseCompoundFile(false);
         iwc.setMergeScheduler(new ConcurrentMergeScheduler());
@@ -65,7 +75,7 @@ public class Indexer {
 
         final IndexWriter writer = new IndexWriter(dir, iwc);
 
-        Stream<Path> jSons = Files.find(mdp,
+        Stream<Path> jSons = Files.find(mpdPath,
                 1, (Path p, BasicFileAttributes att) -> {
 
                     if (!att.isRegularFile()) return false;
@@ -81,7 +91,7 @@ public class Indexer {
 
             try (BufferedReader reader = Files.newBufferedReader(path)) {
 
-                MPD data = gson.fromJson(reader, MPD.class);
+                MPD data = MPD.GSON.fromJson(reader, MPD.class);
 
                 for (Playlist playlist : data.playlists) {
 
@@ -116,5 +126,4 @@ public class Indexer {
 
         return numIndexed;
     }
-
 }

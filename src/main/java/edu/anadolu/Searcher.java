@@ -13,10 +13,13 @@ import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.regex.Pattern;
 
@@ -26,10 +29,25 @@ import java.util.regex.Pattern;
  */
 public class Searcher implements Closeable {
 
+    private static final int RESULT_SIZE = 500;
 
     static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
+
+    private final StringBuilder builder = new StringBuilder();
+
+    public Searcher(Path indexPath, Path challengePath) throws IOException, ParseException {
+        if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
+            throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
+        }
+
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
+        try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
+            this.challenge = MPD.GSON.fromJson(reader, MPD.class);
+        }
+    }
 
     public void search(Format format) throws IOException, ParseException {
 
@@ -42,26 +60,17 @@ public class Searcher implements Closeable {
                 submission = tracksOnly(playlist.tracks, playlist.pid);
             }
 
-            if (Format.RecSys.equals(format))
-                ResSys(submission, playlist.pid);
-            else if (Format.TREC.equals(format))
-                TREC(submission, playlist.pid);
+            if (submission.size() == RESULT_SIZE)
+                export(submission, playlist.pid, format);
         }
     }
 
-    public Searcher(Path indexPath, Path challengePath) throws IOException, ParseException {
-        if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
-            throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
+    public void exportResultsToFile(Path resultPath) {
+        try (BufferedWriter writer = Files.newBufferedWriter(resultPath, Charset.forName("UTF-8"))) {
+            writer.write(builder.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-
-        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
-
-        try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
-            this.challenge = Indexer.gson.fromJson(reader, MPD.class);
-        }
-
-
     }
 
     @Override
@@ -122,7 +131,7 @@ public class Searcher implements Closeable {
 
             for (String t : tracks) {
 
-                if (submission.size() < 500) {
+                if (submission.size() < RESULT_SIZE) {
                     submission.add(t);
                 } else {
                     finish = true;
@@ -136,12 +145,10 @@ public class Searcher implements Closeable {
         }
 
 
-        if (submission.size() < 500)
+        if (submission.size() != RESULT_SIZE)
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
         return submission;
-
-
     }
 
     /**
@@ -187,7 +194,7 @@ public class Searcher implements Closeable {
 
                 if (seeds.contains(t)) continue;
 
-                if (submission.size() < 500) {
+                if (submission.size() < RESULT_SIZE) {
                     submission.add(t);
                 } else {
                     finish = true;
@@ -200,55 +207,43 @@ public class Searcher implements Closeable {
 
         }
 
-
         seeds.clear();
-        if (submission.size() != 500)
+
+        if (submission.size() != RESULT_SIZE)
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
         return submission;
-
-
     }
 
-    /**
-     * this is a sample submission for the recsys challenge
-     * all fields are comma separated. It is ok, but optional
-     * to have whitespace before and after the comma.
-     */
-    void ResSys(LinkedHashSet<String> submission, int pId) {
+    private void export(LinkedHashSet<String> submission, int pid, Format format) {
+        switch (format) {
+            case RECSYS:
+                builder.append(pid);
 
-        if (submission.isEmpty()) return;
+                for (String s : submission) {
+                    builder.append(", ");
+                    builder.append(s);
+                }
 
-        System.out.print(pId);
+                builder.append("\n");
+                break;
+            case TREC:
+                int i = 1;
+                for (String s : submission) {
+                    builder.append(pid);
+                    builder.append("\tQ0\t");
+                    builder.append(s);
+                    builder.append("\t");
+                    builder.append(i);
+                    builder.append("\t");
+                    builder.append(i);
+                    builder.append("\t");
+                    builder.append("BM25");
+                    builder.append("\n");
 
-        for (String s : submission)
-            System.out.print(", " + s);
-
-        System.out.println();
-
-    }
-
-    void TREC(LinkedHashSet<String> submission, int pId) {
-
-        if (submission.isEmpty()) return;
-
-        int i = 0;
-        for (String s : submission) {
-
-            i++;
-
-            System.out.print(pId);
-            System.out.print("\tQ0\t");
-            System.out.print(s);
-            System.out.print("\t");
-            System.out.print(i);
-            System.out.print("\t");
-            System.out.print(i);
-            System.out.print("\t");
-            System.out.print("BM25");
-
-            System.out.println();
-
+                    i ++;
+                }
+                break;
         }
     }
 }

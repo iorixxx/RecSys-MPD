@@ -11,38 +11,25 @@ import java.nio.file.Paths;
  */
 public class SearchApp {
 
-    private Path indexPath;
-
-    private Path challengePath;
-
-    public SearchApp(String indexPath, String challengePath) {
-        this.indexPath = Paths.get(indexPath);
-        this.challengePath = Paths.get(challengePath);
-    }
-
-    public void execute() {
-        try {
-            Searcher searcher = new Searcher(indexPath, challengePath);
-
-            searcher.search(Format.TREC);
-            searcher.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void main(String[] args) {
-        if (args.length == 2) {
-            String indexPath = args[0];
-            String challengePath = args[1];
+        if (args.length == 3) {
+            Path indexPath = Paths.get(args[0]);
+            Path challengePath = Paths.get(args[1]);
+            Path resultPath = Paths.get(args[2]);
+            Format format = Format.valueOf(args[3]);
 
-            SearchApp app = new SearchApp(indexPath, challengePath);
+            try {
+                Searcher searcher = new Searcher(indexPath, challengePath);
 
-            app.execute();
+                searcher.search(format);
+                searcher.exportResultsToFile(resultPath);
+                searcher.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         else {
-            System.out.println("Index path and challenge path should be given as arguments");
+            System.out.println("Index path, challenge path, result path and format should be given as arguments");
         }
     }
 }

@@ -6,6 +6,6 @@ package edu.anadolu;
  * TREC format is useful for Information Retrieval evaluation scripts such as trec_eval and gdeval.pl
  */
 public enum Format {
-    RecSys,
+    RECSYS,
     TREC
 }
