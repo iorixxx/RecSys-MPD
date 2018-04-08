@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 3) {
+        if (args.length == 4) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
