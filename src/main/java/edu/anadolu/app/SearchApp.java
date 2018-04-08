@@ -22,6 +22,7 @@ public class SearchApp {
                 searcher.search(format);
                 searcher.exportResultsToFile(resultPath);
                 searcher.close();
+                searcher.printPageCountMap();
             } catch (Exception e) {
                 e.printStackTrace();
             }

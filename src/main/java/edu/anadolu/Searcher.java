@@ -19,8 +19,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 
 
@@ -28,6 +27,8 @@ import java.util.regex.Pattern;
  * Create submission
  */
 public class Searcher implements Closeable {
+
+    private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
     private static final int RESULT_SIZE = 500;
 
@@ -47,6 +48,11 @@ public class Searcher implements Closeable {
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = MPD.GSON.fromJson(reader, MPD.class);
         }
+
+        for (int i = 1; i <= 100; i++)
+            pageCount.put(i, 0);
+
+        pageCount.put(-1, 0);
     }
 
     public void search(Format format) throws IOException, ParseException {
@@ -140,6 +146,8 @@ public class Searcher implements Closeable {
 
             }
 
+            incrementPageCountMap(i);
+
             if (finish) break;
 
         }
@@ -149,6 +157,26 @@ public class Searcher implements Closeable {
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
         return submission;
+    }
+
+    private void incrementPageCountMap(int i) {
+        // count max page count: How many results do we iterate to fill quota of 500?
+        if (pageCount.containsKey(i + 1)) {
+            int count = pageCount.get(i + 1);
+            count++;
+            pageCount.put(i + 1, count);
+        } else {
+            int count = pageCount.get(-1);
+            count++;
+            pageCount.put(-1, count);
+        }
+    }
+
+    public void printPageCountMap() {
+        pageCount.entrySet().stream()
+                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                .filter(o -> o.getValue() > 0)
+                .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
     }
 
     /**
@@ -202,6 +230,8 @@ public class Searcher implements Closeable {
                 }
 
             }
+
+            incrementPageCountMap(i);
 
             if (finish) break;
 
