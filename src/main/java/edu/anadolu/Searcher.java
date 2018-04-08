@@ -35,7 +35,7 @@ public class Searcher implements Closeable {
 
     private static final int RESULT_SIZE = 500;
 
-    static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
+    private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
 
@@ -308,7 +308,6 @@ public class Searcher implements Closeable {
             // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
             if (seeds.contains(track.track_uri)) continue;
 
-            builder.append(track.track_uri).append(' ');
             seeds.add(track.artist_uri);
             clauses[j++] = new SpanTermQuery(new Term("track_uris", track.track_uri));
         }
@@ -323,6 +322,7 @@ public class Searcher implements Closeable {
         else
             n = (int) (tracks.length * 1.25); // for n=100 use 125
 
+        //TODO experiment with SpanOrQuery or SpanNearQuery. Which one performs better?
         SpanFirstQuery spanFirstQuery = SpanType.SpanOR.equals(type) ? new SpanFirstQuery(new SpanOrQuery(clauses), n) : new SpanFirstQuery(new SpanNearQuery(clauses, 10, false), n);
 
         ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
