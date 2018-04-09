@@ -9,7 +9,9 @@ public enum SimilarityConfig {
 
     BM25,
     IB,
-    DFI;
+    DFI,
+    PL2,
+    TFIDF;
 
     public Similarity getSimilarity() {
         Similarity s = null;
@@ -24,6 +26,14 @@ public enum SimilarityConfig {
             case DFI:
                 s = new DFISimilarity(new IndependenceChiSquared());
                 break;
+            case PL2:
+                s = new DFRSimilarity(new BasicModelP(), new AfterEffectL(), new NormalizationH2());
+                break;
+            case TFIDF:
+                s = new ClassicSimilarity();
+                break;
+            default:
+                throw new AssertionError(this);
         }
 
         return s;

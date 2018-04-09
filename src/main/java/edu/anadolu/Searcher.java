@@ -11,8 +11,6 @@ import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.similarities.BM25Similarity;
-import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
@@ -20,7 +18,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -43,7 +41,7 @@ public class Searcher implements Closeable {
 
     private final StringBuilder builder = new StringBuilder();
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws IOException, ParseException {
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws IOException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -84,7 +82,7 @@ public class Searcher implements Closeable {
     }
 
     public void exportResultsToFile(Path resultPath) {
-        try (BufferedWriter writer = Files.newBufferedWriter(resultPath, Charset.forName("UTF-8"))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(resultPath, StandardCharsets.UTF_8)) {
             writer.write(builder.toString());
         } catch (IOException e) {
             e.printStackTrace();
