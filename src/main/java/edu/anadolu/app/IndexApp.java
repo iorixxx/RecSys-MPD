@@ -24,8 +24,7 @@ public class IndexApp {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-        else {
+        } else {
             System.out.println("Index path and MPD path should be given as arguments");
         }
     }

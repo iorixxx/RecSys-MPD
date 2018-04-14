@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -30,14 +31,13 @@ public class Indexer {
     static Analyzer analyzer() throws IOException {
 
         Map<String, Analyzer> analyzerPerField = new HashMap<>();
-        analyzerPerField.put("name", anlyzr());
+        analyzerPerField.put("name", icu());
         analyzerPerField.put("track_uris", new WhitespaceAnalyzer());
 
-        return new PerFieldAnalyzerWrapper(anlyzr(), analyzerPerField);
+        return new PerFieldAnalyzerWrapper(icu(), analyzerPerField);
     }
 
-    private static Analyzer anlyzr() throws IOException {
-
+    static Analyzer icu() throws IOException {
         return CustomAnalyzer.builder()
                 .withTokenizer(ICUTokenizerFactory.class)
                 .addTokenFilter("lowercase")
@@ -70,7 +70,7 @@ public class Indexer {
 
                 });
 
-        jSons.forEach(path -> {
+        jSons.parallel().forEach(path -> {
 
 
             try (BufferedReader reader = Files.newBufferedReader(path)) {
@@ -83,14 +83,18 @@ public class Indexer {
                     document.add(new TextField("name", playlist.name, Field.Store.YES));
                     document.add(new StringField("id", Integer.toString(playlist.pid), Field.Store.YES));
                     document.add(new IntPoint("num_tracks", playlist.num_tracks));
+                    document.add(new IntPoint("num_followers", playlist.num_followers));
 
+                    HashSet<String> seeds = new HashSet<>(100);
                     StringBuilder builder = new StringBuilder();
                     for (Track track : playlist.tracks) {
+                        if (seeds.contains(track.track_uri)) continue;
                         builder.append(track.track_uri).append(' ');
+                        seeds.add(track.track_uri);
                     }
 
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
-
+                    seeds.clear();
                     writer.addDocument(document);
                 }
 

@@ -69,7 +69,7 @@ public class Searcher implements Closeable {
             } else {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
-                if (lastTrack.pos == playlist.tracks.length - 1) {
+                if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
                     submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanOR);
                 } else {
                     submission = tracksOnly(playlist.tracks, playlist.pid);
@@ -101,7 +101,7 @@ public class Searcher implements Closeable {
 
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarityConfig.getSimilarity());
-        QueryParser queryParser = new QueryParser("name", Indexer.analyzer());
+        QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
@@ -206,7 +206,7 @@ public class Searcher implements Closeable {
             // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
             if (seeds.contains(track.track_uri)) continue;
             builder.append(track.track_uri).append(' ');
-            seeds.add(track.artist_uri);
+            seeds.add(track.track_uri);
         }
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
@@ -297,27 +297,27 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title and the first N tracks. N here is 1, 5, 10, 25, 100
      */
-    public LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws IOException {
+    public LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
 
-        HashSet<String> seeds = new HashSet<>(100);
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
-        SpanQuery[] clauses = new SpanQuery[tracks.length];
+        ArrayList<SpanQuery> clauses = new ArrayList<>(tracks.length);
 
-        int j = 0;
+
         for (Track track : tracks) {
 
             // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
             if (seeds.contains(track.track_uri)) continue;
 
-            seeds.add(track.artist_uri);
-            clauses[j++] = new SpanTermQuery(new Term("track_uris", track.track_uri));
+            seeds.add(track.track_uri);
+            clauses.add(new SpanTermQuery(new Term("track_uris", track.track_uri)));
         }
 
         //TODO try to figure out n from tracks.length
 
-        int n;
+        final int n;
         if (tracks.length < 6)
             n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
         else if (tracks.length < 26)
@@ -326,13 +326,19 @@ public class Searcher implements Closeable {
             n = (int) (tracks.length * 1.25); // for n=100 use 125
 
         //TODO experiment with SpanOrQuery or SpanNearQuery. Which one performs better?
-        SpanFirstQuery spanFirstQuery = SpanType.SpanOR.equals(type) ? new SpanFirstQuery(new SpanOrQuery(clauses), n) : new SpanFirstQuery(new SpanNearQuery(clauses, 10, false), n);
+        final SpanFirstQuery spanFirstQuery;
+
+        if (SpanType.SpanOR.equals(type))
+            spanFirstQuery = new SpanFirstQuery(new SpanOrQuery(clauses.toArray(new SpanQuery[clauses.size()])), n);
+        else
+            spanFirstQuery = new SpanFirstQuery(new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
+
 
         ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
         if (hits.length == 0) {
-            System.out.println("Zero result found for pId : " + pId);
-            return new LinkedHashSet<>();
+            System.out.println("SpanFirst found zero result found for pId : " + pId + " first " + tracks.length);
+            return tracksOnly(tracks, pId);
         }
 
         LinkedHashSet<String> submission = new LinkedHashSet<>(500);
@@ -346,6 +352,10 @@ public class Searcher implements Closeable {
 
             String trackURIs = doc.get("track_uris");
 
+            System.out.println("trackURIs " + trackURIs);
+            System.out.println("seeds " + seeds);
+
+            System.out.println("=============");
 
             for (String t : whiteSpaceSplitter.split(trackURIs)) {
 
@@ -369,7 +379,7 @@ public class Searcher implements Closeable {
         seeds.clear();
 
         if (submission.size() != RESULT_SIZE)
-            System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing N");
+            System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing first=" + tracks.length);
 
         return submission;
     }
