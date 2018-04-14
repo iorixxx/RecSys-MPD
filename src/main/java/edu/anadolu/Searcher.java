@@ -383,9 +383,9 @@ public class Searcher implements Closeable {
         final SpanFirstQuery spanFirstQuery;
 
         if (SpanType.SpanOR.equals(type))
-            spanFirstQuery = new SpanFirstQuery(new SpanOrQuery(clauses.toArray(new SpanQuery[clauses.size()])), n);
+            spanFirstQuery = new SpanFirstQuery(clauses.size() == 1 ? clauses.get(0) : new SpanOrQuery(clauses.toArray(new SpanQuery[clauses.size()])), n);
         else
-            spanFirstQuery = new SpanFirstQuery(new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
+            spanFirstQuery = new SpanFirstQuery(clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
 
 
         ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
