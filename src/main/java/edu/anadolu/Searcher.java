@@ -70,7 +70,7 @@ public class Searcher implements Closeable {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanOR);
+                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanNear);
                 } else {
                     submission = tracksOnly(playlist.tracks, playlist.pid);
                 }
