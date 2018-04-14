@@ -5,6 +5,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.misc.HighFreqTerms;
+import org.apache.lucene.misc.TermStats;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
@@ -24,6 +26,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
+
 
 /**
  * Create submission
@@ -39,7 +43,9 @@ public class Searcher implements Closeable {
     private final IndexReader reader;
     private final SimilarityConfig similarityConfig;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws IOException {
+    private final SortedSet<TermStats> highFreqTrackURIs;
+
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -55,6 +61,50 @@ public class Searcher implements Closeable {
             pageCount.put(i, 0);
 
         pageCount.put(-1, 0);
+
+
+        Comparator<TermStats> comparator = new HighFreqTerms.DocFreqComparator();
+
+        TermStats[] terms = getHighFreqTerms(reader, RESULT_SIZE * 2, "track_uris", comparator);
+
+        System.out.println("Top-10 Track URIs sorted by playlist frequency");
+        System.out.println("term \t totalTF \t docFreq");
+
+        SortedSet<TermStats> highFreqTrackURIs = new TreeSet<>(Collections.reverseOrder(new HighFreqTerms.DocFreqComparator()));
+        int i = 0;
+        for (TermStats termStats : terms) {
+            if (i++ < 10)
+                System.out.printf(Locale.ROOT, "%s \t %d \t %d \n",
+                        termStats.termtext.utf8ToString(), termStats.totalTermFreq, termStats.docFreq);
+            highFreqTrackURIs.add(termStats);
+        }
+        this.highFreqTrackURIs = Collections.unmodifiableSortedSet(highFreqTrackURIs);
+
+        i = 0;
+        for (final TermStats termStats : this.highFreqTrackURIs) {
+            if (!terms[i++].equals(termStats))
+                throw new RuntimeException(termStats.termtext.utf8ToString());
+        }
+
+    }
+
+    /**
+     * If certain algorithm collects less than RESULT_SIZE tracks,
+     * then fill remaining tracks using most frequent tracks as a last resort.
+     */
+    private void fallBackToMostFreqTracks(LinkedHashSet<String> submission) {
+
+        for (final TermStats termStats : this.highFreqTrackURIs) {
+
+            final String track = termStats.termtext.utf8ToString();
+
+            submission.add(track);
+            if (submission.size() == RESULT_SIZE) break;
+        }
+
+        if (submission.size() != RESULT_SIZE)
+            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
+
     }
 
     public void search(Format format, Path resultPath) throws IOException, ParseException {
@@ -77,8 +127,13 @@ public class Searcher implements Closeable {
                 }
             }
 
-            if (submission.size() == RESULT_SIZE)
-                export(submission, playlist.pid, format, out);
+            if (submission.size() < RESULT_SIZE)
+                fallBackToMostFreqTracks(submission);
+
+            if (submission.size() != RESULT_SIZE)
+                throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
+
+            export(submission, playlist.pid, format, out);
 
             out.flush();
         }
