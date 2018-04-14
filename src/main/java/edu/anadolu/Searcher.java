@@ -136,6 +136,7 @@ public class Searcher implements Closeable {
             export(submission, playlist.pid, format, out);
 
             out.flush();
+            submission.clear();
         }
 
         out.flush();
@@ -429,11 +430,26 @@ public class Searcher implements Closeable {
 
         }
 
-        seeds.clear();
 
-        if (submission.size() != RESULT_SIZE)
+        /**
+         * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
+         */
+        if (submission.size() != RESULT_SIZE) {
             System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing first=" + tracks.length);
 
+            LinkedHashSet<String> backUp = tracksOnly(tracks, pId);
+            for (final String track : backUp) {
+                submission.add(track);
+                if (submission.size() == RESULT_SIZE) break;
+            }
+
+            if (submission.size() != RESULT_SIZE) {
+                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size());
+            }
+
+        }
+
+        seeds.clear();
         return submission;
     }
 }
