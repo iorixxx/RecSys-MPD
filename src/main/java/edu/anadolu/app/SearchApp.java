@@ -21,8 +21,7 @@ public class SearchApp {
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[4]);
 
             try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig)) {
-                searcher.search(format);
-                searcher.exportResultsToFile(resultPath);
+                searcher.search(format, resultPath);
                 searcher.printPageCountMap();
             } catch (Exception e) {
                 e.printStackTrace();

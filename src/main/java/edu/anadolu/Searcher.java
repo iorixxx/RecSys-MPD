@@ -15,9 +15,9 @@ import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,8 +39,6 @@ public class Searcher implements Closeable {
     private final IndexReader reader;
     private final SimilarityConfig similarityConfig;
 
-    private final StringBuilder builder = new StringBuilder();
-
     public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws IOException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
@@ -59,7 +57,10 @@ public class Searcher implements Closeable {
         pageCount.put(-1, 0);
     }
 
-    public void search(Format format) throws IOException, ParseException {
+    public void search(Format format, Path resultPath) throws IOException, ParseException {
+
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
+
 
         for (Playlist playlist : this.challenge.playlists) {
 
@@ -77,16 +78,13 @@ public class Searcher implements Closeable {
             }
 
             if (submission.size() == RESULT_SIZE)
-                export(submission, playlist.pid, format);
-        }
-    }
+                export(submission, playlist.pid, format, out);
 
-    public void exportResultsToFile(Path resultPath) {
-        try (BufferedWriter writer = Files.newBufferedWriter(resultPath, StandardCharsets.UTF_8)) {
-            writer.write(builder.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
+            out.flush();
         }
+
+        out.flush();
+        out.close();
     }
 
     @Override
@@ -214,7 +212,7 @@ public class Searcher implements Closeable {
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
         if (hits.length == 0) {
-            System.out.println("Zero result found for pId : " + pId);
+            System.out.println("tracksOnly found zero result found for pId : " + pId);
             return new LinkedHashSet<>();
         }
 
@@ -257,31 +255,31 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    private void export(LinkedHashSet<String> submission, int pid, Format format) {
+    private void export(LinkedHashSet<String> submission, int pid, Format format, PrintWriter out) {
         switch (format) {
             case RECSYS:
-                builder.append(pid);
+                out.print(pid);
 
                 for (String s : submission) {
-                    builder.append(", ");
-                    builder.append(s);
+                    out.print(", ");
+                    out.print(s);
                 }
 
-                builder.append("\n");
+                out.println();
                 break;
             case TREC:
                 int i = 1;
                 for (String s : submission) {
-                    builder.append(pid);
-                    builder.append("\tQ0\t");
-                    builder.append(s);
-                    builder.append("\t");
-                    builder.append(i);
-                    builder.append("\t");
-                    builder.append(i);
-                    builder.append("\t");
-                    builder.append("BM25");
-                    builder.append("\n");
+                    out.print(pid);
+                    out.print("\tQ0\t");
+                    out.print(s);
+                    out.print("\t");
+                    out.print(i);
+                    out.print("\t");
+                    out.print(i);
+                    out.print("\t");
+                    out.print(similarityConfig);
+                    out.println();
 
                     i++;
                 }
