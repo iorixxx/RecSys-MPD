@@ -34,6 +34,8 @@ import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
  */
 public class Searcher implements Closeable {
 
+    private static final String TEAM_INFO = "team_info,main,Anadolu Team,aarslan2@anadolu.edu.tr";
+
     private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
     private static final int RESULT_SIZE = 500;
@@ -41,6 +43,7 @@ public class Searcher implements Closeable {
     private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
+    private final IndexSearcher searcher;
     private final SimilarityConfig similarityConfig;
 
     private final SortedSet<TermStats> highFreqTrackURIs;
@@ -52,6 +55,9 @@ public class Searcher implements Closeable {
 
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.similarityConfig = similarityConfig;
+
+        this.searcher = new IndexSearcher(reader);
+        this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = MPD.GSON.fromJson(reader, MPD.class);
@@ -70,7 +76,7 @@ public class Searcher implements Closeable {
         System.out.println("Top-10 Track URIs sorted by playlist frequency");
         System.out.println("term \t totalTF \t docFreq");
 
-        SortedSet<TermStats> highFreqTrackURIs = new TreeSet<>(Collections.reverseOrder(new HighFreqTerms.DocFreqComparator()));
+        SortedSet<TermStats> highFreqTrackURIs = new TreeSet<>(Collections.reverseOrder(comparator));
         int i = 0;
         for (TermStats termStats : terms) {
             if (i++ < 10)
@@ -82,8 +88,17 @@ public class Searcher implements Closeable {
 
         i = 0;
         for (final TermStats termStats : this.highFreqTrackURIs) {
-            if (!terms[i++].equals(termStats))
+            if (!terms[i].equals(termStats))
                 throw new RuntimeException(termStats.termtext.utf8ToString());
+            if (!terms[i].termtext.utf8ToString().equals(termStats.termtext.utf8ToString()))
+                throw new RuntimeException(termStats.termtext.utf8ToString());
+            if (termStats.totalTermFreq != termStats.docFreq)
+                throw new RuntimeException(termStats.termtext.utf8ToString());
+            if (terms[i].totalTermFreq != terms[i].docFreq)
+                throw new RuntimeException(termStats.termtext.utf8ToString());
+            if (terms[i].docFreq != termStats.docFreq)
+                throw new RuntimeException(termStats.termtext.utf8ToString());
+            i++;
         }
 
     }
@@ -110,6 +125,7 @@ public class Searcher implements Closeable {
     public void search(Format format, Path resultPath) throws IOException, ParseException {
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
+        out.println(TEAM_INFO);
 
 
         for (Playlist playlist : this.challenge.playlists) {
@@ -153,15 +169,13 @@ public class Searcher implements Closeable {
      */
     public LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
 
-        IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(similarityConfig.getSimilarity());
         QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
 
 
-        LinkedHashSet<String> submission = new LinkedHashSet<>(500);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
@@ -170,7 +184,7 @@ public class Searcher implements Closeable {
          */
         if (hits.length == 0) {
 
-            queryParser = new QueryParser("name", Indexer.analyzer());
+            queryParser = new QueryParser("name", Indexer.icu());
             queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
             query = queryParser.parse(QueryParserBase.escape(title));
@@ -218,7 +232,7 @@ public class Searcher implements Closeable {
 
 
         if (submission.size() != RESULT_SIZE)
-            System.out.println("warning result set for " + pId + " size " + submission.size());
+            System.out.println(submission.size() + " results found for title : " + title);
 
         return submission;
     }
@@ -248,8 +262,6 @@ public class Searcher implements Closeable {
      */
     public LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
-        IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(similarityConfig.getSimilarity());
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
@@ -272,7 +284,7 @@ public class Searcher implements Closeable {
             return new LinkedHashSet<>();
         }
 
-        LinkedHashSet<String> submission = new LinkedHashSet<>(500);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
         boolean finish = false;
 
@@ -283,8 +295,13 @@ public class Searcher implements Closeable {
 
             String trackURIs = doc.get("track_uris");
 
+            String[] parts = whiteSpaceSplitter.split(trackURIs);
 
-            for (String t : whiteSpaceSplitter.split(trackURIs)) {
+            if (parts.length <= seeds.size())
+                System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
+
+
+            for (String t : parts) {
 
                 if (seeds.contains(t)) continue;
 
@@ -353,8 +370,6 @@ public class Searcher implements Closeable {
      */
     public LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
 
-        IndexSearcher searcher = new IndexSearcher(reader);
-
         LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
         ArrayList<SpanQuery> clauses = new ArrayList<>(tracks.length);
@@ -395,7 +410,7 @@ public class Searcher implements Closeable {
             return tracksOnly(tracks, pId);
         }
 
-        LinkedHashSet<String> submission = new LinkedHashSet<>(500);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
         boolean finish = false;
 
@@ -450,6 +465,7 @@ public class Searcher implements Closeable {
         }
 
         seeds.clear();
+        clauses.clear();
         return submission;
     }
 }
