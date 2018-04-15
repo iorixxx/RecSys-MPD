@@ -11,7 +11,9 @@ public enum SimilarityConfig {
     IB,
     DFI,
     PL2,
-    TFIDF;
+    TFIDF,
+    RawTF;
+
 
     public Similarity getSimilarity() {
         Similarity s = null;
@@ -31,6 +33,9 @@ public enum SimilarityConfig {
                 break;
             case TFIDF:
                 s = new ClassicSimilarity();
+                break;
+            case RawTF:
+                s = new RawTF();
                 break;
             default:
                 throw new AssertionError(this);
