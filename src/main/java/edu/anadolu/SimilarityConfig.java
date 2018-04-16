@@ -14,9 +14,8 @@ public enum SimilarityConfig {
     TFIDF,
     RawTF;
 
-
     public Similarity getSimilarity() {
-        Similarity s = null;
+        Similarity s;
 
         switch (this) {
             case BM25:
