@@ -12,34 +12,36 @@ public enum SimilarityConfig {
     DFI,
     PL2,
     TFIDF,
+    LogTF,
     RawTF;
 
     public Similarity getSimilarity() {
-        Similarity s;
 
         switch (this) {
+
             case BM25:
-                s = new BM25Similarity();
-                break;
+                return new BM25Similarity();
+
             case IB:
-                s = new IBSimilarity(new DistributionLL(), new LambdaDF(), new NormalizationH2());
-                break;
+                return new IBSimilarity(new DistributionLL(), new LambdaDF(), new NormalizationH2());
+
             case DFI:
-                s = new DFISimilarity(new IndependenceChiSquared());
-                break;
+                return new DFISimilarity(new IndependenceChiSquared());
+
             case PL2:
-                s = new DFRSimilarity(new BasicModelP(), new AfterEffectL(), new NormalizationH2());
-                break;
+                return new DFRSimilarity(new BasicModelP(), new AfterEffectL(), new NormalizationH2());
+
             case TFIDF:
-                s = new ClassicSimilarity();
-                break;
+                return new ClassicSimilarity();
+
+            case LogTF:
+                return new LogTF();
+
             case RawTF:
-                s = new RawTF();
-                break;
+                return new RawTF();
+
             default:
                 throw new AssertionError(this);
         }
-
-        return s;
     }
 }
