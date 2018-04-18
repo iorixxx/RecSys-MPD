@@ -119,12 +119,20 @@ public class Searcher implements Closeable {
 
     }
 
+    private int toggle = 0;
+
     private void fill(LinkedHashSet<String> submission) {
         if (Filler.Follower.equals(this.filler))
             fallBackToMostFollowedTracks(submission);
         else if (Filler.Blended.equals(this.filler))
             blended(submission);
-        else
+        else if (Filler.Hybrid.equals(this.filler)) {
+            if (++toggle % 2 == 0) {
+                fallBackToMostFollowedTracks(submission);
+            } else {
+                fallBackToMostFreqTracks(submission);
+            }
+        } else
             fallBackToMostFreqTracks(submission);
 
         if (submission.size() != RESULT_SIZE)
@@ -138,9 +146,7 @@ public class Searcher implements Closeable {
 
         int toggle = 0;
         while (first.hasNext() || second.hasNext()) {
-            ++toggle;
-
-            if (toggle % 2 == 0) {
+            if (++toggle % 2 == 0) {
                 submission.add(first.next());
             } else {
                 submission.add(second.next().termtext.utf8ToString());
