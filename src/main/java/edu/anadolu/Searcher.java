@@ -16,15 +16,13 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
 
@@ -47,15 +45,17 @@ public class Searcher implements Closeable {
     private final SimilarityConfig similarityConfig;
 
     private final SortedSet<TermStats> highFreqTrackURIs;
+    private final Filler filler;
+    private final List<String> followerFreq;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig) throws Exception {
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
 
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.similarityConfig = similarityConfig;
-
+        this.filler = filler;
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
 
@@ -68,6 +68,22 @@ public class Searcher implements Closeable {
 
         pageCount.put(-1, 0);
 
+
+        ClassLoader classLoader = getClass().getClassLoader();
+
+        try (InputStream resource = classLoader.getResourceAsStream("follower_frequency.txt")) {
+            List<String> lines =
+                    new BufferedReader(new InputStreamReader(resource,
+                            StandardCharsets.UTF_8)).lines().collect(Collectors.toList());
+
+            List<String> followerFreq = new ArrayList<>(lines.size());
+            for (String line : lines) {
+                followerFreq.add(whiteSpaceSplitter.split(line)[0]);
+            }
+
+            this.followerFreq = Collections.unmodifiableList(followerFreq);
+            lines.clear();
+        }
 
         Comparator<TermStats> comparator = new HighFreqTerms.DocFreqComparator();
 
@@ -102,6 +118,58 @@ public class Searcher implements Closeable {
         }
 
     }
+
+    private void fill(LinkedHashSet<String> submission) {
+        if (Filler.Follower.equals(this.filler))
+            fallBackToMostFollowedTracks(submission);
+        else if (Filler.Blended.equals(this.filler))
+            blended(submission);
+        else
+            fallBackToMostFreqTracks(submission);
+
+        if (submission.size() != RESULT_SIZE)
+            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
+    }
+
+    private void blended(LinkedHashSet<String> submission) {
+
+        Iterator<String> first = this.followerFreq.iterator();
+        Iterator<TermStats> second = this.highFreqTrackURIs.iterator();
+
+        int toggle = 0;
+        while (first.hasNext() || second.hasNext()) {
+            ++toggle;
+
+            if (toggle % 2 == 0) {
+                submission.add(first.next());
+            } else {
+                submission.add(second.next().termtext.utf8ToString());
+            }
+
+            if (submission.size() == RESULT_SIZE) break;
+        }
+
+        if (submission.size() != RESULT_SIZE)
+            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
+
+    }
+
+
+    /**
+     * Filler alternative: fill remaining tracks using most followed tracks
+     */
+    private void fallBackToMostFollowedTracks(LinkedHashSet<String> submission) {
+
+        for (final String track : this.followerFreq) {
+            submission.add(track);
+            if (submission.size() == RESULT_SIZE) break;
+        }
+
+        if (submission.size() != RESULT_SIZE)
+            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
+
+    }
+
 
     /**
      * If certain algorithm collects less than RESULT_SIZE tracks,
@@ -144,7 +212,7 @@ public class Searcher implements Closeable {
             }
 
             if (submission.size() < RESULT_SIZE)
-                fallBackToMostFreqTracks(submission);
+                fill(submission);
 
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
@@ -167,7 +235,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title only
      */
-    public LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
+    private LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
@@ -179,7 +247,7 @@ public class Searcher implements Closeable {
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
-        /**
+        /*
          * Try with OR operator, relaxed mode.
          */
         if (hits.length == 0) {
@@ -260,7 +328,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only. Works best with random tracks category 8 and category 10
      */
-    public LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
+    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
@@ -368,7 +436,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title and the first N tracks. N here is 1, 5, 10, 25, 100
      */
-    public LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
+    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
@@ -446,7 +514,7 @@ public class Searcher implements Closeable {
         }
 
 
-        /**
+        /*
          * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != RESULT_SIZE) {

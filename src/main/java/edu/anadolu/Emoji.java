@@ -1,6 +1,8 @@
 package edu.anadolu;
 
 
+import com.ibm.icu.lang.UScript;
+import com.ibm.icu.lang.UScriptRun;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.icu.tokenattributes.ScriptAttribute;
@@ -42,6 +44,22 @@ public class Emoji {
     }
 
     public static void main(String[] args) throws IOException {
-        analyze("\uD83D \uDD25 \uD83D \uDD25 \uD83D \uDD25 \u261D ahmet config \uD83D\uDCA9 \uD83D\uDCA9\uD83D\uDCA9 help \uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A");
+        String text = "\uD83D \uDD25 \uD83D \uDD25 \uD83D \uDD25 \u261D ahmet config \uD83D\uDCA9 \uD83D\uDCA9\uD83D\uDCA9 help \uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A";
+        analyze(text);
+        printScriptRuns(text.toCharArray());
+    }
+
+
+    static void printScriptRuns(char[] text) {
+        UScriptRun scriptRun = new UScriptRun(text);
+
+        while (scriptRun.next()) {
+            int start = scriptRun.getScriptStart();
+            int limit = scriptRun.getScriptLimit();
+            int script = scriptRun.getScriptCode();
+
+            System.out.println("Script \"" + UScript.getName(script) + "\" from " +
+                    start + " to " + limit + ".");
+        }
     }
 }

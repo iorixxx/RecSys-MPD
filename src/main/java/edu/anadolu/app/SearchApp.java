@@ -1,5 +1,6 @@
 package edu.anadolu.app;
 
+import edu.anadolu.Filler;
 import edu.anadolu.Format;
 import edu.anadolu.Searcher;
 import edu.anadolu.SimilarityConfig;
@@ -13,14 +14,15 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 5) {
+        if (args.length == 6) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
             Format format = Format.valueOf(args[3]);
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[4]);
+            Filler filler = Filler.valueOf(args[5]);
 
-            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig)) {
+            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler)) {
                 searcher.search(format, resultPath);
                 searcher.printPageCountMap();
             } catch (Exception e) {
