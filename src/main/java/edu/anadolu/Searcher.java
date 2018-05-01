@@ -32,7 +32,7 @@ import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
  */
 public class Searcher implements Closeable {
 
-    private static final String TEAM_INFO = "team_info,main,Anadolu Team,aarslan2@anadolu.edu.tr";
+    private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
     private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
