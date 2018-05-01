@@ -132,7 +132,9 @@ public class Searcher implements Closeable {
             } else {
                 fallBackToMostFreqTracks(submission);
             }
-        } else
+        } else if (Filler.Playlist.equals(this.filler))
+            fallBackToMostFreqTracks(submission);
+        else
             fallBackToMostFreqTracks(submission);
 
         if (submission.size() != RESULT_SIZE)
@@ -258,17 +260,23 @@ public class Searcher implements Closeable {
          */
         if (hits.length == 0) {
 
-            queryParser = new QueryParser("name", Indexer.icu());
-            queryParser.setDefaultOperator(QueryParser.Operator.OR);
+            // one term query
+            if (whiteSpaceSplitter.split(title.trim()).length == 1) {
 
-            query = queryParser.parse(QueryParserBase.escape(title));
+            } else {
+
+                queryParser = new QueryParser("name", Indexer.icu());
+                queryParser.setDefaultOperator(QueryParser.Operator.OR);
+
+                query = queryParser.parse(QueryParserBase.escape(title));
 
 
-            hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+                hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
-            if (hits.length == 0) {
-                System.out.println("Zero result found for title : " + title);
-                return new LinkedHashSet<>();
+                if (hits.length == 0) {
+                    System.out.println("Zero result found for title : " + title);
+                    return new LinkedHashSet<>();
+                }
             }
 
         }
@@ -440,7 +448,7 @@ public class Searcher implements Closeable {
     }
 
     /**
-     * Predict tracks for a playlist given its title and the first N tracks. N here is 1, 5, 10, 25, 100
+     * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
      */
     private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
 
