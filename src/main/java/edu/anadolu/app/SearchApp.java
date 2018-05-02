@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 6) {
+        if (args.length == 7) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
