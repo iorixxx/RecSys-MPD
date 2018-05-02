@@ -22,7 +22,9 @@ public class SearchApp {
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[4]);
             Filler filler = Filler.valueOf(args[5]);
 
-            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler)) {
+            boolean useOnlyLonger = Boolean.valueOf(args[6]);
+
+            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler, useOnlyLonger)) {
                 searcher.search(format, resultPath);
                 searcher.printPageCountMap();
             } catch (Exception e) {

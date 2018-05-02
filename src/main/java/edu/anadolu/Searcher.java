@@ -48,7 +48,9 @@ public class Searcher implements Closeable {
     private final Filler filler;
     private final List<String> followerFreq;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler) throws Exception {
+    private final boolean useOnlyLonger;
+
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler, boolean useOnlyLonger) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -58,6 +60,7 @@ public class Searcher implements Closeable {
         this.filler = filler;
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
+        this.useOnlyLonger = useOnlyLonger;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = MPD.GSON.fromJson(reader, MPD.class);
@@ -378,6 +381,9 @@ public class Searcher implements Closeable {
             String trackURIs = doc.get("track_uris");
 
             String[] parts = whiteSpaceSplitter.split(trackURIs);
+
+            if (useOnlyLonger && (parts.length <= seeds.size()))
+                continue;
 
             if (parts.length <= seeds.size())
                 System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
