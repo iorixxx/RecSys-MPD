@@ -29,7 +29,7 @@ public enum SimilarityConfig {
                 return new DFISimilarity(new IndependenceChiSquared());
 
             case PL2:
-                return new DFRSimilarity(new BasicModelP(), new AfterEffectL(), new NormalizationH2());
+                return new DFRSimilarity(new BasicModelG(), new AfterEffectL(), new NormalizationH2());
 
             case TFIDF:
                 return new ClassicSimilarity();
