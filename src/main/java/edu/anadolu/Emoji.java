@@ -44,7 +44,7 @@ public class Emoji {
     }
 
     public static void main(String[] args) throws IOException {
-        String text = "\uD83D \uDD25 \uD83D \uDD25 \uD83D \uDD25 \u261D ahmet config \uD83D\uDCA9 \uD83D\uDCA9\uD83D\uDCA9 help \uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A";
+        String text = "\uD83D \uDD25 \uD83D \uDD25 \uD83D \uDD25 \u261D ahmet config \uD83D\uDCA9 \uD83D\uDCA9\uD83D\uDCA9 help Its_lit \uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A";
         analyze(text);
         printScriptRuns(text.toCharArray());
     }

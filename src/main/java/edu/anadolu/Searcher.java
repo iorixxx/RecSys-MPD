@@ -264,14 +264,18 @@ public class Searcher implements Closeable {
         if (hits.length == 0) {
 
             // one term query
-            if (whiteSpaceSplitter.split(title.trim()).length == 1) {
+            if (whiteSpaceSplitter.split(title.trim()).length == 1 && !title.contains("_")) {
 
             } else {
 
                 queryParser = new QueryParser("name", Indexer.icu());
                 queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-                query = queryParser.parse(QueryParserBase.escape(title));
+                if (whiteSpaceSplitter.split(title.trim()).length == 1 && title.contains("_")) {
+                    query = queryParser.parse(QueryParserBase.escape(title.replaceFirst("_", " ")));
+                } else {
+                    query = queryParser.parse(QueryParserBase.escape(title));
+                }
 
 
                 hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
