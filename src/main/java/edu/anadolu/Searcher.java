@@ -12,7 +12,6 @@ import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanFirstQuery;
 import org.apache.lucene.search.spans.SpanNearQuery;
-import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
 
@@ -24,7 +23,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static edu.anadolu.Helper.clauses;
+import static edu.anadolu.Helper.*;
 import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
 
 
@@ -37,7 +36,7 @@ public class Searcher implements Closeable {
 
     private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
-    private static final int RESULT_SIZE = 500;
+    static final int RESULT_SIZE = 500;
 
     static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
@@ -128,80 +127,24 @@ public class Searcher implements Closeable {
 
     private void fill(LinkedHashSet<String> submission) {
         if (Filler.Follower.equals(this.filler))
-            fallBackToMostFollowedTracks(submission);
+            fallBackToMostFollowedTracks(submission, this.followerFreq);
         else if (Filler.Blended.equals(this.filler))
-            blended(submission);
+            blended(submission, this.highFreqTrackURIs, this.followerFreq);
         else if (Filler.Hybrid.equals(this.filler)) {
             if (++toggle % 2 == 0) {
-                fallBackToMostFollowedTracks(submission);
+                fallBackToMostFollowedTracks(submission, this.followerFreq);
             } else {
-                fallBackToMostFreqTracks(submission);
+                fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
             }
         } else if (Filler.Playlist.equals(this.filler))
-            fallBackToMostFreqTracks(submission);
+            fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
         else
-            fallBackToMostFreqTracks(submission);
+            fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
 
         if (submission.size() != RESULT_SIZE)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
     }
 
-    private void blended(LinkedHashSet<String> submission) {
-
-        Iterator<String> first = this.followerFreq.iterator();
-        Iterator<TermStats> second = this.highFreqTrackURIs.iterator();
-
-        int toggle = 0;
-        while (first.hasNext() || second.hasNext()) {
-            if (++toggle % 2 == 0) {
-                submission.add(first.next());
-            } else {
-                submission.add(second.next().termtext.utf8ToString());
-            }
-
-            if (submission.size() == RESULT_SIZE) break;
-        }
-
-        if (submission.size() != RESULT_SIZE)
-            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-
-    }
-
-
-    /**
-     * Filler alternative: fill remaining tracks using most followed tracks
-     */
-    private void fallBackToMostFollowedTracks(LinkedHashSet<String> submission) {
-
-        for (final String track : this.followerFreq) {
-            submission.add(track);
-            if (submission.size() == RESULT_SIZE) break;
-        }
-
-        if (submission.size() != RESULT_SIZE)
-            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-
-    }
-
-
-    /**
-     * If certain algorithm collects less than RESULT_SIZE tracks,
-     * then fill remaining tracks using most frequent tracks as a last resort.
-     */
-    private void fallBackToMostFreqTracks(LinkedHashSet<String> submission) {
-
-        for (final TermStats termStats : this.highFreqTrackURIs) {
-
-            final String track = termStats.termtext.utf8ToString();
-
-            submission.add(track);
-            if (submission.size() == RESULT_SIZE) break;
-        }
-
-        if (submission.size() != RESULT_SIZE)
-            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-
-    }
 
     public void search(Format format, Path resultPath) throws IOException, ParseException {
 
@@ -230,7 +173,7 @@ public class Searcher implements Closeable {
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
 
-            Helper.export(submission, playlist.pid, format, out, similarityConfig);
+            export(submission, playlist.pid, format, out, similarityConfig);
 
             out.flush();
             submission.clear();
@@ -358,11 +301,8 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId, int howMany) throws IOException {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
-
-        //TODO Helper.termQueryClauses(tracks, seeds);
-        ArrayList<TermQuery> clauses = clauses(TermQuery.class, tracks, seeds);
-
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
+        ArrayList<TermQuery> clauses = clauses(TermQuery.class, tracks, seeds);
 
         int minShouldMatch = seeds.size();
 
@@ -441,12 +381,9 @@ public class Searcher implements Closeable {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
-
-        //TODO Helper.spanTermQueryClauses(tracks, seeds);
         ArrayList<SpanTermQuery> clauses = clauses(SpanTermQuery.class, tracks, seeds);
 
-
-        final SpanQuery[] clausesIn = clauses.toArray(new SpanQuery[clauses.size()]);
+        final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
 
         final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
 
