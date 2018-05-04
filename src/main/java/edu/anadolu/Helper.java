@@ -3,7 +3,6 @@ package edu.anadolu;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
 import java.io.PrintWriter;
@@ -42,11 +41,8 @@ class Helper {
                 clauses.add(cons.newInstance(new Term("track_uris", track.track_uri)));
             }
 
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                InvocationTargetException exception) {
-
-            exception.printStackTrace();
-
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
+            throw new RuntimeException(exception);
         }
 
         return clauses;

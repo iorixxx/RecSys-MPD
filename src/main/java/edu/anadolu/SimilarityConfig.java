@@ -8,6 +8,7 @@ import org.apache.lucene.search.similarities.*;
 public enum SimilarityConfig {
 
     BM25,
+    DPH,
     IB,
     DFI,
     PL2,
@@ -39,6 +40,9 @@ public enum SimilarityConfig {
 
             case RawTF:
                 return new RawTF();
+
+            case DPH:
+                return new DPH();
 
             default:
                 throw new AssertionError(this);

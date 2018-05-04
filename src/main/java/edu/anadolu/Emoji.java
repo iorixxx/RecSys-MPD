@@ -9,7 +9,6 @@ import org.apache.lucene.analysis.icu.tokenattributes.ScriptAttribute;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -30,7 +29,7 @@ public class Emoji {
         // The Analyzer class will construct the Tokenizer, TokenFilter(s), and CharFilter(s),
         //   and pass the resulting Reader to the Tokenizer.
 
-        int i=0;
+        int i = 0;
 
         try (Reader reader = new StringReader(text);
              TokenStream ts = analyzer.tokenStream("field", reader)) {

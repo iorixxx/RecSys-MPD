@@ -7,27 +7,25 @@ import java.util.Objects;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
-   int slop = 0;
-
+    int slop = 0;
     int end = 0;
-
     boolean inOrder = true;
 
-    public SpanNearConfig() {
+    private SpanNearConfig() {
         this(0, 0, true);
     }
 
-    public SpanNearConfig(int slop, int end, boolean inOrder) {
+    private SpanNearConfig(int slop, int end, boolean inOrder) {
         this.slop = slop;
         this.end = end;
         this.inOrder = inOrder;
     }
 
-    public void setInOrder(boolean inOrder) {
+    private void setInOrder(boolean inOrder) {
         this.inOrder = inOrder;
     }
 
-    boolean tightest() {
+    private boolean tightest() {
         return this.inOrder && 0 == this.end && 0 == this.slop;
     }
 
@@ -115,14 +113,14 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     public static void main(String[] args) {
 
 
-        for (SpanNearConfig config1 : mode1) {
-            System.out.println(config1);
+        for (SpanNearConfig config : mode1) {
+            System.out.println((config.tightest() ? "***" : "") + config);
         }
 
         System.out.println("=========");
 
-        for (SpanNearConfig config1 : mode2) {
-            System.out.println(config1);
+        for (SpanNearConfig config : mode2) {
+            System.out.println((config.tightest() ? "***" : "") + config);
         }
     }
 

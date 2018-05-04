@@ -1,5 +1,6 @@
 package edu.anadolu;
 
+import com.google.gson.Gson;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -55,6 +56,7 @@ public class Searcher implements Closeable {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
 
+        final Gson GSON = new Gson();
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.similarityConfig = similarityConfig;
         this.filler = filler;
@@ -63,7 +65,7 @@ public class Searcher implements Closeable {
         this.useOnlyLonger = useOnlyLonger;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
-            this.challenge = MPD.GSON.fromJson(reader, MPD.class);
+            this.challenge = GSON.fromJson(reader, MPD.class);
         }
 
         for (int i = 1; i <= 100; i++)
@@ -218,7 +220,7 @@ public class Searcher implements Closeable {
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
                     submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode1);
                 } else {
-                    submission = tracksOnly(playlist.tracks, playlist.pid);
+                    submission = tracksOnly(playlist.tracks, playlist.pid, RESULT_SIZE);
                 }
             }
 
@@ -353,18 +355,18 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
      */
-    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws IOException {
+    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId, int howMany) throws IOException {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
 
         //TODO Helper.termQueryClauses(tracks, seeds);
         ArrayList<TermQuery> clauses = clauses(TermQuery.class, tracks, seeds);
 
-        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
 
         int minShouldMatch = seeds.size();
 
-        while (submission.size() < RESULT_SIZE) {
+        while (submission.size() < howMany) {
 
             // halting criteria
             if (minShouldMatch == 0) break;
@@ -380,12 +382,6 @@ public class Searcher implements Closeable {
 
 
             ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
-
-            // if (hits.length == 0) {
-            //    System.out.println("tracksOnly found zero result found for pId : " + pId);
-            //   return new LinkedHashSet<>();
-            // }
-
 
             boolean finish = false;
 
@@ -409,7 +405,7 @@ public class Searcher implements Closeable {
 
                     if (seeds.contains(t)) continue;
 
-                    if (submission.size() < RESULT_SIZE) {
+                    if (submission.size() < howMany) {
                         submission.add(t);
                     } else {
                         finish = true;
@@ -431,7 +427,7 @@ public class Searcher implements Closeable {
 
         seeds.clear();
 
-        if (submission.size() != RESULT_SIZE)
+        if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
             System.out.println("warning result set for " + pId + " size " + submission.size());
 
         return submission;
@@ -452,7 +448,7 @@ public class Searcher implements Closeable {
 
         final SpanQuery[] clausesIn = clauses.toArray(new SpanQuery[clauses.size()]);
 
-        List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
+        final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
 
         int j = 0;
 
@@ -462,19 +458,7 @@ public class Searcher implements Closeable {
             if (j == configs.size()) break;
             SpanNearConfig config = configs.get(j++);
 
-            //TODO try to figure out n from tracks.length
-
-//            final int n;
-//            if (tracks.length < 6)
-//                n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
-//            else if (tracks.length < 26)
-//                n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
-//            else
-//                n = (int) (tracks.length * 1.25); // for n=100 use 125
-
-
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
-
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
@@ -523,9 +507,10 @@ public class Searcher implements Closeable {
         if (submission.size() != RESULT_SIZE) {
             System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clausesIn.length);
 
-            LinkedHashSet<String> backUp = tracksOnly(tracks, pId);
+            LinkedHashSet<String> backUp = tracksOnly(tracks, pId, RESULT_SIZE * 2);
             for (final String track : backUp) {
-                submission.add(track);
+                if (!submission.contains(track))
+                    submission.add(track);
                 if (submission.size() == RESULT_SIZE) break;
             }
 

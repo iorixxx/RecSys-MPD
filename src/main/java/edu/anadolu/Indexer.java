@@ -1,5 +1,6 @@
 package edu.anadolu;
 
+import com.google.gson.Gson;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
  */
 public class Indexer {
 
-    static Analyzer analyzer() throws IOException {
+    private static Analyzer analyzer() throws IOException {
 
         Map<String, Analyzer> analyzerPerField = new HashMap<>();
         analyzerPerField.put("name", icu());
@@ -44,7 +45,23 @@ public class Indexer {
                 .build();
     }
 
+    static Stream<Path> jSons(Path mpdPath) throws IOException {
+        return Files.find(mpdPath,
+                1, (Path p, BasicFileAttributes att) -> {
+
+                    if (!att.isRegularFile()) return false;
+
+                    Path name = p.getFileName();
+
+                    return (name != null && name.toString().endsWith(".json"));
+
+                });
+    }
+
     public int index(Path indexPath, Path mpdPath) throws IOException {
+
+        final Gson GSON = new Gson();
+
         System.out.println("Indexing to directory '" + indexPath + "'...");
 
         Directory dir = FSDirectory.open(indexPath);
@@ -59,27 +76,16 @@ public class Indexer {
 
         final IndexWriter writer = new IndexWriter(dir, iwc);
 
-        Stream<Path> jSons = Files.find(mpdPath,
-                1, (Path p, BasicFileAttributes att) -> {
-
-                    if (!att.isRegularFile()) return false;
-
-                    Path name = p.getFileName();
-
-                    return (name != null && name.toString().endsWith(".json"));
-
-                });
+        Stream<Path> jSons = jSons(mpdPath);
 
         jSons.parallel().forEach(path -> {
 
 
             try (BufferedReader reader = Files.newBufferedReader(path)) {
 
-                MPD data = MPD.GSON.fromJson(reader, MPD.class);
+                MPD data = GSON.fromJson(reader, MPD.class);
 
                 for (Playlist playlist : data.playlists) {
-
-                    System.out.print("1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks);
 
                     Document document = new Document();
                     document.add(new TextField("name", playlist.name, Field.Store.YES));
@@ -93,8 +99,6 @@ public class Indexer {
                         if (seeds.contains(track.track_uri)) continue;
                         builder.append(track.track_uri).append(' ');
                         seeds.add(track.track_uri);
-
-                        System.out.print(" 3:" + track.pos + " 4:" + track.duration_ms + " # " + track.track_uri);
                     }
 
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
@@ -103,7 +107,7 @@ public class Indexer {
                 }
 
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                throw new RuntimeException(ioe);
             }
         });
 
