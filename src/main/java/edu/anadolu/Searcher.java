@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static edu.anadolu.Helper.clauses;
 import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
 
 
@@ -207,7 +208,7 @@ public class Searcher implements Closeable {
 
             LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
-                submission = titleOnly(playlist.name, playlist.pid);
+                submission = titleOnly(playlist.name.trim(), playlist.pid);
             } else {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
@@ -224,7 +225,7 @@ public class Searcher implements Closeable {
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
 
-            export(submission, playlist.pid, format, out);
+            Helper.export(submission, playlist.pid, format, out, similarityConfig);
 
             out.flush();
             submission.clear();
@@ -259,8 +260,10 @@ public class Searcher implements Closeable {
          */
         if (hits.length == 0) {
 
+            final int queryLength = Emoji.analyze(title);
+
             // one term query: fuzzy match
-            if (Emoji.analyze(title.trim()) == 1 && !title.contains("_")) {
+            if (queryLength == 1 && !title.contains("_")) {
 
                 System.out.println("==oneTermQuery : " + title);
 
@@ -269,7 +272,7 @@ public class Searcher implements Closeable {
                 queryParser = new QueryParser("name", Indexer.icu());
                 queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-                if (Emoji.analyze(title.trim()) == 1 && title.contains("_")) {
+                if (queryLength == 1 && title.contains("_")) {
                     query = queryParser.parse(QueryParserBase.escape(title.replaceAll("_", " ")));
                 } else {
                     query = queryParser.parse(QueryParserBase.escape(title));
@@ -347,11 +350,12 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
      */
-    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
+    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws IOException {
 
-        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
 
-        List<TermQuery> clauses = Helper.termQueryClauses(tracks, seeds);
+        //TODO Helper.termQueryClauses(tracks, seeds);
+        ArrayList<TermQuery> clauses = clauses(TermQuery.class, tracks, seeds);
 
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
@@ -430,37 +434,6 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    private void export(LinkedHashSet<String> submission, int pid, Format format, PrintWriter out) {
-        switch (format) {
-            case RECSYS:
-                out.print(pid);
-
-                for (String s : submission) {
-                    out.print(", ");
-                    out.print(s);
-                }
-
-                out.println();
-                break;
-            case TREC:
-                int i = 1;
-                for (String s : submission) {
-                    out.print(pid);
-                    out.print("\tQ0\t");
-                    out.print(s);
-                    out.print("\t");
-                    out.print(i);
-                    out.print("\t");
-                    out.print(i);
-                    out.print("\t");
-                    out.print(similarityConfig);
-                    out.println();
-
-                    i++;
-                }
-                break;
-        }
-    }
 
     enum SpanType {
         SpanOR,
@@ -470,11 +443,13 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
      */
-    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
+    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws IOException {
 
-        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
-        List<SpanTermQuery> clauses = Helper.spanTermQueryClauses(tracks, seeds);
+        //TODO Helper.spanTermQueryClauses(tracks, seeds);
+        ArrayList<SpanTermQuery> clauses = clauses(SpanTermQuery.class, tracks, seeds);
 
 
         //TODO try to figure out n from tracks.length
@@ -503,7 +478,6 @@ public class Searcher implements Closeable {
             return tracksOnly(tracks, pId);
         }
 
-        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
         boolean finish = false;
 
