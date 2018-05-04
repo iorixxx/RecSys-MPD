@@ -6,5 +6,6 @@ public class Track {
     String artist_name;
     String track_uri;
     String artist_uri;
+    int duration_ms;
 
 }

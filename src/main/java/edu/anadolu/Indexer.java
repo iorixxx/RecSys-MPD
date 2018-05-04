@@ -79,6 +79,8 @@ public class Indexer {
 
                 for (Playlist playlist : data.playlists) {
 
+                    System.out.print("1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks);
+
                     Document document = new Document();
                     document.add(new TextField("name", playlist.name, Field.Store.YES));
                     document.add(new StringField("id", Integer.toString(playlist.pid), Field.Store.YES));
@@ -91,6 +93,8 @@ public class Indexer {
                         if (seeds.contains(track.track_uri)) continue;
                         builder.append(track.track_uri).append(' ');
                         seeds.add(track.track_uri);
+
+                        System.out.print(" 3:" + track.pos + " 4:" + track.duration_ms + " # " + track.track_uri);
                     }
 
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
