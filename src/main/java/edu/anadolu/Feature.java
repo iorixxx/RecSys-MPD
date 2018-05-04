@@ -55,8 +55,7 @@ public class Feature {
 
                 for (Playlist playlist : data.playlists) {
 
-                    out.print("1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpaceSplitter.split(playlist.name.trim()).length);
-
+                    final String typeQ = "1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpaceSplitter.split(playlist.name.trim()).length;
 
                     HashSet<String> seeds = new HashSet<>(100);
 
@@ -65,6 +64,7 @@ public class Feature {
 
                         seeds.add(track.track_uri);
 
+                        out.print(typeQ);
                         out.print(" 4:" + track.pos + " 5:" + track.duration_ms + " # " + track.track_uri);
                         out.println();
                     }
