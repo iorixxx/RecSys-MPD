@@ -38,7 +38,7 @@ public class Searcher implements Closeable {
 
     private static final int RESULT_SIZE = 500;
 
-    private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
+    static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
     private final IndexSearcher searcher;
@@ -263,16 +263,18 @@ public class Searcher implements Closeable {
          */
         if (hits.length == 0) {
 
-            // one term query
-            if (whiteSpaceSplitter.split(title.trim()).length == 1 && !title.contains("_")) {
+            // one term query: fuzzy match
+            if (Emoji.analyze(title.trim()) == 1 && !title.contains("_")) {
+
+                System.out.println("==oneTermQuery : " + title);
 
             } else {
 
                 queryParser = new QueryParser("name", Indexer.icu());
                 queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-                if (whiteSpaceSplitter.split(title.trim()).length == 1 && title.contains("_")) {
-                    query = queryParser.parse(QueryParserBase.escape(title.replaceFirst("_", " ")));
+                if (Emoji.analyze(title.trim()) == 1 && title.contains("_")) {
+                    query = queryParser.parse(QueryParserBase.escape(title.replaceAll("_", " ")));
                 } else {
                     query = queryParser.parse(QueryParserBase.escape(title));
                 }
