@@ -1,18 +1,14 @@
 package edu.anadolu;
 
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.misc.HighFreqTerms;
 import org.apache.lucene.misc.TermStats;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.*;
 import org.apache.lucene.store.FSDirectory;
 
@@ -349,68 +345,80 @@ public class Searcher implements Closeable {
     }
 
     /**
-     * Predict tracks for a playlist given its tracks only. Works best with random tracks category 8 and category 10
+     * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
      */
     private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
-        queryParser.setDefaultOperator(QueryParser.Operator.OR);
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
-        HashSet<String> seeds = new HashSet<>(100);
-
-        StringBuilder builder = new StringBuilder();
-        for (Track track : tracks) {
-            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
-            if (seeds.contains(track.track_uri)) continue;
-            builder.append(track.track_uri).append(' ');
-            seeds.add(track.track_uri);
-        }
-        Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
-
-
-        ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
-
-        if (hits.length == 0) {
-            System.out.println("tracksOnly found zero result found for pId : " + pId);
-            return new LinkedHashSet<>();
-        }
+        List<TermQuery> clauses = Helper.termQueryClauses(tracks, seeds);
 
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
 
-        boolean finish = false;
+        int minShouldMatch = seeds.size();
 
-        for (int i = 0; i < hits.length; i++) {
-            int docId = hits[i].doc;
-            Document doc = searcher.doc(docId);
-            if (Integer.parseInt(doc.get("id")) == pId) continue;
+        while (submission.size() < RESULT_SIZE) {
 
-            String trackURIs = doc.get("track_uris");
+            // halting criteria
+            if (minShouldMatch == 0) break;
 
-            String[] parts = whiteSpaceSplitter.split(trackURIs);
-
-            if (useOnlyLonger && (parts.length <= seeds.size()))
-                continue;
-
-            if (parts.length <= seeds.size())
-                System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.setMinimumNumberShouldMatch(--minShouldMatch);
 
 
-            for (String t : parts) {
+            for (TermQuery tq : clauses)
+                builder.add(tq, BooleanClause.Occur.SHOULD);
 
-                if (seeds.contains(t)) continue;
+            BooleanQuery bq = builder.build();
 
-                if (submission.size() < RESULT_SIZE) {
-                    submission.add(t);
-                } else {
-                    finish = true;
+
+            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+
+            // if (hits.length == 0) {
+            //    System.out.println("tracksOnly found zero result found for pId : " + pId);
+            //   return new LinkedHashSet<>();
+            // }
+
+
+            boolean finish = false;
+
+            for (int i = 0; i < hits.length; i++) {
+                int docId = hits[i].doc;
+                Document doc = searcher.doc(docId);
+                if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+                String trackURIs = doc.get("track_uris");
+
+                String[] parts = whiteSpaceSplitter.split(trackURIs);
+
+                if (useOnlyLonger && (parts.length <= seeds.size()))
+                    continue;
+
+                if (parts.length <= seeds.size())
+                    System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
+
+
+                for (String t : parts) {
+
+                    if (seeds.contains(t)) continue;
+
+                    if (submission.size() < RESULT_SIZE) {
+                        submission.add(t);
+                    } else {
+                        finish = true;
+                        break;
+                    }
+
+                }
+
+                incrementPageCountMap(i);
+
+                if (finish) {
+                    System.out.println("minShouldMath: " + minShouldMatch + "/" + seeds.size());
                     break;
                 }
 
             }
-
-            incrementPageCountMap(i);
-
-            if (finish) break;
 
         }
 
@@ -466,17 +474,8 @@ public class Searcher implements Closeable {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
-        ArrayList<SpanQuery> clauses = new ArrayList<>(tracks.length);
+        List<SpanTermQuery> clauses = Helper.spanTermQueryClauses(tracks, seeds);
 
-
-        for (Track track : tracks) {
-
-            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
-            if (seeds.contains(track.track_uri)) continue;
-
-            seeds.add(track.track_uri);
-            clauses.add(new SpanTermQuery(new Term("track_uris", track.track_uri)));
-        }
 
         //TODO try to figure out n from tracks.length
 
