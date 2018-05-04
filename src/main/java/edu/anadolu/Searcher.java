@@ -509,7 +509,7 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println("progress: " + j + "/" + configs.size() + "\t" + config);
+                    System.out.println("progress: " + j + "/" + configs.size() + "\t" + config + " for tracks " + clausesIn.length);
                     break;
                 }
 
@@ -521,7 +521,7 @@ public class Searcher implements Closeable {
          * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != RESULT_SIZE) {
-            System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing first=" + tracks.length);
+            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clausesIn.length);
 
             LinkedHashSet<String> backUp = tracksOnly(tracks, pId);
             for (final String track : backUp) {

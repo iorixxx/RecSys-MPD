@@ -7,9 +7,7 @@ import java.util.Objects;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
-    private int counter = 0;
-
-    int slop = 0;
+   int slop = 0;
 
     int end = 0;
 
@@ -29,17 +27,6 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         this.inOrder = inOrder;
     }
 
-    void relax() {
-
-        counter++;
-
-        if (counter % 2 == 0) {
-            slop++;
-        } else if (counter % 2 == 1) {
-            end++;
-        }
-    }
-
     boolean tightest() {
         return this.inOrder && 0 == this.end && 0 == this.slop;
     }
@@ -47,8 +34,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     @Override
     public String toString() {
         return "SpanNearConfig{" +
-                "counter=" + counter +
-                ", slop=" + slop +
+                "slop=" + slop +
                 ", end=" + end +
                 ", inOrder=" + inOrder +
                 '}';
@@ -107,8 +93,6 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
             i++;
         }
-
-        System.out.println(list.size());
         return Collections.unmodifiableList(list);
     }
 
@@ -125,7 +109,6 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         }
 
         Collections.sort(list);
-        System.out.println(list.size());
         return Collections.unmodifiableList(list);
     }
 
@@ -135,7 +118,6 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         for (SpanNearConfig config1 : mode1) {
             System.out.println(config1);
         }
-
 
         System.out.println("=========");
 
