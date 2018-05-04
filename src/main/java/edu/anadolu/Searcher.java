@@ -357,12 +357,10 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println("minShouldMath: " + minShouldMatch + "/" + seeds.size());
+                    System.out.println("minShouldMatch: " + minShouldMatch + "/" + seeds.size());
                     break;
                 }
-
             }
-
         }
 
         seeds.clear();
