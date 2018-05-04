@@ -66,12 +66,9 @@ public class Feature {
                         seeds.add(track.track_uri);
 
                         out.print(" 4:" + track.pos + " 5:" + track.duration_ms + " # " + track.track_uri);
+                        out.println();
                     }
-
-
-                    out.println();
                     seeds.clear();
-
                 }
 
                 out.flush();
