@@ -509,7 +509,7 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println(config);
+                    System.out.println("progress: " + j + "/" + configs.size() + "\t" + config);
                     break;
                 }
 
