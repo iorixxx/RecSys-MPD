@@ -9,7 +9,10 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.*;
-import org.apache.lucene.search.spans.*;
+import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.*;
@@ -213,7 +216,7 @@ public class Searcher implements Closeable {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanNear);
+                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode1);
                 } else {
                     submission = tracksOnly(playlist.tracks, playlist.pid);
                 }
@@ -435,15 +438,10 @@ public class Searcher implements Closeable {
     }
 
 
-    enum SpanType {
-        SpanOR,
-        SpanNear,
-    }
-
     /**
      * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
      */
-    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanType type) throws IOException {
+    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanNearConfig.RelaxMode mode) throws IOException {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
@@ -452,64 +450,70 @@ public class Searcher implements Closeable {
         ArrayList<SpanTermQuery> clauses = clauses(SpanTermQuery.class, tracks, seeds);
 
 
-        //TODO try to figure out n from tracks.length
+        final SpanQuery[] clausesIn = clauses.toArray(new SpanQuery[clauses.size()]);
 
-        final int n;
-        if (tracks.length < 6)
-            n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
-        else if (tracks.length < 26)
-            n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
-        else
-            n = (int) (tracks.length * 1.25); // for n=100 use 125
+        List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
 
-        //TODO experiment with SpanOrQuery or SpanNearQuery. Which one performs better?
-        final SpanFirstQuery spanFirstQuery;
+        int j = 0;
 
-        if (SpanType.SpanOR.equals(type))
-            spanFirstQuery = new SpanFirstQuery(clauses.size() == 1 ? clauses.get(0) : new SpanOrQuery(clauses.toArray(new SpanQuery[clauses.size()])), n);
-        else
-            spanFirstQuery = new SpanFirstQuery(clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
+        while (submission.size() < RESULT_SIZE) {
 
+            // halting criteria
+            if (j == configs.size()) break;
+            SpanNearConfig config = configs.get(j++);
 
-        ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+            //TODO try to figure out n from tracks.length
 
-        if (hits.length == 0) {
-            System.out.println("SpanFirst found zero result found for pId : " + pId + " first " + tracks.length);
-            return tracksOnly(tracks, pId);
-        }
+//            final int n;
+//            if (tracks.length < 6)
+//                n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
+//            else if (tracks.length < 26)
+//                n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
+//            else
+//                n = (int) (tracks.length * 1.25); // for n=100 use 125
 
 
-        boolean finish = false;
+            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
-        for (int i = 0; i < hits.length; i++) {
-            int docId = hits[i].doc;
-            Document doc = searcher.doc(docId);
-            if (Integer.parseInt(doc.get("id")) == pId) continue;
 
-            String trackURIs = doc.get("track_uris");
+            ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
-            System.out.println("trackURIs " + trackURIs);
-            System.out.println("seeds " + seeds);
+            boolean finish = false;
 
-            System.out.println("=============");
+            for (int i = 0; i < hits.length; i++) {
+                int docId = hits[i].doc;
+                Document doc = searcher.doc(docId);
+                if (Integer.parseInt(doc.get("id")) == pId) continue;
 
-            for (String t : whiteSpaceSplitter.split(trackURIs)) {
+                String trackURIs = doc.get("track_uris");
 
-                if (seeds.contains(t)) continue;
+                if (config.inOrder && 0 == config.end && 0 == config.slop) {
+                    System.out.println("trackURIs " + trackURIs);
+                    System.out.println("seeds " + seeds);
+                    System.out.println("=============");
+                }
 
-                if (submission.size() < RESULT_SIZE) {
-                    submission.add(t);
-                } else {
-                    finish = true;
+                for (String t : whiteSpaceSplitter.split(trackURIs)) {
+
+                    if (seeds.contains(t)) continue;
+
+                    if (submission.size() < RESULT_SIZE) {
+                        submission.add(t);
+                    } else {
+                        finish = true;
+                        break;
+                    }
+
+                }
+
+                incrementPageCountMap(i);
+
+                if (finish) {
+                    System.out.println(config);
                     break;
                 }
 
             }
-
-            incrementPageCountMap(i);
-
-            if (finish) break;
-
         }
 
 
