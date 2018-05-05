@@ -164,7 +164,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     public static void main(String[] args) {
 
-        int n = 100;
+        int n = 1;
         System.out.println("==== Mode1 " + mode1(n).size());
         for (SpanNearConfig config : mode1(n)) {
             System.out.println(config + (config.tightest(n) ? "***" : ""));

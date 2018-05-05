@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.misc.HighFreqTerms;
 import org.apache.lucene.misc.TermStats;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -152,25 +153,29 @@ public class Searcher implements Closeable {
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
         out.println(TEAM_INFO);
 
-
         int titleOnly = 0;
         int firstN = 0;
         int random = 0;
+        int first = 0;
+
         for (Playlist playlist : this.challenge.playlists) {
 
             LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
                 titleOnly++;
                 submission = titleOnly(playlist.name.trim(), playlist.pid);
+            } else if (playlist.tracks.length == 1) {
+                first++;
+                submission = firstTrack(playlist);
             } else {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
                     firstN++;
-                    submission = firstNTracks(playlist.tracks, playlist.pid, relaxMode);
+                    submission = spanFirst(playlist, relaxMode);
                 } else {
                     random++;
-                    submission = tracksOnly(playlist.tracks, playlist.pid, RESULT_SIZE);
+                    submission = tracksOnly(playlist, RESULT_SIZE);
                 }
             }
 
@@ -190,7 +195,7 @@ public class Searcher implements Closeable {
         out.close();
 
         // Sanity check
-        if (titleOnly == 1000 && random == 2000 && firstN == 7000)
+        if (first == 1000 && titleOnly == 1000 && random == 2000 && firstN == 6000)
             System.out.println("Number of entries into the Category Paths is OK!");
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
@@ -310,7 +315,10 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
      */
-    private LinkedHashSet<String> tracksOnly(Track[] tracks, int pId, int howMany) throws IOException {
+    private LinkedHashSet<String> tracksOnly(Playlist playlist, int howMany) throws IOException {
+
+        final Track[] tracks = playlist.tracks;
+        final int pId = playlist.pid;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
@@ -327,7 +335,7 @@ public class Searcher implements Closeable {
             if (minShouldMatch == 0) break;
 
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.setMinimumNumberShouldMatch(--minShouldMatch);
+            builder.setMinimumNumberShouldMatch(minShouldMatch--);
 
 
             for (TermQuery tq : clauses)
@@ -370,7 +378,7 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println("minShouldMatch: " + (minShouldMatch + 1) + "/" + seeds.size());
+                    System.out.println("minShouldMatch: " + (bq.getMinimumNumberShouldMatch()) + "/" + seeds.size());
                     break;
                 }
             }
@@ -386,9 +394,12 @@ public class Searcher implements Closeable {
 
 
     /**
-     * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
+     * Predict tracks for a playlist given its first N tracks, where N can equal 5, 10, 25, or 100.
      */
-    private LinkedHashSet<String> firstNTracks(Track[] tracks, int pId, SpanNearConfig.RelaxMode mode) throws IOException {
+    private LinkedHashSet<String> spanFirst(Playlist playlist, SpanNearConfig.RelaxMode mode) throws IOException {
+
+        final Track[] tracks = playlist.tracks;
+        final int pId = playlist.pid;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
@@ -469,7 +480,7 @@ public class Searcher implements Closeable {
         if (submission.size() != RESULT_SIZE) {
             System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clauses.size());
 
-            LinkedHashSet<String> backUp = tracksOnly(tracks, pId, RESULT_SIZE * 2);
+            LinkedHashSet<String> backUp = tracksOnly(playlist, RESULT_SIZE * 2);
             for (final String track : backUp) {
                 if (seeds.contains(track) || submission.contains(track)) continue;
                 submission.add(track);
@@ -484,6 +495,92 @@ public class Searcher implements Closeable {
 
         seeds.clear();
         clauses.clear();
+        return submission;
+    }
+
+    /**
+     * Predict tracks for a playlist given its title and the first track
+     */
+    private LinkedHashSet<String> firstTrack(Playlist playlist) throws IOException {
+
+        final Track[] tracks = playlist.tracks;
+        final int pId = playlist.pid;
+
+        if (tracks.length != 1)
+            throw new RuntimeException("tracks length is not 1!");
+
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
+        SpanTermQuery spanTermQuery = new SpanTermQuery(new Term("track_uris", tracks[0].track_uri));
+        seeds.add(tracks[0].track_uri);
+
+        if (seeds.size() != 1)
+            throw new RuntimeException("seeds.size is not 1!");
+
+        int end = 1;
+
+        while (submission.size() < RESULT_SIZE) {
+
+            // halting criteria
+            if (end == 66) {
+                break;
+            }
+
+            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(spanTermQuery, end++);
+            ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+
+            boolean finish = false;
+
+            for (int i = 0; i < hits.length; i++) {
+                int docId = hits[i].doc;
+                Document doc = searcher.doc(docId);
+                if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+                String trackURIs = doc.get("track_uris");
+
+
+                for (String t : whiteSpaceSplitter.split(trackURIs)) {
+
+                    if (seeds.contains(t) || submission.contains(t)) continue;
+                    submission.add(t);
+                    if (submission.size() == RESULT_SIZE) {
+                        finish = true;
+                        break;
+                    }
+
+                }
+
+                incrementPageCountMap(i);
+
+                if (finish) {
+                    System.out.println("progress: " + (end - 1) + "/" + 10 + "\t" + " for tracks 1");
+                    break;
+                }
+
+            }
+        }
+
+
+        /*
+         * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
+         */
+        if (submission.size() != RESULT_SIZE) {
+            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks 1");
+
+            LinkedHashSet<String> backUp = tracksOnly(playlist, RESULT_SIZE * 2);
+            for (final String track : backUp) {
+                if (seeds.contains(track) || submission.contains(track)) continue;
+                submission.add(track);
+                if (submission.size() == RESULT_SIZE) break;
+            }
+
+            if (submission.size() != RESULT_SIZE) {
+                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
+            }
+
+        }
+
+        seeds.clear();
         return submission;
     }
 }
