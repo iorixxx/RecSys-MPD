@@ -396,6 +396,9 @@ public class Searcher implements Closeable {
             }
             SpanNearConfig config = configs.get(j++);
 
+            if (config.tightest())
+                System.out.println("tightest pid: " + pId + " for tracks " + tracks.length);
+
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;

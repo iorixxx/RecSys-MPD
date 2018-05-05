@@ -25,7 +25,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         this.inOrder = inOrder;
     }
 
-    private boolean tightest() {
+    boolean tightest() {
         return this.inOrder && 0 == this.end && 0 == this.slop;
     }
 
@@ -113,12 +113,12 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     public static void main(String[] args) {
 
 
+        System.out.println("==== Mode1 " + mode1.size());
         for (SpanNearConfig config : mode1) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
 
-        System.out.println("=========");
-
+        System.out.println("==== Mode2 " + mode2.size());
         for (SpanNearConfig config : mode2) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
