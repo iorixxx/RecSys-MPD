@@ -166,7 +166,7 @@ public class Searcher implements Closeable {
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
                     firstN++;
-                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode1);
+                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode2);
                 } else {
                     random++;
                     submission = tracksOnly(playlist.tracks, playlist.pid, RESULT_SIZE);
@@ -445,7 +445,6 @@ public class Searcher implements Closeable {
                     System.out.println("=============" + config);
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
-                    System.out.println("============= " + n);
                 }
 
                 for (String t : whiteSpaceSplitter.split(trackURIs)) {
