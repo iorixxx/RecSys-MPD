@@ -8,8 +8,11 @@ import org.apache.lucene.search.similarities.SimilarityBase;
  */
 public class RawTF extends SimilarityBase {
 
-    @Override
     protected double score(BasicStats stats, double freq, double docLen) {
+        return freq;
+    }
+
+    protected float score(BasicStats stats, float freq, float docLen) {
         return freq;
     }
 

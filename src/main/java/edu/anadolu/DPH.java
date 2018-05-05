@@ -20,7 +20,6 @@ import org.apache.lucene.search.similarities.SimilarityBase;
  */
 public class DPH extends SimilarityBase {
 
-    @Override
     protected double score(BasicStats stats, double freq, double docLen) {
         double f = freq / docLen;
         double norm = (1d - f) * (1d - f) / (freq + 1d);
@@ -35,6 +34,22 @@ public class DPH extends SimilarityBase {
                 stats.getNumberOfDocuments() / stats.getTotalTermFreq())
                 + 0.5d * log2(2d * Math.PI * freq * (1d - f))
         );
+    }
+
+    protected float score(BasicStats stats, float freq, float docLen) {
+        double f = freq / docLen;
+        double norm = (1d - f) * (1d - f) / (freq + 1d);
+
+        // averageDocumentLength => stats.getAvgFieldLength()
+        // numberOfDocuments => stats.getNumberOfDocuments()
+        // termFrequency => stats.getTotalTermFreq()
+
+        return (float) (norm
+                * (freq * log2((freq *
+                stats.getAvgFieldLength() / docLen) *
+                stats.getNumberOfDocuments() / stats.getTotalTermFreq())
+                + 0.5d * log2(2d * Math.PI * freq * (1d - f))
+        ));
     }
 
     @Override

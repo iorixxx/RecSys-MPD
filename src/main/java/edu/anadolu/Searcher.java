@@ -304,6 +304,9 @@ public class Searcher implements Closeable {
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
         ArrayList<TermQuery> clauses = clauses(TermQuery.class, tracks, seeds);
 
+        if (seeds.size() != clauses.size())
+            throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
+
         int minShouldMatch = seeds.size();
 
         while (submission.size() < howMany) {
@@ -381,6 +384,9 @@ public class Searcher implements Closeable {
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
         ArrayList<SpanTermQuery> clauses = clauses(SpanTermQuery.class, tracks, seeds);
 
+        if (seeds.size() != clauses.size())
+            throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
+
         final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
 
         final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
@@ -412,7 +418,8 @@ public class Searcher implements Closeable {
 
                 String trackURIs = doc.get("track_uris");
 
-                if (config.inOrder && config.end < 2 && 0 == config.slop) {
+               // if (config.inOrder && config.end < 2 && 0 == config.slop)
+                {
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
                     System.out.println("=============" + config);

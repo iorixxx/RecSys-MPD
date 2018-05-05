@@ -8,8 +8,11 @@ import org.apache.lucene.search.similarities.SimilarityBase;
  */
 public class LogTF extends SimilarityBase {
 
-    @Override
     protected double score(BasicStats stats, double freq, double docLen) {
+        return log2(freq + 1);
+    }
+
+    protected float score(BasicStats stats, float freq, float docLen) {
         return (float) log2(freq + 1);
     }
 

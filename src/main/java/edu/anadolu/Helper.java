@@ -19,6 +19,7 @@ class Helper {
 
     static <T extends Query> ArrayList<T> clauses(Class<T> queryClass, Track[] tracks, LinkedHashSet<String> seeds) {
 
+        seeds.clear();
         ArrayList<T> clauses = new ArrayList<>(tracks.length);
 
 
