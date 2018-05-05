@@ -418,8 +418,7 @@ public class Searcher implements Closeable {
 
                 String trackURIs = doc.get("track_uris");
 
-               // if (config.inOrder && config.end < 2 && 0 == config.slop)
-                {
+                if (config.inOrder && config.end < 2 && 0 == config.slop) {
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
                     System.out.println("=============" + config);
