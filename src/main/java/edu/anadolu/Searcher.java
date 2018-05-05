@@ -146,7 +146,7 @@ public class Searcher implements Closeable {
     }
 
 
-    public void search(Format format, Path resultPath) throws IOException, ParseException {
+    public void search(Format format, Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException, ParseException {
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
         out.println(TEAM_INFO);
@@ -166,7 +166,7 @@ public class Searcher implements Closeable {
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
                     firstN++;
-                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode2);
+                    submission = firstNTracks(playlist.tracks, playlist.pid, relaxMode);
                 } else {
                     random++;
                     submission = tracksOnly(playlist.tracks, playlist.pid, RESULT_SIZE);
@@ -185,9 +185,14 @@ public class Searcher implements Closeable {
             submission.clear();
         }
 
-        System.out.println("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
         out.flush();
         out.close();
+
+        // Sanity check
+        if (titleOnly == 1000 && random == 2000 && firstN == 7000)
+            System.out.println("Number of entries into the Category Paths is OK!");
+        else
+            throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
     }
 
     @Override
@@ -395,14 +400,7 @@ public class Searcher implements Closeable {
             throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
 
 
-        final List<SpanNearConfig> configs;
-
-        if (SpanNearConfig.RelaxMode.Mode1.equals(mode))
-            configs = SpanNearConfig.mode1(clauses.size());
-        else if (SpanNearConfig.RelaxMode.Mode2.equals(mode))
-            configs = SpanNearConfig.mode2(clauses.size());
-        else
-            configs = SpanNearConfig.mode3(clauses.size());
+        final List<SpanNearConfig> configs = SpanNearConfig.configs(mode, clauses.size());
 
         int j = 0;
 
@@ -420,14 +418,6 @@ public class Searcher implements Closeable {
 
             final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
 
-            final int n;
-            if (tracks.length < 6)
-                n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
-            else if (tracks.length < 26)
-                n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
-            else
-                n = (int) (tracks.length * 1.25); // for n=100 use 125
-
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
@@ -442,7 +432,13 @@ public class Searcher implements Closeable {
                 String trackURIs = doc.get("track_uris");
 
                 if (config.inOrder && config.slop == 0 && config.end == clauses.size()) {
-                    System.out.println("=============" + config + " for tracks " + clauses.size());
+                    System.out.println("============ " + config + " for tracks " + clauses.size());
+                    System.out.println("trackURIs " + trackURIs);
+                    System.out.println("seeds " + seeds);
+                }
+
+                if (config.slop == config.end) {
+                    System.out.println("------------ " + config + " for tracks " + clauses.size());
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
                 }

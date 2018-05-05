@@ -1,9 +1,6 @@
 package edu.anadolu;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
@@ -53,26 +50,64 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         return Objects.hash(slop, end, inOrder);
     }
 
-    static final List<SpanNearConfig> mode1;
-    static final List<SpanNearConfig> mode2;
+    private static final Map<Integer, List<SpanNearConfig>> SPAN_CACHE = new HashMap<>();
 
-    static {
-        mode1 = mode1(5);
-        mode2 = mode2(5);
+    static List<SpanNearConfig> configs(RelaxMode mode, int n) {
+
+        if (SPAN_CACHE.containsKey(n)) return SPAN_CACHE.get(n);
+
+        final List<SpanNearConfig> configs;
+
+        switch (mode) {
+            case Mode1:
+                configs = mode1(n);
+                break;
+            case Mode2:
+                configs = mode2(n);
+                break;
+            case Mode3:
+                configs = mode3(n);
+                break;
+            default:
+                throw new AssertionError(SpanNearConfig.class);
+        }
+
+        SPAN_CACHE.put(n, configs);
+        return configs;
     }
 
-    enum RelaxMode {
+    public enum RelaxMode {
         Mode1,
         Mode2,
+        Mode3
     }
 
-    static List<SpanNearConfig> mode1(int end) {
+
+    private static int highEnd(int n) {
+        if (n < 6)
+            return n + 3; // for n=1 and n=5 use 2 and 7
+        else if (n < 26)
+            return (int) (n * 1.5); // for n=10 and n=25 use 15 and 37
+        else
+            return (int) (n * 1.25); // for n=100 use 125
+    }
+
+    private static int highSlop(int n) {
+        if (n < 6)
+            return 3; // for n=1 and n=5 use 2 and 7
+        else if (n < 26)
+            return (int) (n * 0.5); // for n=10 and n=25 use 5 and 12
+        else
+            return (int) (n * 0.25); // for n=100 use 25
+    }
+
+    private static List<SpanNearConfig> mode1(int n) {
         List<SpanNearConfig> list = new ArrayList<>();
 
-        SpanNearConfig config = new SpanNearConfig(0, end, true);
+        SpanNearConfig config = new SpanNearConfig(0, n, true);
 
         int i = 0;
-        while (config.slop < 20 || config.end < 20) {
+        while (config.slop < highSlop(n) || config.end < highEnd(n)) {
 
             for (boolean inOrder : new boolean[]{true, false}) {
                 config.setInOrder(inOrder);
@@ -95,11 +130,11 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     }
 
 
-    static List<SpanNearConfig> mode2(int n) {
+    private static List<SpanNearConfig> mode2(int n) {
         List<SpanNearConfig> list = new ArrayList<>();
 
-        for (int slop = 0; slop < 20; slop++) {
-            for (int end = n; end < 20; end++) {
+        for (int slop = 0; slop < highSlop(n); slop++) {
+            for (int end = n; end < highEnd(n); end++) {
                 for (boolean inOrder : new boolean[]{true, false}) {
                     list.add(new SpanNearConfig(slop, end, inOrder));
                 }
@@ -110,12 +145,12 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         return Collections.unmodifiableList(list);
     }
 
-    static List<SpanNearConfig> mode3(int end) {
+    private static List<SpanNearConfig> mode3(int n) {
         List<SpanNearConfig> list = new ArrayList<>();
 
-        for (int slop = 0; slop < 20; slop++) {
+        for (int slop = 0; slop < highSlop(n); slop++) {
             for (boolean inOrder : new boolean[]{true, false}) {
-                list.add(new SpanNearConfig(slop, end, inOrder));
+                list.add(new SpanNearConfig(slop, n, inOrder));
             }
         }
 
@@ -125,19 +160,19 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     public static void main(String[] args) {
 
-
-        System.out.println("==== Mode1 " + mode1.size());
-        for (SpanNearConfig config : mode1) {
+        int n = 25;
+        System.out.println("==== Mode1 " + mode1(n).size());
+        for (SpanNearConfig config : mode1(n)) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
 
-        System.out.println("==== Mode2 " + mode2.size());
-        for (SpanNearConfig config : mode2) {
+        System.out.println("==== Mode2 " + mode2(n).size());
+        for (SpanNearConfig config : mode2(n)) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
 
-        System.out.println("==== Mode3");
-        for (SpanNearConfig config : mode3(5)) {
+        System.out.println("==== Mode3 " + mode3(n).size());
+        for (SpanNearConfig config : mode3(n)) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
     }
