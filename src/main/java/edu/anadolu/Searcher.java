@@ -395,7 +395,14 @@ public class Searcher implements Closeable {
             throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
 
 
-        final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1(clauses.size()) : SpanNearConfig.mode2(clauses.size());
+        final List<SpanNearConfig> configs;
+
+        if (SpanNearConfig.RelaxMode.Mode1.equals(mode))
+            configs = SpanNearConfig.mode1(clauses.size());
+        else if (SpanNearConfig.RelaxMode.Mode2.equals(mode))
+            configs = SpanNearConfig.mode2(clauses.size());
+        else
+            configs = SpanNearConfig.mode3(clauses.size());
 
         int j = 0;
 
@@ -421,7 +428,7 @@ public class Searcher implements Closeable {
             else
                 n = (int) (tracks.length * 1.25); // for n=100 use 125
 
-            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), clauses.size());
+            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
