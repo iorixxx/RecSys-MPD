@@ -4,13 +4,9 @@ import java.util.*;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
-    int slop = 0;
-    int end = 0;
-    boolean inOrder = true;
-
-    private SpanNearConfig() {
-        this(0, 0, true);
-    }
+    int slop;
+    int end;
+    boolean inOrder;
 
     private SpanNearConfig(int slop, int end, boolean inOrder) {
         this.slop = slop;
@@ -22,8 +18,11 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         this.inOrder = inOrder;
     }
 
-    boolean tightest() {
-        return this.inOrder && 0 == this.end && 0 == this.slop;
+    /**
+     * SpanNearConfig{slop=0, end=25, inOrder=true} for tracks 25
+     */
+    boolean tightest(int n) {
+        return this.inOrder && n == this.end && 0 == this.slop;
     }
 
     @Override
@@ -51,6 +50,10 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     }
 
     private static final Map<Integer, List<SpanNearConfig>> SPAN_CACHE = new HashMap<>();
+
+    static String cacheKeys() {
+        return SPAN_CACHE.keySet().toString();
+    }
 
     static List<SpanNearConfig> configs(RelaxMode mode, int n) {
 
@@ -149,31 +152,32 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         List<SpanNearConfig> list = new ArrayList<>();
 
         for (int slop = 0; slop < highSlop(n); slop++) {
-            for (boolean inOrder : new boolean[]{true, false}) {
-                list.add(new SpanNearConfig(slop, n, inOrder));
+            for (int end = slop + n; end < highEnd(n) + slop; end++) {
+                list.add(new SpanNearConfig(slop, end, true));
+                list.add(new SpanNearConfig(slop, end, false));
             }
         }
 
-        Collections.sort(list);
+
         return Collections.unmodifiableList(list);
     }
 
     public static void main(String[] args) {
 
-        int n = 25;
+        int n = 100;
         System.out.println("==== Mode1 " + mode1(n).size());
         for (SpanNearConfig config : mode1(n)) {
-            System.out.println((config.tightest() ? "***" : "") + config);
+            System.out.println(config + (config.tightest(n) ? "***" : ""));
         }
 
         System.out.println("==== Mode2 " + mode2(n).size());
         for (SpanNearConfig config : mode2(n)) {
-            System.out.println((config.tightest() ? "***" : "") + config);
+            System.out.println(config + (config.tightest(n) ? "***" : ""));
         }
 
         System.out.println("==== Mode3 " + mode3(n).size());
         for (SpanNearConfig config : mode3(n)) {
-            System.out.println((config.tightest() ? "***" : "") + config);
+            System.out.println(config + (config.tightest(n) ? "***" : ""));
         }
     }
 

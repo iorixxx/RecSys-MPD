@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static edu.anadolu.Helper.*;
+import static edu.anadolu.SpanNearConfig.cacheKeys;
 import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
 
 
@@ -193,6 +194,8 @@ public class Searcher implements Closeable {
             System.out.println("Number of entries into the Category Paths is OK!");
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
+
+        System.out.println("cacheKeys: " + cacheKeys());
     }
 
     @Override
@@ -264,14 +267,11 @@ public class Searcher implements Closeable {
             String[] tracks = whiteSpaceSplitter.split(trackURIs);
 
             for (String t : tracks) {
-
-                if (submission.size() < RESULT_SIZE) {
-                    submission.add(t);
-                } else {
+                submission.add(t);
+                if (submission.size() == RESULT_SIZE) {
                     finish = true;
                     break;
                 }
-
             }
 
             incrementPageCountMap(i);
@@ -358,11 +358,9 @@ public class Searcher implements Closeable {
 
                 for (String t : parts) {
 
-                    if (seeds.contains(t)) continue;
-
-                    if (submission.size() < howMany) {
-                        submission.add(t);
-                    } else {
+                    if (seeds.contains(t) || submission.contains(t)) continue;
+                    submission.add(t);
+                    if (submission.size() == howMany) {
                         finish = true;
                         break;
                     }
@@ -413,7 +411,7 @@ public class Searcher implements Closeable {
             }
             SpanNearConfig config = configs.get(j++);
 
-            if (config.tightest())
+            if (config.tightest(clauses.size()))
                 System.out.println("tightest pid: " + pId + " for tracks " + tracks.length);
 
             final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
@@ -445,11 +443,9 @@ public class Searcher implements Closeable {
 
                 for (String t : whiteSpaceSplitter.split(trackURIs)) {
 
-                    if (seeds.contains(t)) continue;
-
-                    if (submission.size() < RESULT_SIZE) {
-                        submission.add(t);
-                    } else {
+                    if (seeds.contains(t) || submission.contains(t)) continue;
+                    submission.add(t);
+                    if (submission.size() == RESULT_SIZE) {
                         finish = true;
                         break;
                     }
@@ -475,8 +471,8 @@ public class Searcher implements Closeable {
 
             LinkedHashSet<String> backUp = tracksOnly(tracks, pId, RESULT_SIZE * 2);
             for (final String track : backUp) {
-                if (!submission.contains(track))
-                    submission.add(track);
+                if (seeds.contains(track) || submission.contains(track)) continue;
+                submission.add(track);
                 if (submission.size() == RESULT_SIZE) break;
             }
 
