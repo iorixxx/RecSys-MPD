@@ -357,7 +357,7 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println("minShouldMatch: " + minShouldMatch + "/" + seeds.size());
+                    System.out.println("minShouldMatch: " + (minShouldMatch + 1) + "/" + seeds.size());
                     break;
                 }
             }
@@ -366,7 +366,7 @@ public class Searcher implements Closeable {
         seeds.clear();
 
         if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
-            System.out.println("warning result set for " + pId + " size " + submission.size());
+            System.out.println("warning result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
 
         return submission;
     }
@@ -390,7 +390,10 @@ public class Searcher implements Closeable {
         while (submission.size() < RESULT_SIZE) {
 
             // halting criteria
-            if (j == configs.size()) break;
+            if (j == configs.size()) {
+                System.out.println("halting j " + j);
+                break;
+            }
             SpanNearConfig config = configs.get(j++);
 
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
@@ -406,10 +409,10 @@ public class Searcher implements Closeable {
 
                 String trackURIs = doc.get("track_uris");
 
-                if (config.inOrder && 0 == config.end && 0 == config.slop) {
+                if (config.inOrder && config.end < 2 && 0 == config.slop) {
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
-                    System.out.println("=============");
+                    System.out.println("=============" + config);
                 }
 
                 for (String t : whiteSpaceSplitter.split(trackURIs)) {
@@ -428,7 +431,7 @@ public class Searcher implements Closeable {
                 incrementPageCountMap(i);
 
                 if (finish) {
-                    System.out.println("progress: " + j + "/" + configs.size() + "\t" + config + " for tracks " + clausesIn.length);
+                    System.out.println("progress: " + (j - 1) + "/" + configs.size() + "\t" + config + " for tracks " + clausesIn.length);
                     break;
                 }
 
@@ -450,7 +453,7 @@ public class Searcher implements Closeable {
             }
 
             if (submission.size() != RESULT_SIZE) {
-                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size());
+                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
             }
 
         }
