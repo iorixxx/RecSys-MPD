@@ -57,8 +57,8 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     static final List<SpanNearConfig> mode2;
 
     static {
-        mode1 = mode1();
-        mode2 = mode2();
+        mode1 = mode1(5);
+        mode2 = mode2(5);
     }
 
     enum RelaxMode {
@@ -66,10 +66,10 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         Mode2,
     }
 
-    private static List<SpanNearConfig> mode1() {
+    static List<SpanNearConfig> mode1(int end) {
         List<SpanNearConfig> list = new ArrayList<>();
 
-        SpanNearConfig config = new SpanNearConfig();
+        SpanNearConfig config = new SpanNearConfig(0, end, true);
 
         int i = 0;
         while (config.slop < 20 || config.end < 20) {
@@ -95,14 +95,27 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     }
 
 
-    private static List<SpanNearConfig> mode2() {
+    static List<SpanNearConfig> mode2(int n) {
         List<SpanNearConfig> list = new ArrayList<>();
 
         for (int slop = 0; slop < 20; slop++) {
-            for (int end = 0; end < 20; end++) {
+            for (int end = n; end < 20; end++) {
                 for (boolean inOrder : new boolean[]{true, false}) {
                     list.add(new SpanNearConfig(slop, end, inOrder));
                 }
+            }
+        }
+
+        Collections.sort(list);
+        return Collections.unmodifiableList(list);
+    }
+
+    static List<SpanNearConfig> mode3(int end) {
+        List<SpanNearConfig> list = new ArrayList<>();
+
+        for (int slop = 0; slop < 20; slop++) {
+            for (boolean inOrder : new boolean[]{true, false}) {
+                list.add(new SpanNearConfig(slop, end, inOrder));
             }
         }
 
@@ -120,6 +133,11 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
         System.out.println("==== Mode2 " + mode2.size());
         for (SpanNearConfig config : mode2) {
+            System.out.println((config.tightest() ? "***" : "") + config);
+        }
+
+        System.out.println("==== Mode3");
+        for (SpanNearConfig config : mode3(5)) {
             System.out.println((config.tightest() ? "***" : "") + config);
         }
     }

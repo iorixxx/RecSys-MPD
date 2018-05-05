@@ -394,9 +394,8 @@ public class Searcher implements Closeable {
         if (seeds.size() != clauses.size())
             throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
 
-        final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
 
-        final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1 : SpanNearConfig.mode2;
+        final List<SpanNearConfig> configs = SpanNearConfig.RelaxMode.Mode1.equals(mode) ? SpanNearConfig.mode1(clauses.size()) : SpanNearConfig.mode2(clauses.size());
 
         int j = 0;
 
@@ -412,7 +411,17 @@ public class Searcher implements Closeable {
             if (config.tightest())
                 System.out.println("tightest pid: " + pId + " for tracks " + tracks.length);
 
-            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
+            final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
+
+            final int n;
+            if (tracks.length < 6)
+                n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
+            else if (tracks.length < 26)
+                n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
+            else
+                n = (int) (tracks.length * 1.25); // for n=100 use 125
+
+            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), clauses.size());
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
@@ -425,10 +434,11 @@ public class Searcher implements Closeable {
 
                 String trackURIs = doc.get("track_uris");
 
-                if (config.end < 2 && config.slop == 0) {
+                if (config.inOrder && config.slop == 0) {
+                    System.out.println("=============" + config);
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
-                    System.out.println("=============" + config);
+                    System.out.println("============= " + n);
                 }
 
                 for (String t : whiteSpaceSplitter.split(trackURIs)) {
@@ -459,7 +469,7 @@ public class Searcher implements Closeable {
          * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != RESULT_SIZE) {
-            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clausesIn.length);
+            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clauses.size());
 
             LinkedHashSet<String> backUp = tracksOnly(tracks, pId, RESULT_SIZE * 2);
             for (final String track : backUp) {
