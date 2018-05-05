@@ -152,17 +152,23 @@ public class Searcher implements Closeable {
         out.println(TEAM_INFO);
 
 
+        int titleOnly = 0;
+        int firstN = 0;
+        int random = 0;
         for (Playlist playlist : this.challenge.playlists) {
 
             LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
+                titleOnly++;
                 submission = titleOnly(playlist.name.trim(), playlist.pid);
             } else {
                 Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
                 if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
+                    firstN++;
                     submission = firstNTracks(playlist.tracks, playlist.pid, SpanNearConfig.RelaxMode.Mode1);
                 } else {
+                    random++;
                     submission = tracksOnly(playlist.tracks, playlist.pid, RESULT_SIZE);
                 }
             }
@@ -179,6 +185,7 @@ public class Searcher implements Closeable {
             submission.clear();
         }
 
+        System.out.println("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
         out.flush();
         out.close();
     }
@@ -382,7 +389,7 @@ public class Searcher implements Closeable {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
-        ArrayList<SpanTermQuery> clauses = clauses(SpanTermQuery.class, tracks, seeds);
+        ArrayList<SpanTermQuery> clauses = clauses(tracks, seeds);
 
         if (seeds.size() != clauses.size())
             throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
@@ -418,7 +425,7 @@ public class Searcher implements Closeable {
 
                 String trackURIs = doc.get("track_uris");
 
-                if (config.inOrder && config.end < 2 && 0 == config.slop) {
+                if (config.end < 2 && config.slop == 0) {
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
                     System.out.println("=============" + config);
