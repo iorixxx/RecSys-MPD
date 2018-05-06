@@ -46,7 +46,7 @@ public class Searcher implements Closeable {
     private final IndexSearcher searcher;
     private final SimilarityConfig similarityConfig;
 
-    private final SortedSet<TermStats> highFreqTrackURIs;
+    private final List<String> highFreqTrackURIs;
     private final Filler filler;
     private final List<String> followerFreq;
 
@@ -98,50 +98,35 @@ public class Searcher implements Closeable {
         System.out.println("Top-10 Track URIs sorted by playlist frequency");
         System.out.println("term \t totalTF \t docFreq");
 
-        SortedSet<TermStats> highFreqTrackURIs = new TreeSet<>(Collections.reverseOrder(comparator));
+
+        List<String> highFreqTrackURIs = new ArrayList<>(RESULT_SIZE * 2);
         int i = 0;
         for (TermStats termStats : terms) {
             if (i++ < 10)
                 System.out.printf(Locale.ROOT, "%s \t %d \t %d \n",
                         termStats.termtext.utf8ToString(), termStats.totalTermFreq, termStats.docFreq);
-            highFreqTrackURIs.add(termStats);
+            highFreqTrackURIs.add(termStats.termtext.utf8ToString());
         }
-        this.highFreqTrackURIs = Collections.unmodifiableSortedSet(highFreqTrackURIs);
-
-        i = 0;
-        for (final TermStats termStats : this.highFreqTrackURIs) {
-            if (!terms[i].equals(termStats))
-                throw new RuntimeException(termStats.termtext.utf8ToString());
-            if (!terms[i].termtext.utf8ToString().equals(termStats.termtext.utf8ToString()))
-                throw new RuntimeException(termStats.termtext.utf8ToString());
-            if (termStats.totalTermFreq != termStats.docFreq)
-                throw new RuntimeException(termStats.termtext.utf8ToString());
-            if (terms[i].totalTermFreq != terms[i].docFreq)
-                throw new RuntimeException(termStats.termtext.utf8ToString());
-            if (terms[i].docFreq != termStats.docFreq)
-                throw new RuntimeException(termStats.termtext.utf8ToString());
-            i++;
-        }
-
+        this.highFreqTrackURIs = Collections.unmodifiableList(highFreqTrackURIs);
     }
 
     private int toggle = 0;
 
     private void fill(LinkedHashSet<String> submission, Set<String> seeds) {
         if (Filler.Follower.equals(this.filler))
-            fallBackToMostFollowedTracks(submission, seeds, this.followerFreq);
+            fallBackTo(submission, seeds, this.followerFreq);
         else if (Filler.Blended.equals(this.filler))
             blended(submission, seeds, this.highFreqTrackURIs, this.followerFreq);
         else if (Filler.Hybrid.equals(this.filler)) {
             if (++toggle % 2 == 0) {
-                fallBackToMostFollowedTracks(submission, seeds, this.followerFreq);
+                fallBackTo(submission, seeds, this.followerFreq);
             } else {
-                fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
+                fallBackTo(submission, seeds, this.highFreqTrackURIs);
             }
         } else if (Filler.Playlist.equals(this.filler))
-            fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
+            fallBackTo(submission, seeds, this.highFreqTrackURIs);
         else
-            fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
+            fallBackTo(submission, seeds, this.highFreqTrackURIs);
 
         if (submission.size() != RESULT_SIZE)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
@@ -395,12 +380,6 @@ public class Searcher implements Closeable {
 
                 if (config.inOrder && config.slop == 0 && config.end == clauses.size()) {
                     System.out.println("============ " + config + " for tracks " + clauses.size());
-                    System.out.println("trackURIs " + trackURIs);
-                    System.out.println("seeds " + seeds);
-                }
-
-                if (config.slop == config.end) {
-                    System.out.println("------------ " + config + " for tracks " + clauses.size());
                     System.out.println("trackURIs " + trackURIs);
                     System.out.println("seeds " + seeds);
                 }

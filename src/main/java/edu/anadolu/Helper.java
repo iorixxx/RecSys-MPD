@@ -1,7 +1,6 @@
 package edu.anadolu;
 
 import org.apache.lucene.index.Term;
-import org.apache.lucene.misc.TermStats;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanTermQuery;
 
@@ -97,10 +96,10 @@ class Helper {
     }
 
 
-    static void blended(LinkedHashSet<String> submission, Set<String> seeds, SortedSet<TermStats> highFreqTrackURIs, List<String> followerFreq) {
+    static void blended(LinkedHashSet<String> submission, Set<String> seeds, List<String> highFreqTrackURIs, List<String> followerFreq) {
 
         Iterator<String> first = followerFreq.iterator();
-        Iterator<TermStats> second = highFreqTrackURIs.iterator();
+        Iterator<String> second = highFreqTrackURIs.iterator();
 
         int toggle = 0;
         while (first.hasNext() || second.hasNext()) {
@@ -108,7 +107,7 @@ class Helper {
             if (++toggle % 2 == 0) {
                 done = insertSingleTrack(submission, seeds, first.next(), RESULT_SIZE);
             } else {
-                done = insertSingleTrack(submission, seeds, second.next().termtext.utf8ToString(), RESULT_SIZE);
+                done = insertSingleTrack(submission, seeds, second.next(), RESULT_SIZE);
             }
             if (done) break;
         }
@@ -120,35 +119,15 @@ class Helper {
 
 
     /**
-     * Filler alternative: fill remaining tracks using most followed tracks
+     * If certain algorithm collects less than RESULT_SIZE tracks,
+     * then fill remaining tracks using most frequent tracks as a last resort.
      */
-    static void fallBackToMostFollowedTracks(LinkedHashSet<String> submission, Set<String> seeds, List<String> followerFreq) {
+    static void fallBackTo(LinkedHashSet<String> submission, Set<String> seeds, List<String> followerFreq) {
 
         boolean done = insertTrackURIs(submission, seeds, followerFreq, RESULT_SIZE);
 
         if (!done)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-    }
-
-
-    /**
-     * If certain algorithm collects less than RESULT_SIZE tracks,
-     * then fill remaining tracks using most frequent tracks as a last resort.
-     */
-    static void fallBackToMostFreqTracks(LinkedHashSet<String> submission, Set<String> seeds, SortedSet<TermStats> highFreqTrackURIs) {
-
-        for (final TermStats termStats : highFreqTrackURIs) {
-
-            final String track = termStats.termtext.utf8ToString();
-
-            if (insertSingleTrack(submission, seeds, track, RESULT_SIZE)) {
-                break;
-            }
-        }
-
-        if (submission.size() != RESULT_SIZE)
-            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-
     }
 
     private static boolean insertSingleTrack(LinkedHashSet<String> submission, Set<String> seeds, String t, int howMany) {
