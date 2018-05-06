@@ -15,12 +15,15 @@ import org.apache.lucene.search.spans.SpanFirstQuery;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.PriorityQueue;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -133,35 +136,41 @@ public class Searcher implements Closeable {
     }
 
 
-    public void search(Format format, Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException, ParseException {
+    public void search(Format format, Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException {
 
-        PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
-        out.println(TEAM_INFO);
+        final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
-        int titleOnly = 0;
-        int firstN = 0;
-        int random = 0;
-        int first = 0;
+        out.get().println(TEAM_INFO);
 
-        for (Playlist playlist : this.challenge.playlists) {
+        AtomicInteger titleOnly = new AtomicInteger(0);
+        AtomicInteger firstN = new AtomicInteger(0);
+        AtomicInteger random = new AtomicInteger(0);
+        AtomicInteger first = new AtomicInteger(0);
+
+        Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
             final LinkedHashSet<String> submission;
-            if (playlist.tracks.length == 0) {
-                titleOnly++;
-                submission = titleOnly(playlist.name.trim(), playlist.pid, RESULT_SIZE);
-            } else if (playlist.tracks.length == 1) {
-                first++;
-                submission = firstTrack(playlist);
-            } else {
-                Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
-                if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                    firstN++;
-                    submission = spanFirst(playlist, relaxMode);
+            try {
+                if (playlist.tracks.length == 0) {
+                    titleOnly.incrementAndGet();
+                    submission = titleOnly(playlist.name.trim(), playlist.pid, RESULT_SIZE);
+                } else if (playlist.tracks.length == 1) {
+                    first.incrementAndGet();
+                    submission = firstTrack(playlist);
                 } else {
-                    random++;
-                    submission = tracksOnly(playlist, RESULT_SIZE);
+                    Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
+
+                    if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
+                        firstN.incrementAndGet();
+                        submission = spanFirst(playlist, relaxMode);
+                    } else {
+                        random.incrementAndGet();
+                        submission = tracksOnly(playlist, RESULT_SIZE);
+                    }
                 }
+            } catch (IOException | ParseException e) {
+                throw new RuntimeException(e);
             }
 
             if (submission.size() < RESULT_SIZE) {
@@ -173,17 +182,17 @@ public class Searcher implements Closeable {
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
 
-            export(submission, playlist.pid, format, out, similarityConfig);
+            export(submission, playlist.pid, format, out.get(), similarityConfig);
 
-            out.flush();
+            out.get().flush();
             submission.clear();
-        }
+        });
 
-        out.flush();
-        out.close();
+        out.get().flush();
+        out.get().close();
 
         // Sanity check
-        if (first == 1000 && titleOnly == 1000 && random == 2000 && firstN == 6000)
+        if (first.get() == 1000 && titleOnly.get() == 1000 && random.get() == 2000 && firstN.get() == 6000)
             System.out.println("Number of entries into the Category Paths is OK!");
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
@@ -529,5 +538,78 @@ public class Searcher implements Closeable {
     //TODO longest common prefix : http://richardstartin.uk/new-methods-in-java-9-math-fma-and-arrays-mismatch/
     //TODO Shingle method
 
+    /**
+     * Predict tracks for a playlist given its first N tracks, where N can equal 5, 10, 25, or 100.
+     */
+    private LinkedHashSet<String> longestCommonPrefix(Playlist playlist, int howMany) throws IOException {
+
+        final Track[] tracks = playlist.tracks;
+        final int pId = playlist.pid;
+
+        if (tracks.length < 1)
+            throw new RuntimeException("tracks length is less than 1! " + tracks.length);
+
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
+        Arrays.stream(playlist.tracks).map(track -> track.track_uri).forEach(seeds::add);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
+
+        String[] seedArray = seeds.toArray(new String[seeds.size()]);
+
+        SpanTermQuery spanTermQuery = new SpanTermQuery(new Term("track_uris", tracks[0].track_uri));
+
+        if (!seedArray[0].equals(tracks[0].track_uri))
+            throw new RuntimeException("seedArray[0] and  tracks[0].track_uri) does not match!");
+
+        final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(spanTermQuery, 1);
+        ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+
+        PriorityQueue<StringIntPair> priorityQueue = new PriorityQueue<>(howMany) {
+            @Override
+            protected boolean lessThan(StringIntPair a, StringIntPair b) {
+                return Integer.compare(a.integer, b.integer) < 0;
+            }
+        };
+
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
+            Document doc = searcher.doc(docId);
+            if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+            String trackURIs = doc.get("track_uris");
+
+            String[] parts = whiteSpace.split(trackURIs);
+
+            int index = Arrays.mismatch(parts, seedArray);
+
+            if (index == 0) throw new RuntimeException("can't happen Arrays.mismatch SpanFirst must guarantee 1!");
+
+            if (index == -1) index = Integer.MAX_VALUE;
+
+            priorityQueue.insertWithOverflow(new StringIntPair(trackURIs, index));
+
+        }
+
+        List<StringIntPair> reverse = Helper.reverse(priorityQueue);
+
+        for (StringIntPair pair : reverse) {
+            System.out.println(pair.integer + "\t" + pair.string);
+            boolean done = insertTrackURIs(submission, seeds, Arrays.asList(whiteSpace.split(pair.string)), howMany);
+            if (done) {
+                break;
+            }
+        }
+
+        /*
+         * If longest common prefix (LCP) strategy returns less than 500, use tracksOnly for filler purposes
+         */
+        if (submission.size() != howMany) {
+            System.out.println("LCP returns " + submission.size() + " for tracks " + playlist.tracks.length);
+        }
+
+        priorityQueue.clear();
+        seeds.clear();
+        reverse.clear();
+        return submission;
+    }
 }
 

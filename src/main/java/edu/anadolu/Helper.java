@@ -3,6 +3,7 @@ package edu.anadolu;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.spans.SpanTermQuery;
+import org.apache.lucene.util.PriorityQueue;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
@@ -63,7 +64,7 @@ class Helper {
 
     }
 
-    static void export(LinkedHashSet<String> submission, int pid, Format format, PrintWriter out, SimilarityConfig similarityConfig) {
+    static synchronized void export(LinkedHashSet<String> submission, int pid, Format format, PrintWriter out, SimilarityConfig similarityConfig) {
         switch (format) {
             case RECSYS:
                 out.print(pid);
@@ -167,5 +168,16 @@ class Helper {
                 .filter(o -> o.getValue() > 0)
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
+    }
+
+
+    static <T> List<T> reverse(PriorityQueue<T> priorityQueue) {
+        List<T> reverse = new ArrayList<>(priorityQueue.size());
+
+        while (priorityQueue.size() != 0) {
+            reverse.add(priorityQueue.pop());
+        }
+        Collections.reverse(reverse);
+        return reverse;
     }
 }
