@@ -52,7 +52,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     private static final Map<Integer, List<SpanNearConfig>> SPAN_CACHE = new HashMap<>();
 
     static String cacheKeys() {
-        return new TreeSet<Integer>(SPAN_CACHE.keySet()).toString();
+        return new TreeSet<>(SPAN_CACHE.keySet()).toString();
     }
 
     static List<SpanNearConfig> configs(RelaxMode mode, int n) {
@@ -88,7 +88,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     private static int highEnd(int n) {
         if (n < 6)
-            return n + 3; // for n=1 and n=5 use 2 and 7
+            return n * 2; // n=5 use 10
         else if (n < 26)
             return (int) (n * 1.5); // for n=10 and n=25 use 15 and 37
         else
@@ -97,7 +97,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     private static int highSlop(int n) {
         if (n < 6)
-            return 3; // for n=1 and n=5 use 2 and 7
+            return n * 2; // for n=5 use 10
         else if (n < 26)
             return (int) (n * 0.5); // for n=10 and n=25 use 5 and 12
         else

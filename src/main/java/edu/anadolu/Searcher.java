@@ -196,10 +196,7 @@ public class Searcher implements Closeable {
         reader.close();
     }
 
-    /**
-     * Predict tracks for a playlist given its title only
-     */
-    private LinkedHashSet<String> titleOnly(String title, int pId, int howMany) throws ParseException, IOException {
+    private LinkedHashSet<String> titleAND(String title, int pId, int howMany) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
@@ -210,59 +207,93 @@ public class Searcher implements Closeable {
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
-        /*
-         * Try with OR operator, relaxed mode.
-         */
-        if (hits.length == 0) {
-
-            final int queryLength = Emoji.analyze(title);
-
-            // one term query: fuzzy match
-            if (queryLength == 1 && !title.contains("_")) {
-
-                System.out.println("==oneTermQuery : " + title);
-
-            } else {
-
-                queryParser = new QueryParser("name", Indexer.icu());
-                queryParser.setDefaultOperator(QueryParser.Operator.OR);
-
-                if (queryLength == 1 && title.contains("_")) {
-                    query = queryParser.parse(QueryParserBase.escape(title.replaceAll("_", " ")));
-                } else {
-                    query = queryParser.parse(QueryParserBase.escape(title));
-                }
-
-
-                hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
-
-                if (hits.length == 0) {
-                    System.out.println("Zero result found for title : " + title);
-                    return new LinkedHashSet<>();
-                }
-            }
-
-        }
-
-
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
             Document doc = searcher.doc(docId);
-
-            // if given pId found in the index, skip it: to use 1M index for all kind of tasks (original test set, or the one we created
-
             if (Integer.parseInt(doc.get("id")) == pId) continue;
 
             String trackURIs = doc.get("track_uris");
             List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
-            boolean finish = insertTrackURIs(submission, Collections.emptySet(), list, RESULT_SIZE);
+            boolean finish = insertTrackURIs(submission, Collections.emptySet(), list, howMany);
             if (finish) break;
+        }
+
+        if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
+            System.out.println("titleAND " + submission.size() + " results found for title : " + title);
+
+        return submission;
+
+    }
+
+    private LinkedHashSet<String> titleOR(String title, int pId, int howMany) throws IOException {
+
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
+        ArrayList<String> terms = Emoji.analyze(title);
+
+        List<TermQuery> clauses = terms.stream().map(t -> new Term("name", t)).map(TermQuery::new).collect(Collectors.toList());
+        int minShouldMatch = clauses.size();
+
+        while (submission.size() < howMany) {
+
+            // halting criteria
+            if (minShouldMatch == 0) break;
+
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.setMinimumNumberShouldMatch(minShouldMatch--);
+
+
+            for (TermQuery tq : clauses)
+                builder.add(tq, BooleanClause.Occur.SHOULD);
+
+            BooleanQuery bq = builder.build();
+
+            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+
+            for (ScoreDoc hit : hits) {
+                int docId = hit.doc;
+                Document doc = searcher.doc(docId);
+                if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+                String trackURIs = doc.get("track_uris");
+                List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+                boolean finish = insertTrackURIs(submission, Collections.emptySet(), list, howMany);
+
+                if (finish) {
+                    System.out.println("minShouldMatch: " + (bq.getMinimumNumberShouldMatch()) + "/" + clauses.size());
+                    break;
+                }
+            }
         }
 
 
         if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
-            System.out.println(submission.size() + " results found for title : " + title);
+            System.out.println("titleOR " + submission.size() + " for title " + title);
 
+        return submission;
+    }
+
+    /**
+     * Predict tracks for a playlist given its title only
+     */
+    private LinkedHashSet<String> titleOnly(String title, int pId, int howMany) throws ParseException, IOException {
+
+        LinkedHashSet<String> submission = titleAND(title, pId, howMany);
+
+        if (submission.size() == howMany) return submission;
+
+        final int queryLength = Emoji.analyze(title).size();
+
+        final String newTitle;
+        if (queryLength == 1 && title.contains("_")) {
+            newTitle = title.replaceAll("_", " ").trim();
+        } else newTitle = title.trim();
+
+        LinkedHashSet<String> backUp = titleOR(newTitle, pId, howMany * 2);
+        boolean done = insertTrackURIs(submission, Collections.emptySet(), backUp, howMany);
+
+        if (!done) {
+            System.out.println("backup " + submission.size() + " for title " + newTitle);
+        }
         return submission;
     }
 

@@ -14,6 +14,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 
 /**
  * Helper class for Emoji Presentation Sequences
@@ -23,14 +24,14 @@ import java.io.StringReader;
 public class Emoji {
 
 
-    static int analyze(String text) throws IOException {
+    static ArrayList<String> analyze(String text) throws IOException {
         Analyzer analyzer = Indexer.icu();
 
         // The Analyzer class will construct the Tokenizer, TokenFilter(s), and CharFilter(s),
         //   and pass the resulting Reader to the Tokenizer.
 
-        int i = 0;
 
+        ArrayList<String> terms = new ArrayList<>();
         try (Reader reader = new StringReader(text);
              TokenStream ts = analyzer.tokenStream("field", reader)) {
 
@@ -39,13 +40,12 @@ public class Emoji {
             TypeAttribute type = ts.addAttribute(TypeAttribute.class);
             ts.reset(); // Resets this stream to the beginning. (Required)
             while (ts.incrementToken()) {
-                System.out.println(term.toString() + " " + script.getShortName() + " " + type.type());
-                i++;
+                terms.add(term.toString());
             }
             ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
         }
 
-        return i;
+        return terms;
     }
 
     public static void main(String[] args) throws Exception {
