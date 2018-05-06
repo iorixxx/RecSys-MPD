@@ -247,12 +247,22 @@ public class Searcher implements Closeable {
 
             BooleanQuery bq = builder.build();
 
-            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+            final ScoreDoc[] hits;
+
+            //when there is single term to match i.e., minShouldMatch=1 sort by follower frequency
+            if (bq.getMinimumNumberShouldMatch() == 1)
+                hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(new SortField("num_followers", SortField.Type.INT, true))).scoreDocs;
+            else
+                hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
 
             for (ScoreDoc hit : hits) {
                 int docId = hit.doc;
                 Document doc = searcher.doc(docId);
                 if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+                if (bq.getMinimumNumberShouldMatch() == 1) {
+                    System.out.println(doc.get("id") + "\t" + doc.get("num_followers") + "\t" + minShouldMatch);
+                }
 
                 String trackURIs = doc.get("track_uris");
                 List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
