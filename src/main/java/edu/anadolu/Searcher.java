@@ -484,5 +484,9 @@ public class Searcher implements Closeable {
         seeds.clear();
         return submission;
     }
+
+    //TODO longest common prefix : http://richardstartin.uk/new-methods-in-java-9-math-fma-and-arrays-mismatch/
+    //TODO Shingle method
+
 }
 

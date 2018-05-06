@@ -6,6 +6,7 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
@@ -43,6 +44,17 @@ public class Indexer {
                 .withTokenizer(ICUTokenizerFactory.class)
                 .addTokenFilter("lowercase")
                 .build();
+    }
+
+    static Analyzer shingle() throws IOException {
+        return CustomAnalyzer.builder()
+                .withTokenizer("whitespace")
+                .addTokenFilter(ShingleFilterFactory.class,
+                        "minShingleSize", "2",
+                        "maxShingleSize", "50",
+                        "outputUnigrams", "false",
+                        "outputUnigramsIfNoShingles", "false"
+                ).build();
     }
 
     static Stream<Path> jSons(Path mpdPath) throws IOException {
