@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
-java -server -Xmx1g -jar target/mpd.jar /Users/iorixxx/Desktop/MPD.index/ /Users/iorixxx/Desktop/mpd.v1/data/
+rm -rf /mnt/recSys/MPD.index
+cd /mnt/recSys/RecSys-MPD
+mvn clean package
+cd /mnt/recSys/
+java -server -Xms10g -Xmx25g -jar /mnt/recSys/RecSys-MPD/target/mpd.jar /mnt/recSys/MPD.index /mnt/recSys/data/

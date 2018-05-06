@@ -102,8 +102,9 @@ public class Indexer {
                     Document document = new Document();
                     document.add(new TextField("name", playlist.name, Field.Store.YES));
                     document.add(new StringField("id", Integer.toString(playlist.pid), Field.Store.YES));
-                    document.add(new IntPoint("num_tracks", playlist.num_tracks));
-                    document.add(new IntPoint("num_followers", playlist.num_followers));
+                    document.add(new StoredField("num_tracks", playlist.num_tracks));
+                    document.add(new StoredField("num_followers", playlist.num_followers));
+                    document.add(new NumericDocValuesField("num_followers", playlist.num_followers));
 
                     HashSet<String> seeds = new HashSet<>(100);
                     StringBuilder builder = new StringBuilder();
