@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.stream.Stream;
 
 import static edu.anadolu.Indexer.jSons;
-import static edu.anadolu.Searcher.whiteSpaceSplitter;
+import static edu.anadolu.Searcher.whiteSpace;
 
 /**
  * Feature dumper: Feed features.txt file to LambdaMART
@@ -55,7 +55,7 @@ public class Feature {
 
                 for (Playlist playlist : data.playlists) {
 
-                    final String typeQ = "1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpaceSplitter.split(playlist.name.trim()).length;
+                    final String typeQ = "1" + " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpace.split(playlist.name.trim()).length;
 
                     HashSet<String> seeds = new HashSet<>(100);
 

@@ -52,7 +52,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     private static final Map<Integer, List<SpanNearConfig>> SPAN_CACHE = new HashMap<>();
 
     static String cacheKeys() {
-        return SPAN_CACHE.keySet().toString();
+        return new TreeSet<Integer>(SPAN_CACHE.keySet()).toString();
     }
 
     static List<SpanNearConfig> configs(RelaxMode mode, int n) {
@@ -164,7 +164,8 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     public static void main(String[] args) {
 
-        int n = 1;
+        Collections.emptySet().clear();
+        int n = 25;
         System.out.println("==== Mode1 " + mode1(n).size());
         for (SpanNearConfig config : mode1(n)) {
             System.out.println(config + (config.tightest(n) ? "***" : ""));

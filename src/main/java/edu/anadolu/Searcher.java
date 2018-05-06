@@ -36,11 +36,11 @@ public class Searcher implements Closeable {
 
     private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
-    private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
+//    private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
     static final int RESULT_SIZE = 500;
 
-    static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
+    static final Pattern whiteSpace = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
     private final IndexSearcher searcher;
@@ -68,11 +68,11 @@ public class Searcher implements Closeable {
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
         }
-
-        for (int i = 1; i <= 100; i++)
-            pageCount.put(i, 0);
-
-        pageCount.put(-1, 0);
+//
+//        for (int i = 1; i <= 100; i++)
+//            pageCount.put(i, 0);
+//
+//        pageCount.put(-1, 0);
 
 
         ClassLoader classLoader = getClass().getClassLoader();
@@ -84,7 +84,7 @@ public class Searcher implements Closeable {
 
             List<String> followerFreq = new ArrayList<>(lines.size());
             for (String line : lines) {
-                followerFreq.add(whiteSpaceSplitter.split(line)[0]);
+                followerFreq.add(whiteSpace.split(line)[0]);
             }
 
             this.followerFreq = Collections.unmodifiableList(followerFreq);
@@ -127,21 +127,21 @@ public class Searcher implements Closeable {
 
     private int toggle = 0;
 
-    private void fill(LinkedHashSet<String> submission) {
+    private void fill(LinkedHashSet<String> submission, Set<String> seeds) {
         if (Filler.Follower.equals(this.filler))
-            fallBackToMostFollowedTracks(submission, this.followerFreq);
+            fallBackToMostFollowedTracks(submission, seeds, this.followerFreq);
         else if (Filler.Blended.equals(this.filler))
-            blended(submission, this.highFreqTrackURIs, this.followerFreq);
+            blended(submission, seeds, this.highFreqTrackURIs, this.followerFreq);
         else if (Filler.Hybrid.equals(this.filler)) {
             if (++toggle % 2 == 0) {
-                fallBackToMostFollowedTracks(submission, this.followerFreq);
+                fallBackToMostFollowedTracks(submission, seeds, this.followerFreq);
             } else {
-                fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
+                fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
             }
         } else if (Filler.Playlist.equals(this.filler))
-            fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
+            fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
         else
-            fallBackToMostFreqTracks(submission, this.highFreqTrackURIs);
+            fallBackToMostFreqTracks(submission, seeds, this.highFreqTrackURIs);
 
         if (submission.size() != RESULT_SIZE)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
@@ -160,10 +160,10 @@ public class Searcher implements Closeable {
 
         for (Playlist playlist : this.challenge.playlists) {
 
-            LinkedHashSet<String> submission;
+            final LinkedHashSet<String> submission;
             if (playlist.tracks.length == 0) {
                 titleOnly++;
-                submission = titleOnly(playlist.name.trim(), playlist.pid);
+                submission = titleOnly(playlist.name.trim(), playlist.pid, RESULT_SIZE);
             } else if (playlist.tracks.length == 1) {
                 first++;
                 submission = firstTrack(playlist);
@@ -179,8 +179,11 @@ public class Searcher implements Closeable {
                 }
             }
 
-            if (submission.size() < RESULT_SIZE)
-                fill(submission);
+            if (submission.size() < RESULT_SIZE) {
+                Set<String> seeds = playlist.tracks.length == 0 ? Collections.emptySet() : Arrays.stream(playlist.tracks).map(track -> track.track_uri).collect(Collectors.toSet());
+                fill(submission, seeds);
+                seeds.clear();
+            }
 
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
@@ -211,15 +214,14 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title only
      */
-    private LinkedHashSet<String> titleOnly(String title, int pId) throws ParseException, IOException {
+    private LinkedHashSet<String> titleOnly(String title, int pId, int howMany) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
 
-
-        LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
@@ -257,10 +259,9 @@ public class Searcher implements Closeable {
 
         }
 
-        boolean finish = false;
 
-        for (int i = 0; i < hits.length; i++) {
-            int docId = hits[i].doc;
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
             Document doc = searcher.doc(docId);
 
             // if given pId found in the index, skip it: to use 1M index for all kind of tasks (original test set, or the one we created
@@ -268,48 +269,16 @@ public class Searcher implements Closeable {
             if (Integer.parseInt(doc.get("id")) == pId) continue;
 
             String trackURIs = doc.get("track_uris");
-
-            String[] tracks = whiteSpaceSplitter.split(trackURIs);
-
-            for (String t : tracks) {
-                submission.add(t);
-                if (submission.size() == RESULT_SIZE) {
-                    finish = true;
-                    break;
-                }
-            }
-
-            incrementPageCountMap(i);
-
+            List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+            boolean finish = insertTrackURIs(submission, Collections.emptySet(), list, RESULT_SIZE);
             if (finish) break;
-
         }
 
 
-        if (submission.size() != RESULT_SIZE)
+        if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
             System.out.println(submission.size() + " results found for title : " + title);
 
         return submission;
-    }
-
-    private void incrementPageCountMap(int i) {
-        // count max page count: How many results do we iterate to fill quota of 500?
-        if (pageCount.containsKey(i + 1)) {
-            int count = pageCount.get(i + 1);
-            count++;
-            pageCount.put(i + 1, count);
-        } else {
-            int count = pageCount.get(-1);
-            count++;
-            pageCount.put(-1, count);
-        }
-    }
-
-    public void printPageCountMap() {
-        pageCount.entrySet().stream()
-                .filter(o -> o.getValue() > 0)
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
     }
 
     /**
@@ -346,16 +315,14 @@ public class Searcher implements Closeable {
 
             ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
 
-            boolean finish = false;
 
-            for (int i = 0; i < hits.length; i++) {
-                int docId = hits[i].doc;
+            for (ScoreDoc hit : hits) {
+                int docId = hit.doc;
                 Document doc = searcher.doc(docId);
                 if (Integer.parseInt(doc.get("id")) == pId) continue;
 
                 String trackURIs = doc.get("track_uris");
-
-                String[] parts = whiteSpaceSplitter.split(trackURIs);
+                String[] parts = whiteSpace.split(trackURIs);
 
                 if (useOnlyLonger && (parts.length <= seeds.size()))
                     continue;
@@ -363,19 +330,8 @@ public class Searcher implements Closeable {
                 if (parts.length <= seeds.size())
                     System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
 
-
-                for (String t : parts) {
-
-                    if (seeds.contains(t) || submission.contains(t)) continue;
-                    submission.add(t);
-                    if (submission.size() == howMany) {
-                        finish = true;
-                        break;
-                    }
-
-                }
-
-                incrementPageCountMap(i);
+                List<String> list = Arrays.asList(parts);
+                boolean finish = insertTrackURIs(submission, seeds, list, howMany);
 
                 if (finish) {
                     System.out.println("minShouldMatch: " + (bq.getMinimumNumberShouldMatch()) + "/" + seeds.size());
@@ -404,6 +360,7 @@ public class Searcher implements Closeable {
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
         ArrayList<SpanTermQuery> clauses = clauses(tracks, seeds);
+        final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
 
         if (seeds.size() != clauses.size())
             throw new RuntimeException("seeds.size and clauses.size do not match! " + seeds.size() + " " + clauses.size());
@@ -425,16 +382,12 @@ public class Searcher implements Closeable {
             if (config.tightest(clauses.size()))
                 System.out.println("tightest pid: " + pId + " for tracks " + tracks.length);
 
-            final SpanTermQuery[] clausesIn = clauses.toArray(new SpanTermQuery[clauses.size()]);
-
-            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(clausesIn.length == 1 ? clausesIn[0] : new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
+            final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
-            boolean finish = false;
-
-            for (int i = 0; i < hits.length; i++) {
-                int docId = hits[i].doc;
+            for (ScoreDoc hit : hits) {
+                int docId = hit.doc;
                 Document doc = searcher.doc(docId);
                 if (Integer.parseInt(doc.get("id")) == pId) continue;
 
@@ -452,18 +405,8 @@ public class Searcher implements Closeable {
                     System.out.println("seeds " + seeds);
                 }
 
-                for (String t : whiteSpaceSplitter.split(trackURIs)) {
-
-                    if (seeds.contains(t) || submission.contains(t)) continue;
-                    submission.add(t);
-                    if (submission.size() == RESULT_SIZE) {
-                        finish = true;
-                        break;
-                    }
-
-                }
-
-                incrementPageCountMap(i);
+                List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+                boolean finish = insertTrackURIs(submission, seeds, list, RESULT_SIZE);
 
                 if (finish) {
                     System.out.println("progress: " + (j - 1) + "/" + configs.size() + "\t" + config + " for tracks " + clausesIn.length);
@@ -475,19 +418,15 @@ public class Searcher implements Closeable {
 
 
         /*
-         * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
+         * If SpanFirst strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != RESULT_SIZE) {
-            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks " + clauses.size());
+            System.out.println("SpanFirst strategy returns " + submission.size() + " for tracks " + clauses.size());
 
             LinkedHashSet<String> backUp = tracksOnly(playlist, RESULT_SIZE * 2);
-            for (final String track : backUp) {
-                if (seeds.contains(track) || submission.contains(track)) continue;
-                submission.add(track);
-                if (submission.size() == RESULT_SIZE) break;
-            }
+            boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
-            if (submission.size() != RESULT_SIZE) {
+            if (!done) {
                 System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
             }
 
@@ -529,31 +468,19 @@ public class Searcher implements Closeable {
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(spanTermQuery, end++);
             ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
 
-            boolean finish = false;
 
-            for (int i = 0; i < hits.length; i++) {
-                int docId = hits[i].doc;
+            for (ScoreDoc hit : hits) {
+                int docId = hit.doc;
                 Document doc = searcher.doc(docId);
                 if (Integer.parseInt(doc.get("id")) == pId) continue;
 
                 String trackURIs = doc.get("track_uris");
 
-
-                for (String t : whiteSpaceSplitter.split(trackURIs)) {
-
-                    if (seeds.contains(t) || submission.contains(t)) continue;
-                    submission.add(t);
-                    if (submission.size() == RESULT_SIZE) {
-                        finish = true;
-                        break;
-                    }
-
-                }
-
-                incrementPageCountMap(i);
+                List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+                boolean finish = insertTrackURIs(submission, seeds, list, RESULT_SIZE);
 
                 if (finish) {
-                    System.out.println("progress: " + (end - 1) + "/" + 10 + "\t" + " for tracks 1");
+                    System.out.println("progress: " + (end - 1) + "/" + 66 + " for tracks 1");
                     break;
                 }
 
@@ -562,22 +489,17 @@ public class Searcher implements Closeable {
 
 
         /*
-         * If SpanFirst & SpanNear strategy returns less than 500, use tracksOnly for filler purposes
+         * If SpanFirst strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != RESULT_SIZE) {
-            System.out.println("SpanFirstNear strategy returns " + submission.size() + " for tracks 1");
+            System.out.println("SpanFirst strategy returns " + submission.size() + " for tracks 1");
 
             LinkedHashSet<String> backUp = tracksOnly(playlist, RESULT_SIZE * 2);
-            for (final String track : backUp) {
-                if (seeds.contains(track) || submission.contains(track)) continue;
-                submission.add(track);
-                if (submission.size() == RESULT_SIZE) break;
-            }
+            boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
-            if (submission.size() != RESULT_SIZE) {
-                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
+            if (!done) {
+                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks 1");
             }
-
         }
 
         seeds.clear();

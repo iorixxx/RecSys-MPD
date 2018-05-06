@@ -62,7 +62,7 @@ public class Emoji {
 
         System.out.println(query);
 
-        System.out.println(Searcher.whiteSpaceSplitter.split("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A").length);
+        System.out.println(Searcher.whiteSpace.split("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A").length);
 
         System.out.println(analyze("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A"));
 

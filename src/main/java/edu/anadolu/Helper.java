@@ -97,20 +97,20 @@ class Helper {
     }
 
 
-    static void blended(LinkedHashSet<String> submission, SortedSet<TermStats> highFreqTrackURIs, List<String> followerFreq) {
+    static void blended(LinkedHashSet<String> submission, Set<String> seeds, SortedSet<TermStats> highFreqTrackURIs, List<String> followerFreq) {
 
         Iterator<String> first = followerFreq.iterator();
         Iterator<TermStats> second = highFreqTrackURIs.iterator();
 
         int toggle = 0;
         while (first.hasNext() || second.hasNext()) {
+            final boolean done;
             if (++toggle % 2 == 0) {
-                submission.add(first.next());
+                done = insertSingleTrack(submission, seeds, first.next(), RESULT_SIZE);
             } else {
-                submission.add(second.next().termtext.utf8ToString());
+                done = insertSingleTrack(submission, seeds, second.next().termtext.utf8ToString(), RESULT_SIZE);
             }
-
-            if (submission.size() == RESULT_SIZE) break;
+            if (done) break;
         }
 
         if (submission.size() != RESULT_SIZE)
@@ -122,16 +122,12 @@ class Helper {
     /**
      * Filler alternative: fill remaining tracks using most followed tracks
      */
-    static void fallBackToMostFollowedTracks(LinkedHashSet<String> submission, List<String> followerFreq) {
+    static void fallBackToMostFollowedTracks(LinkedHashSet<String> submission, Set<String> seeds, List<String> followerFreq) {
 
-        for (final String track : followerFreq) {
-            submission.add(track);
-            if (submission.size() == RESULT_SIZE) break;
-        }
+        boolean done = insertTrackURIs(submission, seeds, followerFreq, RESULT_SIZE);
 
-        if (submission.size() != RESULT_SIZE)
+        if (!done)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-
     }
 
 
@@ -139,18 +135,58 @@ class Helper {
      * If certain algorithm collects less than RESULT_SIZE tracks,
      * then fill remaining tracks using most frequent tracks as a last resort.
      */
-    static void fallBackToMostFreqTracks(LinkedHashSet<String> submission, SortedSet<TermStats> highFreqTrackURIs) {
+    static void fallBackToMostFreqTracks(LinkedHashSet<String> submission, Set<String> seeds, SortedSet<TermStats> highFreqTrackURIs) {
 
         for (final TermStats termStats : highFreqTrackURIs) {
 
             final String track = termStats.termtext.utf8ToString();
 
-            submission.add(track);
-            if (submission.size() == RESULT_SIZE) break;
+            if (insertSingleTrack(submission, seeds, track, RESULT_SIZE)) {
+                break;
+            }
         }
 
         if (submission.size() != RESULT_SIZE)
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
 
+    }
+
+    private static boolean insertSingleTrack(LinkedHashSet<String> submission, Set<String> seeds, String t, int howMany) {
+
+        if (seeds.contains(t) || submission.contains(t)) return false;
+        submission.add(t);
+        return submission.size() == howMany;
+
+    }
+
+    static boolean insertTrackURIs(LinkedHashSet<String> submission, Set<String> seeds, Iterable<String> iterable, int howMany) {
+
+        for (String t : iterable) {
+            if (insertSingleTrack(submission, seeds, t, howMany)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    static void incrementPageCountMap(LinkedHashMap<Integer, Integer> pageCount, int i) {
+        // count max page count: How many results do we iterate to fill quota of 500?
+        if (pageCount.containsKey(i + 1)) {
+            int count = pageCount.get(i + 1);
+            count++;
+            pageCount.put(i + 1, count);
+        } else {
+            int count = pageCount.get(-1);
+            count++;
+            pageCount.put(-1, count);
+        }
+    }
+
+    static void printPageCountMap(LinkedHashMap<Integer, Integer> pageCount) {
+        pageCount.entrySet().stream()
+                .filter(o -> o.getValue() > 0)
+                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
     }
 }

@@ -25,7 +25,6 @@ public class SearchApp {
 
             try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler, useOnlyLonger)) {
                 searcher.search(format, resultPath, relaxMode);
-                searcher.printPageCountMap();
             } catch (Exception e) {
                 e.printStackTrace();
             }
