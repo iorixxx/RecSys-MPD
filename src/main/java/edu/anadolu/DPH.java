@@ -21,7 +21,7 @@ import org.apache.lucene.search.similarities.SimilarityBase;
 public class DPH extends SimilarityBase {
 
     protected double score(BasicStats stats, double freq, double docLen) {
-        double f = freq / docLen;
+        double f = relativeFrequency(freq, docLen);
         double norm = (1d - f) * (1d - f) / (freq + 1d);
 
         // averageDocumentLength => stats.getAvgFieldLength()
@@ -37,7 +37,7 @@ public class DPH extends SimilarityBase {
     }
 
     protected float score(BasicStats stats, float freq, float docLen) {
-        double f = freq / docLen;
+        double f = relativeFrequency(freq, docLen);
         double norm = (1d - f) * (1d - f) / (freq + 1d);
 
         // averageDocumentLength => stats.getAvgFieldLength()
@@ -50,6 +50,14 @@ public class DPH extends SimilarityBase {
                 stats.getNumberOfDocuments() / stats.getTotalTermFreq())
                 + 0.5d * log2(2d * Math.PI * freq * (1d - f))
         ));
+    }
+
+    private double relativeFrequency(double tf, double docLength) {
+        assert tf <= docLength : "tf cannot be greater than docLength";
+        double f = tf < docLength ? tf / docLength : 0.99999;
+        assert f > 0 : "relative frequency must be greater than zero: " + f;
+        assert f < 1 : "relative frequency must be less than one: " + f;
+        return f;
     }
 
     @Override
