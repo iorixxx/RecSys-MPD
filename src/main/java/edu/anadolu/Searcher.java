@@ -147,6 +147,8 @@ public class Searcher implements Closeable {
         AtomicInteger random = new AtomicInteger(0);
         AtomicInteger first = new AtomicInteger(0);
 
+        SpanNearConfig.warmSpanCache(relaxMode);
+
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
             final LinkedHashSet<String> submission;

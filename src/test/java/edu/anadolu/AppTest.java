@@ -135,15 +135,13 @@ public class AppTest {
             priorityQueue.insertWithOverflow(new StringIntPair(English.intToEnglish(i), i));
         }
 
-
-        System.out.println("pq size = " + priorityQueue.size());
+        Assert.assertEquals(10, priorityQueue.size());
 
         List<StringIntPair> reverse = Helper.reverse(priorityQueue);
 
+        int i = 2000;
         for (StringIntPair pair : reverse) {
-            System.out.println(pair.integer + "\t" + pair.string);
+            Assert.assertEquals(i--, pair.integer.intValue());
         }
-
-
     }
 }
