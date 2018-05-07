@@ -615,6 +615,13 @@ public class Searcher implements Closeable {
          */
         if (submission.size() != howMany) {
             System.out.println("LCP returns " + submission.size() + " for tracks " + playlist.tracks.length);
+
+            LinkedHashSet<String> backUp = tracksOnly(playlist, howMany * 2);
+            boolean done = insertTrackURIs(submission, seeds, backUp, howMany);
+
+            if (!done) {
+                System.out.println("LCP warning after tracksOnly backup size " + submission.size());
+            }
         }
 
         priorityQueue.clear();
