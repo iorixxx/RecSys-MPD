@@ -144,6 +144,7 @@ public class Searcher implements Closeable {
 
         AtomicInteger titleOnly = new AtomicInteger(0);
         AtomicInteger firstN = new AtomicInteger(0);
+        AtomicInteger first100 = new AtomicInteger(0);
         AtomicInteger random = new AtomicInteger(0);
         AtomicInteger first = new AtomicInteger(0);
 
@@ -164,8 +165,16 @@ public class Searcher implements Closeable {
                     Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
                     if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                        firstN.incrementAndGet();
-                        submission = spanFirst(playlist, relaxMode);
+
+                        if (100 == playlist.tracks.length) {
+                            first100.incrementAndGet();
+                            submission = longestCommonPrefix(playlist, RESULT_SIZE);
+                        } else {
+                            firstN.incrementAndGet();
+                            submission = spanFirst(playlist, relaxMode);
+                        }
+
+
                     } else {
                         random.incrementAndGet();
                         submission = tracksOnly(playlist, RESULT_SIZE);
@@ -194,7 +203,7 @@ public class Searcher implements Closeable {
         out.get().close();
 
         // Sanity check
-        if (first.get() == 1000 && titleOnly.get() == 1000 && random.get() == 2000 && firstN.get() == 6000)
+        if (first.get() == 1000 && titleOnly.get() == 1000 && random.get() == 2000 && firstN.get() == 5000 && first100.get() == 1000)
             System.out.println("Number of entries into the Category Paths is OK!");
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
