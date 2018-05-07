@@ -1,6 +1,7 @@
 package edu.anadolu;
 
 import com.google.gson.Gson;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -546,11 +547,8 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    //TODO longest common prefix : http://richardstartin.uk/new-methods-in-java-9-math-fma-and-arrays-mismatch/
-    //TODO Shingle method
-
     /**
-     * Predict tracks for a playlist given its first N tracks, where N can equal 5, 10, 25, or 100.
+     * longest common prefix : http://richardstartin.uk/new-methods-in-java-9-math-fma-and-arrays-mismatch/
      */
     private LinkedHashSet<String> longestCommonPrefix(Playlist playlist, int howMany) throws IOException {
 
@@ -603,7 +601,7 @@ public class Searcher implements Closeable {
         List<StringIntPair> reverse = Helper.reverse(priorityQueue);
 
         for (StringIntPair pair : reverse) {
-            System.out.println(pair.integer + "\t" + pair.string);
+            //System.out.println(pair.integer + "\t" + pair.string);
             boolean done = insertTrackURIs(submission, seeds, Arrays.asList(whiteSpace.split(pair.string)), howMany);
             if (done) {
                 break;
@@ -628,6 +626,51 @@ public class Searcher implements Closeable {
         seeds.clear();
         reverse.clear();
         return submission;
+    }
+
+    /**
+     * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
+     */
+    private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
+
+        final Track[] tracks = playlist.tracks;
+        final int pId = playlist.pid;
+
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
+
+        QueryParser queryParser = new QueryParser(ShingleFilter.DEFAULT_TOKEN_TYPE, Indexer.shingle());
+        queryParser.setDefaultOperator(QueryParser.Operator.OR);
+
+        StringBuilder builder = new StringBuilder();
+        for (Track track : tracks) {
+            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
+            if (seeds.contains(track.track_uri)) continue;
+
+            seeds.add(track.track_uri);
+            builder.append(track.track_uri).append(' ');
+        }
+
+        Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
+
+        ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
+            Document doc = searcher.doc(docId);
+            if (Integer.parseInt(doc.get("id")) == pId) continue;
+
+            String trackURIs = doc.get("track_uris");
+            List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+            boolean finish = insertTrackURIs(submission, seeds, list, howMany);
+            if (finish) break;
+        }
+
+        if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
+            System.out.println("shingle " + submission.size() + " results found for tracks " + seeds.size());
+
+        return submission;
+
     }
 }
 

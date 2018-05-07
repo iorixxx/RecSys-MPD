@@ -48,7 +48,7 @@ public class Indexer {
                 .build();
     }
 
-    private static Analyzer shingle() throws IOException {
+    static Analyzer shingle() throws IOException {
         return CustomAnalyzer.builder()
                 .withTokenizer("whitespace")
                 .addTokenFilter(ShingleFilterFactory.class,
