@@ -359,7 +359,7 @@ public class Searcher implements Closeable {
             BooleanQuery bq = builder.build();
 
 
-            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(new SortField("num_followers", SortField.Type.INT, true))).scoreDocs;
 
 
             for (ScoreDoc hit : hits) {
