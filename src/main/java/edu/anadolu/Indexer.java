@@ -6,6 +6,7 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
@@ -35,8 +36,9 @@ public class Indexer {
         Map<String, Analyzer> analyzerPerField = new HashMap<>();
         analyzerPerField.put("name", icu());
         analyzerPerField.put("track_uris", new WhitespaceAnalyzer());
+        analyzerPerField.put(ShingleFilter.DEFAULT_TOKEN_TYPE, shingle());
 
-        return new PerFieldAnalyzerWrapper(icu(), analyzerPerField);
+        return new PerFieldAnalyzerWrapper(new WhitespaceAnalyzer(), analyzerPerField);
     }
 
     static Analyzer icu() throws IOException {
@@ -46,12 +48,12 @@ public class Indexer {
                 .build();
     }
 
-    static Analyzer shingle() throws IOException {
+    private static Analyzer shingle() throws IOException {
         return CustomAnalyzer.builder()
                 .withTokenizer("whitespace")
                 .addTokenFilter(ShingleFilterFactory.class,
                         "minShingleSize", "2",
-                        "maxShingleSize", "50",
+                        "maxShingleSize", "25",
                         "outputUnigrams", "false",
                         "outputUnigramsIfNoShingles", "false"
                 ).build();
@@ -108,13 +110,20 @@ public class Indexer {
 
                     HashSet<String> seeds = new HashSet<>(100);
                     StringBuilder builder = new StringBuilder();
+                    StringBuilder album = new StringBuilder();
+                    StringBuilder artist = new StringBuilder();
                     for (Track track : playlist.tracks) {
                         if (seeds.contains(track.track_uri)) continue;
                         builder.append(track.track_uri).append(' ');
+                        album.append(track.album_uri).append(' ');
+                        artist.append(track.artist_uri).append(' ');
                         seeds.add(track.track_uri);
                     }
 
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
+                    document.add(new TextField("album_uris", album.toString().trim(), Field.Store.YES));
+                    document.add(new TextField("artist_uris", artist.toString().trim(), Field.Store.YES));
+                    document.add(new TextField(ShingleFilter.DEFAULT_TOKEN_TYPE, builder.toString().trim(), Field.Store.NO));
                     seeds.clear();
                     writer.addDocument(document);
                 }
