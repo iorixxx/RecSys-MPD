@@ -38,7 +38,7 @@ import static edu.anadolu.SpanNearConfig.cacheKeys;
  */
 public class Searcher implements Closeable {
 
-    private static final int maxClauseCount = Emoji.maxClauseCount() * 2;
+    private static final int maxClauseCount = Emoji.maxClauseCount() * 4;
 
     private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
@@ -84,7 +84,6 @@ public class Searcher implements Closeable {
         AtomicInteger first = new AtomicInteger(0);
 
         SpanNearConfig.warmSpanCache(relaxMode);
-        // BooleanQuery.setMaxClauseCount(maxClauseCount);
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
@@ -104,7 +103,7 @@ public class Searcher implements Closeable {
 
                         if (100 == playlist.tracks.length) {
                             first100.incrementAndGet();
-                            submission = longestCommonPrefix(playlist, RESULT_SIZE);
+                            submission = shingle(playlist, RESULT_SIZE);
                         } else {
                             firstN.incrementAndGet();
                             submission = spanFirst(playlist, relaxMode);
@@ -550,6 +549,7 @@ public class Searcher implements Closeable {
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException {
 
+        BooleanQuery.setMaxClauseCount(maxClauseCount);
 
         final Track[] tracks = playlist.tracks;
 
@@ -576,6 +576,7 @@ public class Searcher implements Closeable {
             throw new RuntimeException(seeds.size() + " " + playlist.tracks.length + " " + BooleanQuery.getMaxClauseCount());
         }
 
+        System.out.println("shingle " + playlist.tracks.length + " " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
         for (ScoreDoc hit : hits) {
