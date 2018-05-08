@@ -6,8 +6,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.misc.HighFreqTerms;
-import org.apache.lucene.misc.TermStats;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
@@ -18,7 +16,10 @@ import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.PriorityQueue;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static edu.anadolu.Helper.*;
 import static edu.anadolu.SpanNearConfig.cacheKeys;
-import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
 
 
 /**
@@ -38,7 +38,7 @@ import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
  */
 public class Searcher implements Closeable {
 
-    private static final int maxClauseCount = Emoji.maxClauseCount();
+    private static final int maxClauseCount = Emoji.maxClauseCount() * 2;
 
     private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
@@ -52,13 +52,9 @@ public class Searcher implements Closeable {
     private final IndexSearcher searcher;
     private final SimilarityConfig similarityConfig;
 
-    private final List<String> highFreqTrackURIs;
-    private final Filler filler;
-    private final List<String> followerFreq;
-
     private final boolean useOnlyLonger;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler, boolean useOnlyLonger) throws Exception {
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, boolean useOnlyLonger) throws IOException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -66,7 +62,6 @@ public class Searcher implements Closeable {
         final Gson GSON = new Gson();
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.similarityConfig = similarityConfig;
-        this.filler = filler;
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
         this.useOnlyLonger = useOnlyLonger;
@@ -74,70 +69,7 @@ public class Searcher implements Closeable {
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
         }
-//
-//        for (int i = 1; i <= 100; i++)
-//            pageCount.put(i, 0);
-//
-//        pageCount.put(-1, 0);
-
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        try (InputStream resource = classLoader.getResourceAsStream("follower_frequency.txt")) {
-            List<String> lines =
-                    new BufferedReader(new InputStreamReader(resource,
-                            StandardCharsets.UTF_8)).lines().collect(Collectors.toList());
-
-            List<String> followerFreq = new ArrayList<>(lines.size());
-            for (String line : lines) {
-                followerFreq.add(whiteSpace.split(line)[0]);
-            }
-
-            this.followerFreq = Collections.unmodifiableList(followerFreq);
-            lines.clear();
-        }
-
-        Comparator<TermStats> comparator = new HighFreqTerms.DocFreqComparator();
-
-        TermStats[] terms = getHighFreqTerms(reader, RESULT_SIZE * 2, "track_uris", comparator);
-
-        System.out.println("Top-10 Track URIs sorted by playlist frequency");
-        System.out.println("term \t totalTF \t docFreq");
-
-
-        List<String> highFreqTrackURIs = new ArrayList<>(RESULT_SIZE * 2);
-        int i = 0;
-        for (TermStats termStats : terms) {
-            if (i++ < 10)
-                System.out.printf(Locale.ROOT, "%s \t %d \t %d \n",
-                        termStats.termtext.utf8ToString(), termStats.totalTermFreq, termStats.docFreq);
-            highFreqTrackURIs.add(termStats.termtext.utf8ToString());
-        }
-        this.highFreqTrackURIs = Collections.unmodifiableList(highFreqTrackURIs);
     }
-
-    private int toggle = 0;
-
-    private void fill(LinkedHashSet<String> submission, Set<String> seeds) {
-        if (Filler.Follower.equals(this.filler))
-            fallBackTo(submission, seeds, this.followerFreq);
-        else if (Filler.Blended.equals(this.filler))
-            blended(submission, seeds, this.highFreqTrackURIs, this.followerFreq);
-        else if (Filler.Hybrid.equals(this.filler)) {
-            if (++toggle % 2 == 0) {
-                fallBackTo(submission, seeds, this.followerFreq);
-            } else {
-                fallBackTo(submission, seeds, this.highFreqTrackURIs);
-            }
-        } else if (Filler.Playlist.equals(this.filler))
-            fallBackTo(submission, seeds, this.highFreqTrackURIs);
-        else
-            fallBackTo(submission, seeds, this.highFreqTrackURIs);
-
-        if (submission.size() != RESULT_SIZE)
-            throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
-    }
-
 
     public void search(Format format, Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException {
 
@@ -152,7 +84,7 @@ public class Searcher implements Closeable {
         AtomicInteger first = new AtomicInteger(0);
 
         SpanNearConfig.warmSpanCache(relaxMode);
-        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
+        BooleanQuery.setMaxClauseCount(maxClauseCount);
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
@@ -178,7 +110,6 @@ public class Searcher implements Closeable {
                             submission = spanFirst(playlist, relaxMode);
                         }
 
-
                     } else {
                         random.incrementAndGet();
                         submission = tracksOnly(playlist, RESULT_SIZE);
@@ -187,15 +118,6 @@ public class Searcher implements Closeable {
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }
-
-            if (submission.size() < RESULT_SIZE) {
-                Set<String> seeds = playlist.tracks.length == 0 ? Collections.emptySet() : Arrays.stream(playlist.tracks).map(track -> track.track_uri).collect(Collectors.toSet());
-                fill(submission, seeds);
-                seeds.clear();
-            }
-
-            if (submission.size() != RESULT_SIZE)
-                throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
 
             export(submission, playlist.pid, format, out.get(), similarityConfig);
 
@@ -517,7 +439,7 @@ public class Searcher implements Closeable {
                 boolean finish = insertTrackURIs(submission, seeds, list, RESULT_SIZE);
 
                 if (finish) {
-                    System.out.println("progress: " + (end - 1) + "/" + 66 + " for tracks 1");
+                    System.out.println("progress: " + (end - 1) + "/" + 50 + " for tracks 1");
                     break;
                 }
 
@@ -626,7 +548,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its first N tracks. Works best with <b>N=100</b> tracks category 9
      */
-    private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
+    private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException {
 
 
         final Track[] tracks = playlist.tracks;

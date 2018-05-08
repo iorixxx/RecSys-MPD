@@ -22,7 +22,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
     /**
      * SpanNearConfig{slop=0, end=25, inOrder=true} for tracks 25
      */
-    boolean tightest(int n) {
+    private boolean tightest(int n) {
         return this.inOrder && n == this.end && 0 == this.slop;
     }
 
@@ -66,7 +66,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
             throw new RuntimeException("cache size " + SPAN_CACHE.size() + " is different from length of keys " + keys.length);
     }
 
-    synchronized static List<SpanNearConfig> configs(RelaxMode mode, int n) {
+    static List<SpanNearConfig> configs(RelaxMode mode, int n) {
 
         if (SPAN_CACHE.containsKey(n)) return SPAN_CACHE.get(n);
 
