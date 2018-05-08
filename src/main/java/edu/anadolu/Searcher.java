@@ -169,7 +169,7 @@ public class Searcher implements Closeable {
 
                         if (100 == playlist.tracks.length) {
                             first100.incrementAndGet();
-                            submission = longestCommonPrefix(playlist, RESULT_SIZE);
+                            submission = shingle(playlist, RESULT_SIZE);
                         } else {
                             firstN.incrementAndGet();
                             submission = spanFirst(playlist, relaxMode);
@@ -621,7 +621,7 @@ public class Searcher implements Closeable {
     }
 
     /**
-     * Predict tracks for a playlist given its tracks only. Works best with <b>random</b> tracks category 8 and category 10
+     * Predict tracks for a playlist given its first N tracks. Works best with <b>N=100</b> tracks category 9
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
 
