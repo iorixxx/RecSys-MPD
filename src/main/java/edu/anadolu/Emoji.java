@@ -52,7 +52,7 @@ public class Emoji {
             return BooleanQuery.getMaxClauseCount();
         }
 
-        return maxClauseCount;
+        return maxClauseCount + 1;
     }
 
 
