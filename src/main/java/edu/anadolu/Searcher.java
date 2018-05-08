@@ -152,7 +152,7 @@ public class Searcher implements Closeable {
         AtomicInteger first = new AtomicInteger(0);
 
         SpanNearConfig.warmSpanCache(relaxMode);
-        BooleanQuery.setMaxClauseCount(maxClauseCount);
+        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
