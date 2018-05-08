@@ -549,7 +549,7 @@ public class Searcher implements Closeable {
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException {
 
-        BooleanQuery.setMaxClauseCount(maxClauseCount);
+        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
 
         final Track[] tracks = playlist.tracks;
 
