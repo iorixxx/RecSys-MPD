@@ -38,6 +38,8 @@ import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
  */
 public class Searcher implements Closeable {
 
+    private static final int maxClauseCount = Emoji.maxClauseCount();
+
     private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
 //    private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
@@ -625,6 +627,7 @@ public class Searcher implements Closeable {
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
 
+        BooleanQuery.setMaxClauseCount(maxClauseCount);
         final Track[] tracks = playlist.tracks;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
