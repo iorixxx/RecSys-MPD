@@ -594,7 +594,7 @@ public class Searcher implements Closeable {
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
         if (hits.length > 0)
-            System.out.println("shingle " + hits.length + " " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
+            System.out.println("clauses " + hits.length + " hits " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
 
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
@@ -609,6 +609,20 @@ public class Searcher implements Closeable {
 
         if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
             System.out.println("shingle " + submission.size() + " results found for tracks " + seeds.size());
+
+        /*
+         * If longest common prefix (LCP) strategy returns less than 500, use tracksOnly for filler purposes
+         */
+        if (submission.size() != howMany) {
+            System.out.println("shingle returns " + submission.size() + " for tracks " + playlist.tracks.length);
+
+            LinkedHashSet<String> backUp = tracksOnly(playlist, howMany * 2);
+            boolean done = insertTrackURIs(submission, seeds, backUp, howMany);
+
+            if (!done) {
+                System.out.println("shingle warning after tracksOnly backup size " + submission.size());
+            }
+        }
 
         seeds.clear();
         return submission;
