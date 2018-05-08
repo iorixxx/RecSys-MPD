@@ -101,7 +101,7 @@ public class Searcher implements Closeable {
 
                     if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
 
-                        if (100 == playlist.tracks.length || 10 == playlist.tracks.length) {
+                        if (100 == playlist.tracks.length || 10 == playlist.tracks.length || 5 == playlist.tracks.length) {
                             first100.incrementAndGet();
                             submission = shingle(playlist, RESULT_SIZE);
                         } else {
@@ -558,6 +558,7 @@ public class Searcher implements Closeable {
 
         QueryParser queryParser = new QueryParser(ShingleFilter.DEFAULT_TOKEN_TYPE, Indexer.shingle());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
+        queryParser.setAutoGeneratePhraseQueries(false);
 
         StringBuilder builder = new StringBuilder();
         for (Track track : tracks) {
