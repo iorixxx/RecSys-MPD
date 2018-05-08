@@ -145,11 +145,11 @@ public class Filler {
         if (seeds.contains(t)) return false;
         out.print(",");
         out.print(t);
+        seeds.add(t);
         return true;
     }
 
-    public void fillInTheBlanks(Path resultPath)
-    {
+    public void fillInTheBlanks(Path resultPath) {
         try {
             for (Type type : Type.values())
                 fillInTheBlanks(resultPath, type);
