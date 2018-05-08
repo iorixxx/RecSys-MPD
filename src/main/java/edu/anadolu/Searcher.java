@@ -152,6 +152,7 @@ public class Searcher implements Closeable {
         AtomicInteger first = new AtomicInteger(0);
 
         SpanNearConfig.warmSpanCache(relaxMode);
+        BooleanQuery.setMaxClauseCount(maxClauseCount);
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
@@ -627,7 +628,7 @@ public class Searcher implements Closeable {
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
 
-        BooleanQuery.setMaxClauseCount(maxClauseCount);
+
         final Track[] tracks = playlist.tracks;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
@@ -645,7 +646,13 @@ public class Searcher implements Closeable {
             builder.append(track.track_uri).append(' ');
         }
 
-        Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
+        Query query;
+
+        try {
+            query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
+        } catch (ParseException p) {
+            throw new RuntimeException(seeds.size() + " " + playlist.tracks.length + " " + BooleanQuery.getMaxClauseCount());
+        }
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
@@ -663,6 +670,7 @@ public class Searcher implements Closeable {
         if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
             System.out.println("shingle " + submission.size() + " results found for tracks " + seeds.size());
 
+        seeds.clear();
         return submission;
 
     }
