@@ -1,7 +1,11 @@
 package edu.anadolu;
 
 import com.google.gson.Gson;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.FlattenGraphFilterFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
+import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -37,8 +41,6 @@ import static edu.anadolu.SpanNearConfig.cacheKeys;
  * Create submission
  */
 public class Searcher implements Closeable {
-
-    private static final int maxClauseCount = Emoji.maxClauseCount() * 4;
 
     private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
@@ -544,22 +546,33 @@ public class Searcher implements Closeable {
         return submission;
     }
 
+    static Analyzer shingleQuery() throws IOException {
+        return CustomAnalyzer.builder()
+                .withTokenizer("whitespace")
+                .addTokenFilter(ShingleFilterFactory.class,
+                        "minShingleSize", "3",
+                        "maxShingleSize", "20",
+                        "outputUnigrams", "false",
+                        "outputUnigramsIfNoShingles", "false")
+                .addTokenFilter(FlattenGraphFilterFactory.class)
+                .build();
+    }
+
     /**
      * Predict tracks for a playlist given its first N tracks. Works best with <b>N=100</b> tracks category 9
      */
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException {
-
-        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
 
         final Track[] tracks = playlist.tracks;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
 
-        QueryParser queryParser = new QueryParser(ShingleFilter.DEFAULT_TOKEN_TYPE, Indexer.shingle());
+        QueryParser queryParser = new QueryParser(ShingleFilter.DEFAULT_TOKEN_TYPE, shingleQuery());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
+        queryParser.setSplitOnWhitespace(false);
         queryParser.setAutoGeneratePhraseQueries(false);
-        queryParser.setSplitOnWhitespace(true);
+        queryParser.setEnableGraphQueries(false);
 
         StringBuilder builder = new StringBuilder();
         for (Track track : tracks) {
@@ -581,7 +594,7 @@ public class Searcher implements Closeable {
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
         if (hits.length > 0)
-            System.out.println("shingle " + playlist.tracks.length + " " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
+            System.out.println("shingle " + hits.length + " " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
 
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
