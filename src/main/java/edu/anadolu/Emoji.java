@@ -30,7 +30,7 @@ public class Emoji {
     static int maxClauseCount() {
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 1; i <= 100; i++)
+        for (int i = 1; i <= 10; i++)
             builder.append(Integer.toString(i)).append(' ');
 
         int maxClauseCount = 0;

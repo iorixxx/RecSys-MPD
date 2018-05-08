@@ -1,7 +1,6 @@
 package edu.anadolu;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
@@ -50,7 +49,18 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         return Objects.hash(slop, end, inOrder);
     }
 
-    private static final ConcurrentHashMap<Integer, List<SpanNearConfig>> SPAN_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Integer, List<SpanNearConfig>> SPAN_CACHE;
+
+    static {
+
+        Map<Integer, List<SpanNearConfig>> map = new HashMap<>();
+        int[] keys = new int[]{4, 5, 6, 7, 8, 9, 10, 18, 20, 21, 22, 23, 24, 25, 65, 66, 75, 80, 82, 83, 84, 85, 87, 88, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100};
+        for (int i : keys)
+            map.put(i, mode3(i));
+
+        SPAN_CACHE = Collections.unmodifiableMap(map);
+
+    }
 
     static String cacheKeys() {
         return new TreeSet<>(SPAN_CACHE.keySet()).toString();
