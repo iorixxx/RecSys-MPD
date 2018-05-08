@@ -177,7 +177,7 @@ public class Filler {
             newFileName = name + filler.toString() + ".csv";
 
 
-        final PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath.getParent().resolve(newFileName), StandardCharsets.US_ASCII));
+        final PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath.toAbsolutePath().getParent().resolve(newFileName), StandardCharsets.US_ASCII));
 
 
         List<String> lines = Files.readAllLines(resultPath);
