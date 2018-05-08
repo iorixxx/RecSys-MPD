@@ -84,7 +84,7 @@ public class Searcher implements Closeable {
         AtomicInteger first = new AtomicInteger(0);
 
         SpanNearConfig.warmSpanCache(relaxMode);
-        BooleanQuery.setMaxClauseCount(maxClauseCount);
+        // BooleanQuery.setMaxClauseCount(maxClauseCount);
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
@@ -104,7 +104,7 @@ public class Searcher implements Closeable {
 
                         if (100 == playlist.tracks.length) {
                             first100.incrementAndGet();
-                            submission = shingle(playlist, RESULT_SIZE);
+                            submission = longestCommonPrefix(playlist, RESULT_SIZE);
                         } else {
                             firstN.incrementAndGet();
                             submission = spanFirst(playlist, relaxMode);
