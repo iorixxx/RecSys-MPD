@@ -334,7 +334,6 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> tracksOnly(Playlist playlist, int howMany) throws IOException {
 
         final Track[] tracks = playlist.tracks;
-        final int pId = playlist.pid;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
@@ -366,7 +365,7 @@ public class Searcher implements Closeable {
             for (ScoreDoc hit : hits) {
                 int docId = hit.doc;
                 Document doc = searcher.doc(docId);
-                if (Integer.parseInt(doc.get("id")) == pId) continue;
+                if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
 
                 String trackURIs = doc.get("track_uris");
                 String[] parts = whiteSpace.split(trackURIs);
@@ -390,7 +389,7 @@ public class Searcher implements Closeable {
         seeds.clear();
 
         if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
-            System.out.println("warning result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
+            System.out.println("warning result set size " + submission.size() + " for tracks " + tracks.length);
 
         return submission;
     }
@@ -402,7 +401,6 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> spanFirst(Playlist playlist, SpanNearConfig.RelaxMode mode) throws IOException {
 
         final Track[] tracks = playlist.tracks;
-        final int pId = playlist.pid;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(RESULT_SIZE);
@@ -421,13 +419,9 @@ public class Searcher implements Closeable {
 
             // halting criteria
             if (j == configs.size()) {
-                System.out.println("halting j " + j);
                 break;
             }
             SpanNearConfig config = configs.get(j++);
-
-            if (config.tightest(clauses.size()))
-                System.out.println("tightest pid: " + pId + " for tracks " + tracks.length);
 
             final SpanFirstQuery spanFirstQuery = new SpanFirstQuery(new SpanNearQuery(clausesIn, config.slop, config.inOrder), config.end);
 
@@ -436,7 +430,7 @@ public class Searcher implements Closeable {
             for (ScoreDoc hit : hits) {
                 int docId = hit.doc;
                 Document doc = searcher.doc(docId);
-                if (Integer.parseInt(doc.get("id")) == pId) continue;
+                if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
 
                 String trackURIs = doc.get("track_uris");
 
@@ -468,7 +462,7 @@ public class Searcher implements Closeable {
             boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
             if (!done) {
-                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks " + tracks.length);
+                System.out.println("warning after tracksOnly backup result set size " + submission.size() + " for tracks " + tracks.length);
             }
 
         }
@@ -484,7 +478,6 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> firstTrack(Playlist playlist) throws IOException {
 
         final Track[] tracks = playlist.tracks;
-        final int pId = playlist.pid;
 
         if (tracks.length != 1)
             throw new RuntimeException("tracks length is not 1!");
@@ -502,7 +495,7 @@ public class Searcher implements Closeable {
         while (submission.size() < RESULT_SIZE) {
 
             // halting criteria
-            if (end == 66) {
+            if (end == 50) {
                 break;
             }
 
@@ -513,7 +506,7 @@ public class Searcher implements Closeable {
             for (ScoreDoc hit : hits) {
                 int docId = hit.doc;
                 Document doc = searcher.doc(docId);
-                if (Integer.parseInt(doc.get("id")) == pId) continue;
+                if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
 
                 String trackURIs = doc.get("track_uris");
 
@@ -539,7 +532,7 @@ public class Searcher implements Closeable {
             boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
             if (!done) {
-                System.out.println("warning after tracksOnly backup result set for " + pId + " size " + submission.size() + " for tracks 1");
+                System.out.println("warning after tracksOnly backup result set size " + submission.size() + " for tracks 1");
             }
         }
 
@@ -553,7 +546,6 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> longestCommonPrefix(Playlist playlist, int howMany) throws IOException {
 
         final Track[] tracks = playlist.tracks;
-        final int pId = playlist.pid;
 
         if (tracks.length < 1)
             throw new RuntimeException("tracks length is less than 1! " + tracks.length);
@@ -582,7 +574,7 @@ public class Searcher implements Closeable {
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
             Document doc = searcher.doc(docId);
-            if (Integer.parseInt(doc.get("id")) == pId) continue;
+            if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
 
             String trackURIs = doc.get("track_uris");
 
@@ -634,7 +626,6 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> shingle(Playlist playlist, int howMany) throws IOException, ParseException {
 
         final Track[] tracks = playlist.tracks;
-        final int pId = playlist.pid;
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
@@ -658,7 +649,7 @@ public class Searcher implements Closeable {
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;
             Document doc = searcher.doc(docId);
-            if (Integer.parseInt(doc.get("id")) == pId) continue;
+            if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
 
             String trackURIs = doc.get("track_uris");
             List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
