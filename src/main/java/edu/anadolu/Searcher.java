@@ -105,7 +105,7 @@ public class Searcher implements Closeable {
 
                     if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
 
-                        if (100 == playlist.tracks.length || 10 == playlist.tracks.length || 5 == playlist.tracks.length || 25 == playlist.tracks.length) {
+                        if (100 == playlist.tracks.length || 10 == playlist.tracks.length || 5 == playlist.tracks.length) {
                             first100.incrementAndGet();
                             submission = shinglePureOR(playlist, RESULT_SIZE);
                         } else {
