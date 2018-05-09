@@ -81,8 +81,7 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
         if (SPAN_CACHE.containsKey(n))
             return SPAN_CACHE.get(n);
         else
-            throw new RuntimeException(" n " + n + " mode" + mode);
-
+          return mode3(n);
 
 //        final List<SpanNearConfig> configs;
 //
