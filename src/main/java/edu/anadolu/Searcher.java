@@ -105,7 +105,7 @@ public class Searcher implements Closeable {
 
                     if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
 
-                        if (100 == playlist.tracks.length || 10 == playlist.tracks.length || 5 == playlist.tracks.length) {
+                        if (100 == playlist.tracks.length) {
                             first100.incrementAndGet();
                             submission = shinglePureOR(playlist, RESULT_SIZE);
                         } else {
@@ -386,11 +386,14 @@ public class Searcher implements Closeable {
         if (submission.size() != RESULT_SIZE) {
             System.out.println("SpanFirst strategy returns " + submission.size() + " for tracks " + clauses.size());
 
-            LinkedHashSet<String> backUp = tracksOnly(playlist, RESULT_SIZE * 2);
+            LinkedHashSet<String> backUp = shinglePureOR(playlist, RESULT_SIZE * 2);
             boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
             if (!done) {
                 System.out.println("warning after tracksOnly backup result set size " + submission.size() + " for tracks " + tracks.length);
+
+                backUp = tracksOnly(playlist, RESULT_SIZE * 2);
+                insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
             }
 
         }

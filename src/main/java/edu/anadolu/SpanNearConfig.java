@@ -78,26 +78,30 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
     static List<SpanNearConfig> configs(RelaxMode mode, int n) {
 
-        if (SPAN_CACHE.containsKey(n)) return SPAN_CACHE.get(n);
+        if (SPAN_CACHE.containsKey(n))
+            return SPAN_CACHE.get(n);
+        else
+            throw new RuntimeException(" n " + n + " mode" + mode);
 
-        final List<SpanNearConfig> configs;
 
-        switch (mode) {
-            case Mode1:
-                configs = mode1(n);
-                break;
-            case Mode2:
-                configs = mode2(n);
-                break;
-            case Mode3:
-                configs = mode3(n);
-                break;
-            default:
-                throw new AssertionError(SpanNearConfig.class);
-        }
-
-        SPAN_CACHE.put(n, configs);
-        return configs;
+//        final List<SpanNearConfig> configs;
+//
+//        switch (mode) {
+//            case Mode1:
+//                configs = mode1(n);
+//                break;
+//            case Mode2:
+//                configs = mode2(n);
+//                break;
+//            case Mode3:
+//                configs = mode3(n);
+//                break;
+//            default:
+//                throw new AssertionError(SpanNearConfig.class);
+//        }
+//
+//        SPAN_CACHE.put(n, configs);
+//        return configs;
     }
 
     public enum RelaxMode {

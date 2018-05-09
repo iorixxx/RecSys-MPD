@@ -3,6 +3,7 @@ package edu.anadolu;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
@@ -19,6 +20,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static edu.anadolu.Indexer.shingle;
 import static edu.anadolu.Searcher.shingleQuery;
@@ -75,7 +78,7 @@ public class ShingleTest extends LuceneTestCase {
 
         System.out.println(QueryParserBase.escape(seeds));
 
-        Query query = queryParser.parse(QueryParserBase.escape(seeds));
+        Query query = queryParser.parse("a b c d e");
 
         SynonymQuery synonymQuery;
 
@@ -116,6 +119,21 @@ public class ShingleTest extends LuceneTestCase {
         // simpleQueryParser.setEnablePositionIncrements(false);
 
         printHits(searcher.search(simpleQueryParser.parse(seeds), 10).scoreDocs);
+
+
+        System.out.println("boolean");
+        List<String> terms = Emoji.analyze(seeds, Indexer.shingle());
+
+        List<TermQuery> clauses = terms.stream().map(t -> new Term("track", t)).map(TermQuery::new).collect(Collectors.toList());
+
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        for (TermQuery tq : clauses)
+            builder.add(tq, BooleanClause.Occur.SHOULD);
+
+        BooleanQuery bq = builder.build();
+
+        printHits(searcher.search(bq, 10).scoreDocs);
 
 
         reader.close();

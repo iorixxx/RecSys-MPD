@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import static edu.anadolu.Indexer.icu;
 
@@ -106,6 +107,11 @@ public class Emoji {
 
 
         System.out.println(maxClauseCount());
+
+
+        List<String> terms = Emoji.analyze(" a b c d e f g", Indexer.shingle());
+
+        terms.forEach(System.out::println);
     }
 
 
