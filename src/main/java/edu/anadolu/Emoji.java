@@ -15,6 +15,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 
+import static edu.anadolu.Indexer.icu;
+
 /**
  * Helper class for Emoji Presentation Sequences
  *
@@ -30,7 +32,7 @@ public class Emoji {
     static int maxClauseCount() {
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 1; i <= 10; i++)
+        for (int i = 1; i <= 100; i++)
             builder.append(Integer.toString(i)).append(' ');
 
         int maxClauseCount = 0;
@@ -56,12 +58,12 @@ public class Emoji {
     }
 
 
-    static ArrayList<String> analyze(String text) {
+    static ArrayList<String> analyze(String text, Analyzer analyzer) {
 
         ArrayList<String> terms = new ArrayList<>();
 
         try (Reader reader = new StringReader(text);
-             Analyzer analyzer = Indexer.icu();
+
              TokenStream ts = analyzer.tokenStream("field", reader)) {
 
             //ScriptAttribute script = ts.addAttribute(ScriptAttribute.class);
@@ -82,13 +84,13 @@ public class Emoji {
 
     public static void main(String[] args) throws Exception {
         String text = "\uD83D \uDD25 \uD83D \uDD25 \uD83D \uDD25 \u261D ahmet config \uD83D\uDCA9 \uD83D\uDCA9\uD83D\uDCA9 help Its_lit \uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A";
-        analyze(text);
+        analyze(text, icu());
         printScriptRuns(text.toCharArray());
 
         System.out.println("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A");
 
 
-        QueryParser queryParser = new QueryParser("title", Indexer.icu());
+        QueryParser queryParser = new QueryParser("title", icu());
 
         Query query = queryParser.parse("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A");
 
@@ -96,7 +98,7 @@ public class Emoji {
 
         System.out.println(Searcher.whiteSpace.split("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A").length);
 
-        System.out.println(analyze("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A"));
+        System.out.println(analyze("\uD83D\uDC9A\uD83D\uDC9A\uD83D\uDC9A", icu()));
 
         String title = "Its_lit";
 

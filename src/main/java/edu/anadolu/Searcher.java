@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static edu.anadolu.Helper.*;
+import static edu.anadolu.Indexer.icu;
 import static edu.anadolu.SpanNearConfig.cacheKeys;
 
 
@@ -87,6 +88,7 @@ public class Searcher implements Closeable {
 
         SpanNearConfig.warmSpanCache(relaxMode);
 
+        BooleanQuery.setMaxClauseCount(1612);
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
             final LinkedHashSet<String> submission;
@@ -105,7 +107,7 @@ public class Searcher implements Closeable {
 
                         if (100 == playlist.tracks.length || 10 == playlist.tracks.length || 5 == playlist.tracks.length || 25 == playlist.tracks.length) {
                             first100.incrementAndGet();
-                            submission = shingle(playlist, RESULT_SIZE);
+                            submission = shinglePureOR(playlist, RESULT_SIZE);
                         } else {
                             firstN.incrementAndGet();
                             submission = spanFirst(playlist, relaxMode);
@@ -145,7 +147,7 @@ public class Searcher implements Closeable {
 
     private LinkedHashSet<String> titleAND(String title, int pId, int howMany) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser("name", Indexer.icu());
+        QueryParser queryParser = new QueryParser("name", icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
@@ -175,7 +177,7 @@ public class Searcher implements Closeable {
     private LinkedHashSet<String> titleOR(String title, int pId, int howMany) throws IOException {
 
         LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
-        ArrayList<String> terms = Emoji.analyze(title);
+        ArrayList<String> terms = Emoji.analyze(title, icu());
 
         List<TermQuery> clauses = terms.stream().map(t -> new Term("name", t)).map(TermQuery::new).collect(Collectors.toList());
         int minShouldMatch = clauses.size();
@@ -238,7 +240,7 @@ public class Searcher implements Closeable {
 
         if (submission.size() == howMany) return submission;
 
-        final int queryLength = Emoji.analyze(title).size();
+        final int queryLength = Emoji.analyze(title, icu()).size();
 
         final String newTitle;
         if (queryLength == 1 && title.contains("_")) {
@@ -607,14 +609,76 @@ public class Searcher implements Closeable {
             if (finish) break;
         }
 
-        if (howMany == RESULT_SIZE && submission.size() != RESULT_SIZE)
-            System.out.println("shingle " + submission.size() + " results found for tracks " + seeds.size());
-
         /*
          * If longest common prefix (LCP) strategy returns less than 500, use tracksOnly for filler purposes
          */
         if (submission.size() != howMany) {
             System.out.println("shingle returns " + submission.size() + " for tracks " + playlist.tracks.length);
+
+            LinkedHashSet<String> backUp = tracksOnly(playlist, howMany * 2);
+            boolean done = insertTrackURIs(submission, seeds, backUp, howMany);
+
+            if (!done) {
+                System.out.println("shingle warning after tracksOnly backup size " + submission.size());
+            }
+        }
+
+        seeds.clear();
+        return submission;
+
+    }
+
+    /**
+     * Predict tracks for a playlist given its first N tracks. Works best with <b>N=100</b> tracks category 9
+     */
+    private LinkedHashSet<String> shinglePureOR(Playlist playlist, int howMany) throws IOException {
+
+        final Track[] tracks = playlist.tracks;
+
+        LinkedHashSet<String> seeds = new LinkedHashSet<>(tracks.length);
+        LinkedHashSet<String> submission = new LinkedHashSet<>(howMany);
+
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Track track : tracks) {
+            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
+            if (seeds.contains(track.track_uri)) continue;
+
+            seeds.add(track.track_uri);
+            stringBuilder.append(track.track_uri).append(' ');
+        }
+
+        List<String> terms = Emoji.analyze(stringBuilder.toString().trim(), Indexer.shingle());
+
+        List<TermQuery> clauses = terms.stream().map(t -> new Term(ShingleFilter.DEFAULT_TOKEN_TYPE, t)).map(TermQuery::new).collect(Collectors.toList());
+
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        for (TermQuery tq : clauses)
+            builder.add(tq, BooleanClause.Occur.SHOULD);
+
+        BooleanQuery bq = builder.build();
+
+        ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+
+        for (ScoreDoc hit : hits) {
+            int docId = hit.doc;
+            Document doc = searcher.doc(docId);
+            if (Integer.parseInt(doc.get("id")) == playlist.pid) continue;
+
+            String trackURIs = doc.get("track_uris");
+            List<String> list = Arrays.asList(whiteSpace.split(trackURIs));
+            boolean finish = insertTrackURIs(submission, seeds, list, howMany);
+            if (finish) break;
+        }
+
+
+
+        /*
+         * If longest common prefix (LCP) strategy returns less than 500, use tracksOnly for filler purposes
+         */
+        if (submission.size() != howMany) {
+            System.out.println("ORshingle returns " + submission.size() + " for tracks " + playlist.tracks.length);
 
             LinkedHashSet<String> backUp = tracksOnly(playlist, howMany * 2);
             boolean done = insertTrackURIs(submission, seeds, backUp, howMany);
