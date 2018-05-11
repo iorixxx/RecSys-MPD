@@ -4,13 +4,11 @@ cd /mnt/recSys/runnable
 mkdir -p results
 
 JAR=/mnt/recSys/runnable/mpd.jar
-INDEX=/mnt/recSys/runnable/MPD.index
+INDEX=/mnt/recSys/MPD.index/
 CHALLENGE=/mnt/recSys/challenge_test_set.json
 RESULT=/mnt/recSys/runnable/results
 
 cp /mnt/recSys/RecSys-MPD/target/mpd.jar $JAR
-rm -rf $INDEX
-cp -r /mnt/recSys/MPD.index/ $INDEX
 
 SIMILARITIES=( BM25 DPH TFIDF IB DFI PL2 )
 BOOLEANS=( true false )
