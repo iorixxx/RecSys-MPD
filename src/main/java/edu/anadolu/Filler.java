@@ -215,11 +215,16 @@ public class Filler {
 
             int id = Integer.parseInt(list.get(0));
 
-            Set<String> seeds = Arrays.stream(challenge.playlists).filter(p -> p.pid == id).map(p -> p.tracks).flatMap(Arrays::stream).map(t -> t.track_uri).distinct().collect(Collectors.toSet());
+            Set<String> seeds = Arrays.stream(challenge.playlists)
+                    .filter(p -> p.pid == id)
+                    .map(p -> p.tracks).flatMap(Arrays::stream)
+                    .map(t -> t.track_uri)
+                    .distinct()
+                    .collect(Collectors.toSet());
 
             seeds.addAll(list);
 
-            int howMany = RESULT_SIZE - seeds.size() + 1;
+            int howMany = RESULT_SIZE - list.size() + 1;
             insertions += howMany;
             fill(filler, out, seeds, howMany);
             out.println();
