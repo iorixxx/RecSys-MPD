@@ -2,6 +2,7 @@ package edu.anadolu;
 
 import com.google.gson.Gson;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.FlattenGraphFilterFactory;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
@@ -52,11 +53,12 @@ public class Indexer {
         return CustomAnalyzer.builder()
                 .withTokenizer("whitespace")
                 .addTokenFilter(ShingleFilterFactory.class,
-                        "minShingleSize", "3",
+                        "minShingleSize", "2",
                         "maxShingleSize", "20",
                         "outputUnigrams", "false",
-                        "outputUnigramsIfNoShingles", "false"
-                ).build();
+                        "outputUnigramsIfNoShingles", "false")
+                .addTokenFilter(FlattenGraphFilterFactory.class)
+                .build();
     }
 
     static Stream<Path> jSons(Path mpdPath) throws IOException {

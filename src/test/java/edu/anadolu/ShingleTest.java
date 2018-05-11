@@ -2,9 +2,6 @@ package edu.anadolu;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.custom.CustomAnalyzer;
-import org.apache.lucene.analysis.shingle.ShingleFilter;
-import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -29,18 +26,6 @@ import static edu.anadolu.Searcher.shingleQuery;
 public class ShingleTest extends LuceneTestCase {
 
 
-    static Analyzer shingleIndex() throws IOException {
-        return CustomAnalyzer.builder()
-                .withTokenizer("whitespace")
-                .addTokenFilter(ShingleFilterFactory.class,
-                        "minShingleSize", "3",
-                        "maxShingleSize", "20",
-                        "outputUnigrams", "false",
-                        "outputUnigramsIfNoShingles", "false")
-                //  .addTokenFilter(FlattenGraphFilterFactory.class)
-                .build();
-    }
-
     @Test
     public void testShingle() throws Exception {
 
@@ -52,7 +37,7 @@ public class ShingleTest extends LuceneTestCase {
         System.out.println("====");
 
         Directory directory = newDirectory();
-        IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(shingleIndex()));
+        IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(Indexer.shingle()));
 
 
         Document document = new Document();
