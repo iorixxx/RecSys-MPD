@@ -13,24 +13,20 @@ rm -rf $INDEX
 cp -r /mnt/recSys/MPD.index/ $INDEX
 
 SIMILARITIES=( BM25 DPH TFIDF IB DFI PL2 )
-FILLERS=( Follower Playlist Blended Hybrid )
 BOOLEANS=( true false )
 MODES=( Mode3 )
 
 for similarity in "${SIMILARITIES[@]}"
 do
-	for filler in "${FILLERS[@]}"
+	for bool in "${BOOLEANS[@]}"
 	do
-		for bool in "${BOOLEANS[@]}"
+		for mode in "${MODES[@]}"
 		do
-			for mode in "${MODES[@]}"
-			do
-				csv=$RESULT"/"$similarity"-"$filler"-"$bool"-"$mode".csv"
-				echo $csv
+			csv=$RESULT"/"$similarity"-"$bool"-"$mode".csv"
+			echo $csv
 
-				java -server -Xms25g -Xmx50g -cp $JAR edu.anadolu.app.SearchApp $INDEX $CHALLENGE $csv RECSYS $similarity $filler $bool $mode
-				python verify_submission.py $CHALLENGE $csv
-			done
+			java -server -Xms25g -Xmx50g -cp $JAR edu.anadolu.app.SearchApp $INDEX $CHALLENGE $csv RECSYS $similarity $bool $mode
+			java -server -Xms10g -Xmx25g -cp $JAR edu.anadolu.app.FillerApp $INDEX $CHALLENGE $csv
 		done
 	done
 done
