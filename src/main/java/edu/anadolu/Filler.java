@@ -1,5 +1,6 @@
 package edu.anadolu;
 
+import com.google.gson.Gson;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.misc.HighFreqTerms;
@@ -10,6 +11,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +37,17 @@ public class Filler {
 
     private static final Pattern comma = Pattern.compile(",");
 
-    public Filler(Path indexPath) {
+    private final MPD challenge;
+
+    public Filler(Path indexPath, Path challengePath) {
+
+        final Gson GSON = new Gson();
+
+        try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
+            this.challenge = GSON.fromJson(reader, MPD.class);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
 
         ClassLoader classLoader = getClass().getClassLoader();
 
@@ -189,17 +201,23 @@ public class Filler {
                 continue;
             }
 
-            final Set<String> seeds = Arrays.stream(comma.split(line)).collect(Collectors.toSet());
+            final List<String> list = Arrays.stream(comma.split(line)).distinct().collect(Collectors.toList());
 
-            if (seeds.size() == 1) blankLines++;
+            if (list.size() == 1) blankLines++;
 
-            if (seeds.size() == RESULT_SIZE + 1) {
+            if (list.size() == RESULT_SIZE + 1) {
                 out.println(line);
                 completeLines++;
                 continue;
             }
 
             out.print(line);
+
+            int id = Integer.parseInt(list.get(0));
+
+            Set<String> seeds = Arrays.stream(challenge.playlists).filter(p -> p.pid == id).map(p -> p.tracks).flatMap(Arrays::stream).map(t -> t.track_uri).distinct().collect(Collectors.toSet());
+
+            seeds.addAll(list);
 
             int howMany = RESULT_SIZE - seeds.size() + 1;
             insertions += howMany;
@@ -214,6 +232,20 @@ public class Filler {
         System.out.println("completeLines " + completeLines);
         System.out.println("blankLines " + blankLines);
         System.out.println("filledTracks " + insertions);
+    }
+
+    public Path dumpJustPIDs() {
+
+        Path path = Paths.get("JustPIDs.csv");
+        try (PrintWriter out = new PrintWriter(Files.newBufferedWriter(path, StandardCharsets.US_ASCII))) {
+            out.println(Searcher.TEAM_INFO);
+            Arrays.stream(challenge.playlists).map(p -> p.pid).forEach(out::println);
+            out.flush();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return path;
     }
 
     public static void main(String[] args) {

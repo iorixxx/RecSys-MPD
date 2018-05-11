@@ -43,9 +43,7 @@ import static edu.anadolu.SpanNearConfig.cacheKeys;
  */
 public class Searcher implements Closeable {
 
-    private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
-
-//    private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
+    static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
     static final int RESULT_SIZE = 500;
 
