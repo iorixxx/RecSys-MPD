@@ -11,7 +11,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -239,9 +238,8 @@ public class Filler {
         System.out.println("filledTracks " + insertions);
     }
 
-    public Path dumpJustPIDs() {
+    public Path dumpJustPIDs(Path path) {
 
-        Path path = Paths.get("JustPIDs.csv");
         try (PrintWriter out = new PrintWriter(Files.newBufferedWriter(path, StandardCharsets.US_ASCII))) {
             out.println(Searcher.TEAM_INFO);
             Arrays.stream(challenge.playlists).map(p -> p.pid).forEach(out::println);
