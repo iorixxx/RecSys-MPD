@@ -18,7 +18,7 @@ public class FillerApp {
             Filler filler = new Filler(indexPath, challengePath);
             filler.fillInTheBlanks(resultPath);
 
-            Path justPIDs = filler.dumpJustPIDs(resultPath.resolve("JustPIDs.csv"));
+            Path justPIDs = filler.dumpJustPIDs(resultPath.toAbsolutePath().getParent().resolve("JustPIDs.csv"));
             filler.fillInTheBlanks(justPIDs);
 
 

@@ -11,6 +11,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -267,6 +269,9 @@ public class Filler {
             newFileName = name + filler.toString() + ".csv";
 
         System.out.println(newFileName);
+
+        System.out.println(Paths.get(name));
+        System.out.println(Paths.get(name).toAbsolutePath().getParent().resolve("test"));
     }
 
 }
