@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -240,7 +239,17 @@ public class Filler {
         System.out.println("filledTracks " + insertions);
     }
 
-    public Path dumpJustPIDs(Path path) {
+    /**
+     * Generates filler submissions that consist of only fillers:
+     * JustPIDs_Follower.csv JustPIDs_Hybrid.csv JustPIDs_Playlist.csv JustPIDs_Blended.csv
+     * THis is find out which filler type is more effective.
+     */
+    public void generateFillerSubmission(Path path) {
+        Path justPIDs = dumpJustPIDs(path.toAbsolutePath().getParent().resolve("JustPIDs.csv"));
+        fillInTheBlanks(justPIDs);
+    }
+
+    private Path dumpJustPIDs(Path path) {
 
         try (PrintWriter out = new PrintWriter(Files.newBufferedWriter(path, StandardCharsets.US_ASCII))) {
             out.println(Searcher.TEAM_INFO);
