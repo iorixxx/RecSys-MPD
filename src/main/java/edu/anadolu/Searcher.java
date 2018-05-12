@@ -649,7 +649,7 @@ public class Searcher implements Closeable {
             stringBuilder.append(track.track_uri).append(' ');
         }
 
-        List<String> terms = Emoji.analyze(stringBuilder.toString().trim(), Indexer.shingle());
+        List<String> terms = Emoji.analyze(stringBuilder.toString().trim(), shingleQuery());
 
         List<TermQuery> clauses = terms.stream().map(t -> new Term(ShingleFilter.DEFAULT_TOKEN_TYPE, t)).map(TermQuery::new).collect(Collectors.toList());
 
