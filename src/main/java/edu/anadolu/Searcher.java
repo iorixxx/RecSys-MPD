@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import static edu.anadolu.Helper.*;
 import static edu.anadolu.Indexer.icu;
-import static edu.anadolu.SpanNearConfig.cacheKeys;
+//import static edu.anadolu.SpanNearConfig.cacheKeys;
 
 
 /**
@@ -84,7 +84,7 @@ public class Searcher implements Closeable {
         AtomicInteger random = new AtomicInteger(0);
         AtomicInteger first = new AtomicInteger(0);
 
-        SpanNearConfig.warmSpanCache(relaxMode);
+        //SpanNearConfig.warmSpanCache(relaxMode);
 
         BooleanQuery.setMaxClauseCount(1612);
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
@@ -135,7 +135,7 @@ public class Searcher implements Closeable {
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
 
-        System.out.println("cacheKeys: " + cacheKeys());
+        //System.out.println("cacheKeys: " + cacheKeys());
     }
 
     @Override
