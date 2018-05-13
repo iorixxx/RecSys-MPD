@@ -553,8 +553,8 @@ public class Searcher implements Closeable {
         return CustomAnalyzer.builder()
                 .withTokenizer("whitespace")
                 .addTokenFilter(ShingleFilterFactory.class,
-                        "minShingleSize", "3",
-                        "maxShingleSize", "20",
+                        "minShingleSize", "2",
+                        "maxShingleSize", "15",
                         "outputUnigrams", "false",
                         "outputUnigramsIfNoShingles", "false")
                 .addTokenFilter(FlattenGraphFilterFactory.class)
