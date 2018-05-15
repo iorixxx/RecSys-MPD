@@ -43,8 +43,18 @@ public class ShingleTest extends LuceneTestCase {
         Document document = new Document();
         document.add(newTextField("track", kURIs, Field.Store.NO));
         document.add(newStringField("id", "1", Field.Store.YES));
-
         writer.addDocument(document);
+
+        Document doc = new Document();
+        doc.add(newTextField("track", kURIs.substring("spotify:track:4y1LsJpmMti1PfRQV9AWWe".length() + 1), Field.Store.NO));
+        doc.add(newStringField("id", "2", Field.Store.YES));
+        writer.addDocument(doc);
+
+        doc = new Document();
+        doc.add(newTextField("track", "a " + kURIs, Field.Store.NO));
+        doc.add(newStringField("id", "3", Field.Store.YES));
+        writer.addDocument(doc);
+
         writer.commit();
         writer.forceMerge(1);
 
@@ -67,7 +77,6 @@ public class ShingleTest extends LuceneTestCase {
 
         SynonymQuery synonymQuery;
 
-        ScoreDoc[] hits = searcher.search(query, 10).scoreDocs;
 
         if (query instanceof BooleanQuery) {
 
@@ -92,9 +101,10 @@ public class ShingleTest extends LuceneTestCase {
             }
         }
 
+        ScoreDoc[] hits = searcher.search(queryParser.parse(QueryParserBase.escape(seeds)), 10).scoreDocs;
+        System.out.println("synonymQuery");
         printHits(hits);
 
-        System.out.println("simple");
 
         SimpleQueryParser simpleQueryParser = new SimpleQueryParser(shingleQuery(), "track");
         simpleQueryParser.setDefaultOperator(BooleanClause.Occur.SHOULD);
@@ -102,11 +112,10 @@ public class ShingleTest extends LuceneTestCase {
         simpleQueryParser.setEnableGraphQueries(false);
         simpleQueryParser.setAutoGenerateMultiTermSynonymsPhraseQuery(false);
         // simpleQueryParser.setEnablePositionIncrements(false);
-
+        System.out.println("simpleQP");
         printHits(searcher.search(simpleQueryParser.parse(seeds), 10).scoreDocs);
 
 
-        System.out.println("boolean");
         List<String> terms = Emoji.analyze(seeds, Indexer.shingle());
 
         List<TermQuery> clauses = terms.stream().map(t -> new Term("track", t)).map(TermQuery::new).collect(Collectors.toList());
@@ -117,7 +126,7 @@ public class ShingleTest extends LuceneTestCase {
             builder.add(tq, BooleanClause.Occur.SHOULD);
 
         BooleanQuery bq = builder.build();
-
+        System.out.println("boolean");
         printHits(searcher.search(bq, 10).scoreDocs);
 
 
@@ -128,7 +137,7 @@ public class ShingleTest extends LuceneTestCase {
 
     private void printHits(ScoreDoc[] hits) {
         for (ScoreDoc hit : hits) {
-            System.out.println("-----" + hit.doc);
+            System.out.println("-----" + hit.doc + " score: " + hit.score);
         }
     }
 

@@ -384,7 +384,7 @@ public class Searcher implements Closeable {
         if (submission.size() != RESULT_SIZE) {
             System.out.println("SpanFirst strategy returns " + submission.size() + " for tracks " + clauses.size());
 
-            LinkedHashSet<String> backUp = shinglePureOR(playlist, RESULT_SIZE * 2);
+            LinkedHashSet<String> backUp = shingle(playlist, RESULT_SIZE * 2);
             boolean done = insertTrackURIs(submission, seeds, backUp, RESULT_SIZE);
 
             if (!done) {
