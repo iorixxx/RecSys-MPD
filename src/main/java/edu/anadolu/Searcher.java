@@ -55,7 +55,11 @@ public class Searcher implements Closeable {
 
     private final boolean useOnlyLonger;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, boolean useOnlyLonger) throws IOException {
+    private final boolean sortByFollower;
+
+    private static final SortField SORT_FOLLOWERS = new SortField("num_followers", SortField.Type.INT, true);
+
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, boolean useOnlyLonger, boolean sortByFollower) throws IOException {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -66,6 +70,7 @@ public class Searcher implements Closeable {
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
         this.useOnlyLonger = useOnlyLonger;
+        this.sortByFollower = sortByFollower;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -197,10 +202,10 @@ public class Searcher implements Closeable {
             final ScoreDoc[] hits;
 
             //when there is single term to match i.e., minShouldMatch=1 sort by follower frequency
-            if (bq.getMinimumNumberShouldMatch() == 1)
-                hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(new SortField("num_followers", SortField.Type.INT, true))).scoreDocs;
+            if (sortByFollower && bq.getMinimumNumberShouldMatch() == 1)
+                hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(SORT_FOLLOWERS, SortField.FIELD_SCORE)).scoreDocs;
             else
-                hits = searcher.search(bq, Integer.MAX_VALUE).scoreDocs;
+                hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(SortField.FIELD_SCORE, SORT_FOLLOWERS)).scoreDocs;
 
             for (ScoreDoc hit : hits) {
                 int docId = hit.doc;
@@ -285,7 +290,10 @@ public class Searcher implements Closeable {
             BooleanQuery bq = builder.build();
 
 
-            ScoreDoc[] hits = searcher.search(bq, Integer.MAX_VALUE, new Sort(new SortField("num_followers", SortField.Type.INT, true))).scoreDocs;
+            ScoreDoc[] hits =
+                    sortByFollower ?
+                            searcher.search(bq, Integer.MAX_VALUE, new Sort(SORT_FOLLOWERS, SortField.FIELD_SCORE)).scoreDocs
+                            : searcher.search(bq, Integer.MAX_VALUE, new Sort(SortField.FIELD_SCORE, SORT_FOLLOWERS)).scoreDocs;
 
 
             for (ScoreDoc hit : hits) {
@@ -595,9 +603,6 @@ public class Searcher implements Closeable {
         }
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
-
-        if (hits.length > 0)
-            System.out.println("clauses " + hits.length + " hits " + seeds.size() + " clauses " + ((BooleanQuery) query).clauses().size());
 
         for (ScoreDoc hit : hits) {
             int docId = hit.doc;

@@ -1,6 +1,9 @@
 package edu.anadolu;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 
@@ -83,24 +86,21 @@ public class SpanNearConfig implements Comparable<SpanNearConfig>, Cloneable {
 //        else
 //          return mode3(n);
 
-        final List<SpanNearConfig> configs;
-
         switch (mode) {
             case Mode1:
-                configs = mode1(n);
-                break;
+                return mode1(n);
+
             case Mode2:
-                configs = mode2(n);
-                break;
+                return mode2(n);
+
             case Mode3:
-                configs = mode3(n);
-                break;
+                return mode3(n);
+
             default:
                 throw new AssertionError(SpanNearConfig.class);
         }
+        //  SPAN_CACHE.put(n, configs);
 
-      //  SPAN_CACHE.put(n, configs);
-        return configs;
     }
 
     public enum RelaxMode {

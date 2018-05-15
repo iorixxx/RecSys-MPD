@@ -23,7 +23,8 @@ do
 			csv=$RESULT"/"$similarity"-"$bool"-"$mode".csv"
 			echo $csv
 
-			java -server -Xms25g -Xmx50g -cp $JAR edu.anadolu.app.SearchApp $INDEX $CHALLENGE $csv RECSYS $similarity $bool $mode
+			java -server -Xms25g -Xmx50g -cp $JAR edu.anadolu.app.SearchApp $INDEX $CHALLENGE $csv RECSYS $similarity $bool $mode true
+			java -server -Xms25g -Xmx50g -cp $JAR edu.anadolu.app.SearchApp $INDEX $CHALLENGE $csv RECSYS $similarity $bool $mode false
 			java -server -Xms10g -Xmx25g -cp $JAR edu.anadolu.app.FillerApp $INDEX $CHALLENGE $csv
 		done
 	done

@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) throws IOException {
-        if (args.length == 7) {
+        if (args.length == 8) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
@@ -23,7 +23,8 @@ public class SearchApp {
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[4]);
             boolean useOnlyLonger = Boolean.valueOf(args[5]);
             SpanNearConfig.RelaxMode relaxMode = SpanNearConfig.RelaxMode.valueOf(args[6]);
-            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, useOnlyLonger)) {
+            boolean sortByFollower = Boolean.valueOf(args[7]);
+            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, useOnlyLonger, sortByFollower)) {
                 searcher.search(format, resultPath, relaxMode);
             }
         } else {
