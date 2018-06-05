@@ -7,5 +7,6 @@ package edu.anadolu;
  */
 public enum Format {
     RECSYS,
-    TREC
+    TREC,
+    LTR
 }

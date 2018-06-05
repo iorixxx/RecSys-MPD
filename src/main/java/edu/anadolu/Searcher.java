@@ -125,7 +125,7 @@ public class Searcher implements Closeable {
                 throw new RuntimeException(e);
             }
 
-            export(submission, playlist.pid, format, out.get(), similarityConfig);
+            export(submission, playlist, format, out.get(), similarityConfig);
 
             out.get().flush();
             submission.clear();

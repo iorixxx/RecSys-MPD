@@ -2,7 +2,6 @@ package edu.anadolu;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.PriorityQueue;
 
@@ -10,8 +9,10 @@ import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static edu.anadolu.Searcher.RESULT_SIZE;
+import static edu.anadolu.Searcher.whiteSpace;
 
 /**
  * Helper class: Trying to refactor code in Searcher, which is hairy.
@@ -65,10 +66,23 @@ class Helper {
 
     }
 
-    static synchronized void export(LinkedHashSet<String> submission, int pid, Format format, PrintWriter out, SimilarityConfig similarityConfig) {
+    // TODO
+    static Track resolveTrackFromURI(String trackURI) {
+        return new Track();
+    }
+
+    // TODO
+    static String actualLabel(String trackURI) {
+        if (ThreadLocalRandom.current().nextBoolean())
+            return "1";
+        else return "0";
+
+    }
+
+    static synchronized void export(LinkedHashSet<String> submission, Playlist playlist, Format format, PrintWriter out, SimilarityConfig similarityConfig) {
         switch (format) {
             case RECSYS:
-                out.print(pid);
+                out.print(playlist.pid);
 
                 for (String s : submission) {
                     out.print(",");
@@ -80,7 +94,7 @@ class Helper {
             case TREC:
                 int i = 1;
                 for (String s : submission) {
-                    out.print(pid);
+                    out.print(playlist.pid);
                     out.print("\tQ0\t");
                     out.print(s);
                     out.print("\t");
@@ -93,6 +107,25 @@ class Helper {
 
                     i++;
                 }
+                break;
+            case LTR:
+
+
+                final String typeQ = " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpace.split(playlist.name.trim()).length;
+
+                for (String s : submission) {
+
+
+                    Track track = resolveTrackFromURI(s);
+
+                    String label = actualLabel(s);
+
+                    out.print(label);
+                    out.print(typeQ);
+                    out.print(" 4:" + track.pos + " 5:" + track.duration_ms + " # " + track.track_uri);
+                    out.println();
+                }
+
                 break;
         }
     }
