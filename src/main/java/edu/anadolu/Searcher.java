@@ -203,12 +203,12 @@ public class Searcher implements Closeable {
 
     }
 
-    public void search(Format format, Path resultPath) throws IOException, ParseException {
+    public void search(Format format, Path resultPath, Path scoresPath) throws IOException, ParseException {
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
         out.println(TEAM_INFO);
 
-        PrintWriter scores = new PrintWriter(Files.newBufferedWriter(resultPath.toAbsolutePath().getParent().resolve("LuceneScores.csv"), StandardCharsets.US_ASCII));
+        PrintWriter scores = new PrintWriter(Files.newBufferedWriter(scoresPath, StandardCharsets.US_ASCII));
         scores.println(TEAM_INFO);
 
 
