@@ -208,6 +208,9 @@ public class Searcher implements Closeable {
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
         out.println(TEAM_INFO);
 
+        PrintWriter scores = new PrintWriter(Files.newBufferedWriter(resultPath.toAbsolutePath().getParent().resolve("LuceneScores.csv"), StandardCharsets.US_ASCII));
+        scores.println(TEAM_INFO);
+
 
         for (Playlist playlist : this.challenge.playlists) {
 
@@ -230,14 +233,18 @@ public class Searcher implements Closeable {
             if (submission.size() != RESULT_SIZE)
                 throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
 
-            export(submission, playlist.pid, format, out);
+            export(submission, playlist.pid, format, out, scores);
 
             out.flush();
+            scores.flush();
             submission.clear();
         }
 
         out.flush();
         out.close();
+
+        scores.flush();
+        scores.close();
     }
 
     @Override
@@ -418,12 +425,16 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    private void export(LinkedHashMap<String, Float> submission, int pid, Format format, PrintWriter out) {
+    private void export(LinkedHashMap<String, Float> submission, int pid, Format format, PrintWriter out, PrintWriter scores) {
         switch (format) {
             case RECSYS:
                 out.print(pid);
+                scores.print(pid);
 
                 for (Map.Entry<String, Float> entry : submission.entrySet()) {
+                    scores.print(", ");
+                    scores.print(entry.getKey());
+
                     out.print(", ");
                     out.print(entry.getKey());
                     out.print("(");
@@ -432,6 +443,7 @@ public class Searcher implements Closeable {
                 }
 
                 out.println();
+                scores.println();
                 break;
             case TREC:
                 int i = 1;
