@@ -432,14 +432,14 @@ public class Searcher implements Closeable {
                 scores.print(pid);
 
                 for (Map.Entry<String, Float> entry : submission.entrySet()) {
-                    scores.print(", ");
-                    scores.print(entry.getKey());
-
                     out.print(", ");
                     out.print(entry.getKey());
-                    out.print("(");
-                    out.print(entry.getValue());
-                    out.print(")");
+
+                    scores.print(", ");
+                    scores.print(entry.getKey());
+                    scores.print("(");
+                    scores.print(entry.getValue());
+                    scores.print(")");
                 }
 
                 out.println();
