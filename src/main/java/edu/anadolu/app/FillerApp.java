@@ -1,7 +1,6 @@
 package edu.anadolu.app;
 
 import edu.anadolu.ExcludeSeeds;
-import edu.anadolu.Filler;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,9 +17,6 @@ public class FillerApp {
 
             ExcludeSeeds excludeSeeds = new ExcludeSeeds(indexPath, challengePath);
             excludeSeeds.fillInTheBlanks(resultPath);
-
-            excludeSeeds.generateFillerSubmission(resultPath);
-
 
         } else {
             System.out.println("Index path and result path should be given as arguments");

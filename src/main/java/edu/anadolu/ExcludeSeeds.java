@@ -93,7 +93,7 @@ public class ExcludeSeeds {
 
     private int toggle = 0;
 
-    private void lessfill(Filler filler, PrintWriter out, Set<String> seeds, int howMany) {
+    private void fill(Filler filler, PrintWriter out, Set<String> seeds, int howMany) {
         if (Filler.Follower.equals(filler))
             insertTrackURIs(out, seeds, this.followerFreq, howMany);
         else if (Filler.Blended.equals(filler))
