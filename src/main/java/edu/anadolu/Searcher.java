@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -33,17 +34,17 @@ import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
  */
 public class Searcher implements Closeable {
 
-    private static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
+    static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
 
     private final LinkedHashMap<Integer, Integer> pageCount = new LinkedHashMap<>();
 
-    private static final int RESULT_SIZE = 500;
+    static final int RESULT_SIZE = 500;
 
     private static final Float FILLER_SCORE = 0.0F;
 
     private static final Integer FILLER_POS = 0;
 
-    private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
+    static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
     private final IndexReader reader;
     private final IndexSearcher searcher;
@@ -211,46 +212,53 @@ public class Searcher implements Closeable {
 
     public void search(Format format, Path resultPath, Path scoresPath) throws IOException, ParseException {
 
-        PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
-        out.println(TEAM_INFO);
+        final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
+        out.get().println(TEAM_INFO);
 
-        PrintWriter scores = new PrintWriter(Files.newBufferedWriter(scoresPath, StandardCharsets.US_ASCII));
-        scores.println(TEAM_INFO);
+        final AtomicReference<PrintWriter> scores = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(scoresPath, StandardCharsets.US_ASCII)));
+        scores.get().println(TEAM_INFO);
 
 
-        for (Playlist playlist : this.challenge.playlists) {
+        Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
             LinkedHashMap<String, Pair<Float, Integer>> submission;
-            if (playlist.tracks.length == 0) {
-                submission = titleOnly(playlist.name, playlist.pid);
-            } else {
-                Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
 
-                if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                    submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanNear);
+            try {
+
+                if (playlist.tracks.length == 0) {
+                    submission = titleOnly(playlist.name, playlist.pid);
                 } else {
-                    submission = tracksOnly(playlist.tracks, playlist.pid);
+                    Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
+
+                    if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
+                        submission = firstNTracks(playlist.tracks, playlist.pid, SpanType.SpanNear);
+                    } else {
+                        submission = tracksOnly(playlist.tracks, playlist.pid);
+                    }
                 }
+
+                if (submission.size() < RESULT_SIZE)
+                    fill(submission);
+
+                if (submission.size() != RESULT_SIZE)
+                    throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
+
+            } catch (IOException | ParseException e) {
+                throw new RuntimeException(e);
             }
 
-            if (submission.size() < RESULT_SIZE)
-                fill(submission);
+            export(submission, playlist.pid, format, out.get(), scores.get());
 
-            if (submission.size() != RESULT_SIZE)
-                throw new RuntimeException("we are about to persist the submission however submission size is not equal to 500! pid=" + playlist.pid + " size=" + submission.size());
-
-            export(submission, playlist.pid, format, out, scores);
-
-            out.flush();
-            scores.flush();
+            out.get().flush();
+            scores.get().flush();
             submission.clear();
-        }
+        });
 
-        out.flush();
-        out.close();
+        out.get().flush();
+        out.get().close();
 
-        scores.flush();
-        scores.close();
+        scores.get().flush();
+        scores.get().close();
     }
 
     @Override
@@ -436,7 +444,7 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    private void export(LinkedHashMap<String, Pair<Float, Integer>> submission, int pid, Format format, PrintWriter out, PrintWriter scores) {
+    private synchronized void export(LinkedHashMap<String, Pair<Float, Integer>> submission, int pid, Format format, PrintWriter out, PrintWriter scores) {
         switch (format) {
             case RECSYS:
                 out.print(pid);
