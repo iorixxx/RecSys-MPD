@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 8) {
+        if (args.length == 9) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
@@ -26,7 +26,9 @@ public class SearchApp {
 
             Path scoresPath = Paths.get(args[7]);
 
-            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler, useOnlyLonger)) {
+            boolean excludeSeeds = Boolean.valueOf(args[8]);
+
+            try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, filler, useOnlyLonger, excludeSeeds)) {
                 searcher.search(format, resultPath, scoresPath);
                 searcher.printPageCountMap();
             } catch (Exception e) {

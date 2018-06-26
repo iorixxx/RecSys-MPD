@@ -52,7 +52,9 @@ public class Searcher implements Closeable {
 
     private final boolean useOnlyLonger;
 
-    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler, boolean useOnlyLonger) throws Exception {
+    private final boolean excludeSeeds;
+
+    public Searcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Filler filler, boolean useOnlyLonger, boolean excludeSeeds) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -63,6 +65,7 @@ public class Searcher implements Closeable {
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
         this.useOnlyLonger = useOnlyLonger;
+        this.excludeSeeds = excludeSeeds;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = MPD.GSON.fromJson(reader, MPD.class);
@@ -400,7 +403,7 @@ public class Searcher implements Closeable {
 
             for (String t : parts) {
 
-                if (seeds.contains(t)) continue;
+                if (excludeSeeds && seeds.contains(t)) continue;
 
                 if (submission.size() < RESULT_SIZE) {
                     submission.put(t, hits[i].score);
@@ -533,7 +536,7 @@ public class Searcher implements Closeable {
 
             for (String t : whiteSpaceSplitter.split(trackURIs)) {
 
-                if (seeds.contains(t)) continue;
+                if (excludeSeeds && seeds.contains(t)) continue;
 
                 if (submission.size() < RESULT_SIZE) {
                     submission.put(t, hits[i].score);
