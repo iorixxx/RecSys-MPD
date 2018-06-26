@@ -1,5 +1,6 @@
 package edu.anadolu;
 
+import javafx.util.Pair;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -38,7 +39,9 @@ public class Searcher implements Closeable {
 
     private static final int RESULT_SIZE = 500;
 
-    private static final float FILLER_SCORE = 0.0F;
+    private static final Float FILLER_SCORE = 0.0F;
+
+    private static final Integer FILLER_POS = 0;
 
     private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
     private final MPD challenge;
@@ -129,7 +132,7 @@ public class Searcher implements Closeable {
 
     private int toggle = 0;
 
-    private void fill(LinkedHashMap<String, Float> submission) {
+    private void fill(LinkedHashMap<String, Pair<Float, Integer>> submission) {
         if (Filler.Follower.equals(this.filler))
             fallBackToMostFollowedTracks(submission);
         else if (Filler.Blended.equals(this.filler))
@@ -149,7 +152,7 @@ public class Searcher implements Closeable {
             throw new RuntimeException("after filler operation submission size is not equal to 500! size=" + submission.size());
     }
 
-    private void blended(LinkedHashMap<String, Float> submission) {
+    private void blended(LinkedHashMap<String, Pair<Float, Integer>> submission) {
 
         Iterator<String> first = this.followerFreq.iterator();
         Iterator<TermStats> second = this.highFreqTrackURIs.iterator();
@@ -157,9 +160,9 @@ public class Searcher implements Closeable {
         int toggle = 0;
         while (first.hasNext() || second.hasNext()) {
             if (++toggle % 2 == 0) {
-                submission.put(first.next(), FILLER_SCORE);
+                submission.put(first.next(), new Pair<>(FILLER_SCORE, FILLER_POS));
             } else {
-                submission.put(second.next().termtext.utf8ToString(), FILLER_SCORE);
+                submission.put(second.next().termtext.utf8ToString(), new Pair<>(FILLER_SCORE, FILLER_POS));
             }
 
             if (submission.size() == RESULT_SIZE) break;
@@ -174,10 +177,10 @@ public class Searcher implements Closeable {
     /**
      * Filler alternative: fill remaining tracks using most followed tracks
      */
-    private void fallBackToMostFollowedTracks(LinkedHashMap<String, Float> submission) {
+    private void fallBackToMostFollowedTracks(LinkedHashMap<String, Pair<Float, Integer>> submission) {
 
         for (final String track : this.followerFreq) {
-            submission.put(track, FILLER_SCORE);
+            submission.put(track, new Pair<>(FILLER_SCORE, FILLER_POS));
             if (submission.size() == RESULT_SIZE) break;
         }
 
@@ -191,13 +194,13 @@ public class Searcher implements Closeable {
      * If certain algorithm collects less than RESULT_SIZE tracks,
      * then fill remaining tracks using most frequent tracks as a last resort.
      */
-    private void fallBackToMostFreqTracks(LinkedHashMap<String, Float> submission) {
+    private void fallBackToMostFreqTracks(LinkedHashMap<String, Pair<Float, Integer>> submission) {
 
         for (final TermStats termStats : this.highFreqTrackURIs) {
 
             final String track = termStats.termtext.utf8ToString();
 
-            submission.put(track, FILLER_SCORE);
+            submission.put(track, new Pair<>(FILLER_SCORE, FILLER_POS));
             if (submission.size() == RESULT_SIZE) break;
         }
 
@@ -217,7 +220,7 @@ public class Searcher implements Closeable {
 
         for (Playlist playlist : this.challenge.playlists) {
 
-            LinkedHashMap<String, Float> submission;
+            LinkedHashMap<String, Pair<Float, Integer>> submission;
             if (playlist.tracks.length == 0) {
                 submission = titleOnly(playlist.name, playlist.pid);
             } else {
@@ -258,7 +261,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its title only
      */
-    private LinkedHashMap<String, Float> titleOnly(String title, int pId) throws ParseException, IOException {
+    private LinkedHashMap<String, Pair<Float, Integer>> titleOnly(String title, int pId) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("name", Indexer.icu());
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
@@ -266,7 +269,7 @@ public class Searcher implements Closeable {
         Query query = queryParser.parse(QueryParserBase.escape(title));
 
 
-        LinkedHashMap<String, Float> submission = new LinkedHashMap<>(RESULT_SIZE);
+        LinkedHashMap<String, Pair<Float, Integer>> submission = new LinkedHashMap<>(RESULT_SIZE);
 
         ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
 
@@ -310,10 +313,13 @@ public class Searcher implements Closeable {
 
             String[] tracks = whiteSpaceSplitter.split(trackURIs);
 
+            int pos = -1;
             for (String t : tracks) {
 
+                pos++;
+
                 if (submission.size() < RESULT_SIZE) {
-                    submission.put(t, hits[i].score);
+                    submission.put(t, new Pair<>(hits[i].score, tracks.length - pos));
                 } else {
                     finish = true;
                     break;
@@ -357,7 +363,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only. Works best with random tracks category 8 and category 10
      */
-    private LinkedHashMap<String, Float> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
+    private LinkedHashMap<String, Pair<Float, Integer>> tracksOnly(Track[] tracks, int pId) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
@@ -381,7 +387,7 @@ public class Searcher implements Closeable {
             return new LinkedHashMap<>();
         }
 
-        LinkedHashMap<String, Float> submission = new LinkedHashMap<>(RESULT_SIZE);
+        LinkedHashMap<String, Pair<Float, Integer>> submission = new LinkedHashMap<>(RESULT_SIZE);
 
         boolean finish = false;
 
@@ -401,12 +407,14 @@ public class Searcher implements Closeable {
                 System.out.println("**** document length " + parts.length + " is less than or equal to query length " + seeds.size());
 
 
+            int pos = -1;
             for (String t : parts) {
 
+                pos++;
                 if (excludeSeeds && seeds.contains(t)) continue;
 
                 if (submission.size() < RESULT_SIZE) {
-                    submission.put(t, hits[i].score);
+                    submission.put(t, new Pair<>(hits[i].score, parts.length - pos));
                 } else {
                     finish = true;
                     break;
@@ -428,13 +436,13 @@ public class Searcher implements Closeable {
         return submission;
     }
 
-    private void export(LinkedHashMap<String, Float> submission, int pid, Format format, PrintWriter out, PrintWriter scores) {
+    private void export(LinkedHashMap<String, Pair<Float, Integer>> submission, int pid, Format format, PrintWriter out, PrintWriter scores) {
         switch (format) {
             case RECSYS:
                 out.print(pid);
                 scores.print(pid);
 
-                for (Map.Entry<String, Float> entry : submission.entrySet()) {
+                for (Map.Entry<String, Pair<Float, Integer>> entry : submission.entrySet()) {
                     out.print(", ");
                     out.print(entry.getKey());
 
@@ -450,14 +458,14 @@ public class Searcher implements Closeable {
                 break;
             case TREC:
                 int i = 1;
-                for (Map.Entry<String, Float> entry : submission.entrySet()) {
+                for (Map.Entry<String, Pair<Float, Integer>> entry : submission.entrySet()) {
                     out.print(pid);
                     out.print("\tQ0\t");
                     out.print(entry.getKey());
                     out.print("\t");
                     out.print(i++);
                     out.print("\t");
-                    out.print(entry.getValue());
+                    out.print(entry.getValue().getKey());
                     out.print("\t");
                     out.print(similarityConfig);
                     out.println();
@@ -476,7 +484,7 @@ public class Searcher implements Closeable {
     /**
      * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
      */
-    private LinkedHashMap<String, Float> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
+    private LinkedHashMap<String, Pair<Float, Integer>> firstNTracks(Track[] tracks, int pId, SpanType type) throws ParseException, IOException {
 
         LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
 
@@ -518,7 +526,7 @@ public class Searcher implements Closeable {
             return tracksOnly(tracks, pId);
         }
 
-        LinkedHashMap<String, Float> submission = new LinkedHashMap<>(RESULT_SIZE);
+        LinkedHashMap<String, Pair<Float, Integer>> submission = new LinkedHashMap<>(RESULT_SIZE);
 
         boolean finish = false;
 
@@ -534,12 +542,17 @@ public class Searcher implements Closeable {
 
             System.out.println("=============");
 
-            for (String t : whiteSpaceSplitter.split(trackURIs)) {
+            String[] parts = whiteSpaceSplitter.split(trackURIs);
+
+
+            int pos = -1;
+            for (String t : parts) {
+                pos++;
 
                 if (excludeSeeds && seeds.contains(t)) continue;
 
                 if (submission.size() < RESULT_SIZE) {
-                    submission.put(t, hits[i].score);
+                    submission.put(t, new Pair<>(hits[i].score, parts.length - pos));
                 } else {
                     finish = true;
                     break;
@@ -560,8 +573,8 @@ public class Searcher implements Closeable {
         if (submission.size() != RESULT_SIZE) {
             System.out.println("warning result set for " + pId + " size " + submission.size() + " try relaxing/increasing first=" + tracks.length);
 
-            LinkedHashMap<String, Float> backUp = tracksOnly(tracks, pId);
-            for (final Map.Entry<String, Float> track : backUp.entrySet()) {
+            LinkedHashMap<String, Pair<Float, Integer>> backUp = tracksOnly(tracks, pId);
+            for (final Map.Entry<String, Pair<Float, Integer>> track : backUp.entrySet()) {
                 submission.put(track.getKey(), track.getValue());
                 if (submission.size() == RESULT_SIZE) break;
             }
