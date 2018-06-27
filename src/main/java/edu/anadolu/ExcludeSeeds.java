@@ -224,6 +224,11 @@ public class ExcludeSeeds {
 
             int howMany = RESULT_SIZE - counter;
 
+            if (howMany == 0) {
+                out.println();
+                continue;
+            }
+
             System.out.println("howMany " + howMany);
 
             seeds.addAll(lines);
