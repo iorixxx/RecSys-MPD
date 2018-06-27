@@ -184,9 +184,7 @@ public class ExcludeSeeds {
         final PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath.toAbsolutePath().getParent().resolve(newFileName), StandardCharsets.US_ASCII));
 
 
-        List<String> lines = Files.readAllLines(resultPath);
-
-        for (String line : lines) {
+        for (String line : Files.readAllLines(resultPath)) {
 
             if (line.startsWith("team_info")) {
                 out.println(line);
@@ -222,18 +220,32 @@ public class ExcludeSeeds {
                 out.print(list.get(j));
             }
 
-            int howMany = RESULT_SIZE - counter;
-
-            if (howMany == 0) {
+            if (RESULT_SIZE == counter) {
                 out.println();
                 continue;
             }
 
-            System.out.println("howMany " + howMany);
+            int howMany = RESULT_SIZE - counter;
+            //  System.out.println("howMany " + howMany);
 
-            seeds.addAll(lines);
+            seeds.addAll(list);
             insertions += howMany;
-            fill(filler, out, seeds, howMany);
+
+            for (String t : this.highFreqTrackURIs) {
+
+                if (seeds.contains(t)) continue;
+
+                counter++;
+                out.print(",");
+                out.print(t);
+                seeds.add(t);
+
+                if (RESULT_SIZE == counter) break;
+
+            }
+
+
+            //   fill(filler, out, seeds, howMany);
             out.println();
         }
 
