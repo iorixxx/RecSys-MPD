@@ -199,13 +199,10 @@ public class ExcludeSeeds {
 
             if (list.size() == 1) blankLines++;
 
-            if (list.size() == RESULT_SIZE + 1) {
-                out.println(line);
-                completeLines++;
-                continue;
+            if (list.size() != RESULT_SIZE + 1) {
+                throw new RuntimeException("submission file has incomplete line ");
             }
 
-            out.print(line);
 
             int id = Integer.parseInt(list.get(0));
 
@@ -216,9 +213,22 @@ public class ExcludeSeeds {
                     .distinct()
                     .collect(Collectors.toSet());
 
-            seeds.addAll(list);
+            out.print(id);
 
-            int howMany = RESULT_SIZE - list.size() + 1;
+            int counter = 0;
+            for (int j = 1; j < list.size(); j++) {
+
+                if (seeds.contains(list.get(j))) continue;
+
+                counter++;
+
+                out.print(", ");
+                out.print(list.get(j));
+            }
+
+            int howMany = RESULT_SIZE - counter;
+
+            seeds.addAll(lines);
             insertions += howMany;
             fill(filler, out, seeds, howMany);
             out.println();
