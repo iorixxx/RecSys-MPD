@@ -119,7 +119,7 @@ public class ExcludeSeeds {
                 if (howMany == counter) return;
             }
         }
-        throw new RuntimeException("can't happen!");
+        throw new RuntimeException("can't happen! howMany=" + howMany + " counter=" + counter);
     }
 
     private static void blended(PrintWriter out, Set<String> seeds, List<String> highFreqTrackURIs, List<String> followerFreq, int howMany) {
@@ -167,8 +167,6 @@ public class ExcludeSeeds {
 
     private void fillInTheBlanks(Path resultPath, Filler filler) throws IOException {
 
-        int blankLines = 0;
-        int completeLines = 0;
 
         int insertions = 0;
 
@@ -196,8 +194,6 @@ public class ExcludeSeeds {
             }
 
             final List<String> list = Arrays.stream(comma.split(line)).distinct().collect(Collectors.toList());
-
-            if (list.size() == 1) blankLines++;
 
             if (list.size() != RESULT_SIZE + 1) {
                 throw new RuntimeException("submission file has incomplete line ");
@@ -228,6 +224,8 @@ public class ExcludeSeeds {
 
             int howMany = RESULT_SIZE - counter;
 
+            System.out.println("howMany " + howMany);
+
             seeds.addAll(lines);
             insertions += howMany;
             fill(filler, out, seeds, howMany);
@@ -238,8 +236,6 @@ public class ExcludeSeeds {
         out.close();
 
         System.out.println("Stats for " + filler.toString());
-        System.out.println("completeLines " + completeLines);
-        System.out.println("blankLines " + blankLines);
         System.out.println("filledTracks " + insertions);
     }
 
