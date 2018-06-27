@@ -218,7 +218,7 @@ public class ExcludeSeeds {
 
                 counter++;
 
-                out.print(", ");
+                out.print(",");
                 out.print(list.get(j));
             }
 
