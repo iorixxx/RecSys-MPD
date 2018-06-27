@@ -230,22 +230,7 @@ public class ExcludeSeeds {
 
             seeds.addAll(list);
             insertions += howMany;
-
-            for (String t : this.highFreqTrackURIs) {
-
-                if (seeds.contains(t)) continue;
-
-                counter++;
-                out.print(",");
-                out.print(t);
-                seeds.add(t);
-
-                if (RESULT_SIZE == counter) break;
-
-            }
-
-
-            //   fill(filler, out, seeds, howMany);
+            fill(filler, out, seeds, howMany);
             out.println();
         }
 
