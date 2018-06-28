@@ -10,7 +10,12 @@ Our model is capable of generating a list of recommended tracks for a given play
 During the ranking step, we use statistical features derived from the MPD. Optionally, we can also utilize audio and album features collected via [Spotify Web API](https://developer.spotify.com/documentation/web-api/). Thus, our model can compete in both main and creative tracks of the challenge.
 
 In order to reproduce our results, one can run ```reproduce.sh``` script provided in the repository. This script builds everything needed from scratch, assuming that requirements below are available at the computing environment:
-* Java
-* Maven
+* JDK 9 or higher
+* Maven 3
 * Python 3.5 or later
 
+### Team Info
+The name of our team in the challenge is **Anadolu**. The members of our team are:
+* Ahmet Arslan
+* Alper Bilge
+* Ali Yürekli
