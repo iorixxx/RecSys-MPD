@@ -1,5 +1,6 @@
 import json
 import csv
+import sys
 from os import listdir
 from os.path import join
 
@@ -45,24 +46,30 @@ def build():
         print("Processing %s" % file)
         process_dataset_json(join(DATA_DIRECTORY, file))
 
-    with open(join(A, "track_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    with open(join(METADATA_DIRECTORY, "track_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in track_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), v["duration"], v["album_uri"], v["artist_uri"], v["track_name"]])
 
-    with open(join(A, "album_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    with open(join(METADATA_DIRECTORY, "album_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in album_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), len(v["tracks"]), v["album_name"]])
 
-    with open(join(A, "artist_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    with open(join(METADATA_DIRECTORY, "artist_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in artist_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), len(v["albums"]), len(v["tracks"]), v["artist_name"]])
 
 
 if __name__ == '__main__':
-    DATA_DIRECTORY = "/Users/41395550350ana/Desktop/mpd/data"
-    A = "/Users/41395550350ana/Desktop/ccc"
+    if len(sys.argv) != 3:
+        print("Usage: argv0 argv1 argv2")
+        print("argv1: The MPD data folder path")
+        print("argv2: Metadata folder path")
+        sys.exit(2)
+    else:
+        DATA_DIRECTORY = sys.argv[1]
+        METADATA_DIRECTORY = sys.argv[2]
 
-    build()
+        build()
