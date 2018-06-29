@@ -94,23 +94,28 @@ def validate(train, test, validation):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print("Usage: argv0 argv1 argv2 argv3 argv4 arg5")
         print("argv1: The MPD data folder path")
         print("argv2: Output folder path")
-        print("argv3: Train")
-        print("argv4: Test")
-        print("argv5: Validation")
+        print("argv3: Maximum number of json files to use")
+        print("argv4: Train")
+        print("argv5: Test")
+        print("argv6: Validation")
         sys.exit(2)
     else:
         DATA_DIRECTORY = sys.argv[1]
         DUMP_DIR = sys.argv[2]
-        train_x = int(sys.argv[3])
-        test_x = int(sys.argv[4])
-        validation_x = int(sys.argv[5])
+        max_num_files = int(sys.argv[3])
+        train_x = int(sys.argv[4])
+        test_x = int(sys.argv[5])
+        validation_x = int(sys.argv[6])
 
         if validate(train_x, test_x, validation_x):
-            for file in listdir(DATA_DIRECTORY):
+            files = listdir(DATA_DIRECTORY)
+            random.shuffle(files)
+
+            for file in files[0:max_num_files]:
                 print("Processing %s" % file)
                 process_dataset_json(join(DATA_DIRECTORY, file))
 
