@@ -5,8 +5,6 @@ import re
 
 USE_CREATIVE_FEATURES = False
 
-min_max_values = {}
-
 challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, lucene_scores = {}, {}, {}, {}, {}, {}
 
 
@@ -127,21 +125,24 @@ def read_audio_metadata_csv(path):
     with open(path, "r", encoding="utf-8") as f1:
         reader = csv.reader(f1)
         for row in reader:
-            track_uri = row[0]
-            danceability = float(row[1])
-            energy = float(row[2])
-            key = int(row[3])
-            loudness = float(row[4])
-            mode = int(row[5])
-            speechiness = float(row[6])
-            acousticness = float(row[7])
-            instrumentalness = float(row[8])
-            liveness = float(row[9])
-            valence = float(row[10])
-            tempo = float(row[11])
-            time_signature = int(row[12])
+            try:
+                track_uri = row[0]
+                danceability = float(row[1])
+                energy = float(row[2])
+                key = int(row[3])
+                loudness = float(row[4])
+                mode = int(row[5])
+                speechiness = float(row[6])
+                acousticness = float(row[7])
+                instrumentalness = float(row[8])
+                liveness = float(row[9])
+                valence = float(row[10])
+                tempo = float(row[11])
+                time_signature = int(row[12])
 
-            audio_metadata[track_uri] = (danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature)
+                audio_metadata[track_uri] = (danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature)
+            except ValueError:
+                print("An error occurred for a single row in audio data")
 
     print("Audio metadata file is read: %s" % path)
 
