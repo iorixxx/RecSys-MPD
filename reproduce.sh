@@ -3,6 +3,7 @@
 MPD_PATH=/mnt/recSys/dataset/mpd/data
 CHALLENGE_PATH=/mnt/recSys/dataset/challenge/challenge_set.json
 
+
 # Spotify Web API credentials must be set here to compete in creative track
 CLIENT_ID=
 CLIENT_SECRET=
@@ -16,8 +17,8 @@ cd experiment
 
 # checkout the source code and build 
 git clone https://github.com/iorixxx/RecSys-MPD.git
-git checkout bbest
 cd RecSys-MPD
+git checkout bbest
 mvn clean package
 cd ..
 
@@ -29,10 +30,8 @@ cp RecSys-MPD/python/* runnable/
 cp RecSys-MPD/jforests/jforests.jar runnable/
 cp RecSys-MPD/jforests/ranking.properties .
 
-
 # create index for the MPD
 java -server -Xms10g -Xmx20g -jar runnable/mpd.jar MPD.index $MPD_PATH
-
 
 # build dataset according to train test validation split
 MAX_JSON_FILES_OF_MPD=100
@@ -54,7 +53,7 @@ wait
 mkdir metadata
 python3 runnable/metadata_builder.py $MPD_PATH metadata/
 python3 runnable/collect_audio_features.py metadata/track_metadata.csv metadata/audio_metadata.csv $CLIENT_ID $CLIENT_SECRET
-python3 runnable/collect_album_popularity.py metadata/album_metadata.csv metadata/album_poularity.csv $CLIENT_ID $CLIENT_SECRET
+python3 runnable/collect_album_popularity.py metadata/album_metadata.csv metadata/album_popularity.csv $CLIENT_ID $CLIENT_SECRET
 
 
 # build LTR model (Last parameter of submission_to_letor.py indicates track mode, False=main, True=creative)
