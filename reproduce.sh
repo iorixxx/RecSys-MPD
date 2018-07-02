@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-# initialize paths for the MPD and challenge set
 MPD_PATH=/mnt/recSys/dataset/mpd/data
 CHALLENGE_PATH=/mnt/recSys/dataset/challenge/challenge_set.json
-
 
 # Spotify Web API credentials must be set here to compete in creative track
 CLIENT_ID=
@@ -31,8 +29,10 @@ cp RecSys-MPD/python/* runnable/
 cp RecSys-MPD/jforests/jforests.jar runnable/
 cp RecSys-MPD/jforests/ranking.properties .
 
+
 # create index for the MPD
 java -server -Xms10g -Xmx20g -jar runnable/mpd.jar MPD.index $MPD_PATH
+
 
 # build dataset according to train test validation split
 MAX_JSON_FILES_OF_MPD=100
@@ -70,4 +70,3 @@ java -server -Xms16g -Xmx64g -jar runnable/jforests.jar --cmd=predict --ranking 
 
 # re-rank recommended tracks
 python3 /mnt/recSys/runnable/submission_rank.py test.txt predictions.txt sorted_test.csv
-
