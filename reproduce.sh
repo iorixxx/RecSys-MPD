@@ -18,6 +18,7 @@ cd experiment
 
 # checkout the source code and build 
 git clone https://github.com/iorixxx/RecSys-MPD.git
+git checkout bbest
 cd RecSys-MPD
 mvn clean package
 cd ..
