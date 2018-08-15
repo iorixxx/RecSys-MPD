@@ -55,18 +55,6 @@ def read_challenge_json(path):
     print("Challenge file is read: %s" % path)
 
 
-def read_album_popularities_csv(path):
-    album_popularities = {}
-
-    with open(path, "r", encoding="utf-8") as f1:
-        reader = csv.reader(f1)
-        for row in reader:
-            album_popularities[row[0]] = int(row[1])
-
-    print("Album popularity file is read: %s" % path)
-    return album_popularities
-
-
 def read_track_metadata_csv(path):
     with open(path, "r", encoding="utf-8") as f1:
         reader = csv.reader(f1)
@@ -84,10 +72,8 @@ def read_track_metadata_csv(path):
     print("Track metadata file is read: %s" % path)
 
 
-def read_album_metadata_csv(path1, path2):
-    album_popularities = read_album_popularities_csv(path2)
-
-    with open(path1, "r", encoding="utf-8") as f1:
+def read_album_metadata_csv(path):
+    with open(path, "r", encoding="utf-8") as f1:
         reader = csv.reader(f1)
         for row in reader:
             album_uri = row[0]
@@ -96,13 +82,9 @@ def read_album_metadata_csv(path1, path2):
             num_tracks_in_album = int(row[3])
             album_name = row[4]
 
-            popularity = 0
-            if album_uri in album_popularities.keys():
-                popularity = album_popularities[album_uri]
+            album_metadata[album_uri] = (occurrence, frequency, num_tracks_in_album, album_name)
 
-            album_metadata[album_uri] = (occurrence, frequency, num_tracks_in_album, album_name, popularity)
-
-    print("Album metadata file is read: %s" % path1)
+    print("Album metadata file is read: %s" % path)
 
 
 def read_artist_metadata_csv(path):
@@ -183,7 +165,7 @@ def process_submission_csv(path1, path2):
                 if row[0] != "team_info":
                     for fr in collect_features(row):
                         if USE_CREATIVE_FEATURES:
-                            f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f 21:%f 22:%f 23:%f 24:%f 25:%f 26:%f 27:%f 28:%f 29:%f 30:%f 31:%f 32:%f 33:%f # %s\n" % tuple(fr))
+                            f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f 21:%f 22:%f 23:%f 24:%f 25:%f 26:%f 27:%f 28:%f 29:%f 30:%f 31:%f 32:%f# %s\n" % tuple(fr))
                         else:
                             f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f # %s\n" % tuple(fr))
 
@@ -224,8 +206,7 @@ def create_comments():
                 "#29:Audio liveness",
                 "#30:Audio valence",
                 "#31:Audio tempo",
-                "#32:Audio time signature",
-                "#33:Album popularity"]
+                "#32:Audio time signature"]
     else:
         return ["#Extracting features with the following feature vector",
                 "#1:Number of tracks in playlist",
@@ -285,7 +266,6 @@ def extract_features(pid, track_uri, index):
     album_frequency = album_metadata[album_uri][1]
     num_tracks_in_album = album_metadata[album_uri][2]
     album_name = album_metadata[album_uri][3]
-    album_popularity = album_metadata[album_uri][4]
 
     artist_occurrence = artist_metadata[artist_uri][0]
     artist_frequency = artist_metadata[artist_uri][1]
@@ -324,7 +304,7 @@ def extract_features(pid, track_uri, index):
             tempo = audio_metadata[track_uri][10]
             time_signature = audio_metadata[track_uri][11]
 
-        values.extend([danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature, album_popularity])
+        values.extend([danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature])
 
     values.append(track_uri)
 
@@ -333,17 +313,16 @@ def extract_features(pid, track_uri, index):
 
 if __name__ == '__main__':
     if len(sys.argv) != 11:
-        print("Usage: argv0 argv1 argv2 argv3 argv4 argv5 argv6 argv7 argv8 argv9 argv10")
+        print("Usage: argv0 argv1 argv2 argv3 argv4 argv5 argv6 argv7 argv8 argv9")
         print("argv1: challenge test set json file")
         print("argv2: track metadata csv file")
         print("argv3: album metadata csv file")
         print("argv4: artist metadata csv file")
         print("argv5: audio metadata csv file")
-        print("argv6: album popularity csv file")
-        print("argv7: submission csv file")
-        print("argv8: lucene score csv file")
-        print("argv9: letor output txt file")
-        print("argv10: use creative features (True or False)")
+        print("argv6: submission csv file")
+        print("argv7: lucene score csv file")
+        print("argv8: letor output txt file")
+        print("argv9: use creative features (True or False)")
         sys.exit(2)
     else:
         challenge_path = sys.argv[1]
@@ -351,17 +330,16 @@ if __name__ == '__main__':
         album_metadata_path = sys.argv[3]
         artist_metadata_path = sys.argv[4]
         audio_metadata_path = sys.argv[5]
-        album_popularity_path = sys.argv[6]
-        submission_path = sys.argv[7]
-        lucene_score_path = sys.argv[8]
-        letor_path = sys.argv[9]
+        submission_path = sys.argv[6]
+        lucene_score_path = sys.argv[7]
+        letor_path = sys.argv[8]
 
-        if sys.argv[10] == "True":
+        if sys.argv[9] == "True":
             USE_CREATIVE_FEATURES = True
 
         read_challenge_json(challenge_path)
         read_track_metadata_csv(track_metadata_path)
-        read_album_metadata_csv(album_metadata_path, album_popularity_path)
+        read_album_metadata_csv(album_metadata_path)
         read_artist_metadata_csv(artist_metadata_path)
         read_lucene_scores_csv(lucene_score_path)
 
