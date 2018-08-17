@@ -3,7 +3,43 @@ import json
 import sys
 import re
 
-USE_CREATIVE_FEATURES = False
+
+CONFIGURATION_KEYS = {"challenge_json", "track_metadata_csv", "album_metadata_csv", "artist_metadata_csv",
+                      "audio_metadata_csv", "submission_csv", "lucene_score_csv", "output_txt", "features"}
+
+FEATURES = {1: "Number of tracks in playlist",
+            2: "Number of samples in playlist",
+            3: "Number of holdouts in playlist",
+            4: "Length of playlist title",
+            5: "Track occurrence",
+            6: "Track frequency",
+            7: "Track duration",
+            8: "Album occurrence",
+            9: "Album frequency",
+            10: "Number of tracks in album",
+            11: "Artist occurrence",
+            12: "Artist frequency",
+            13: "Number of albums of artist",
+            14: "Number of tracks of artist",
+            15: "Submission order",
+            16: "Lucene score",
+            17: "Prediction position",
+            18: "Jaccard distance of playlist title and track name",
+            19: "Jaccard distance of playlist title and album namet",
+            20: "Jaccard distance of playlist title and artist name",
+            21: "Audio danceability",
+            22: "Audio energy",
+            23: "Audio key",
+            24: "Audio loudness",
+            25: "Audio mode",
+            26: "Audio speechiness",
+            27: "Audio acousticness",
+            28: "Audio instrumentalness",
+            29: "Audio liveness",
+            30: "Audio valence",
+            31: "Audio tempo",
+            32: "Audio time signature"}
+
 
 challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, lucene_scores = {}, {}, {}, {}, {}, {}
 
@@ -23,6 +59,19 @@ def normalize_name(name):
     name = re.sub(r"[.,/#!$%^*;:{}=_`~()@]", ' ', name)
     name = re.sub(r'\s+', ' ', name).strip()
     return name
+
+
+def read_configuration_json(path):
+    valid = True
+    with open(path, "r") as f:
+        global conf
+        conf = json.load(f)
+
+        if set(conf.keys()) != CONFIGURATION_KEYS or ("features" in conf.keys() and len(conf["features"]) == 0):
+            valid = False
+
+    print("Configuration file is read: %s" % path)
+    return valid
 
 
 def read_challenge_json(path):
@@ -164,71 +213,45 @@ def process_submission_csv(path1, path2):
             for row in reader:
                 if row[0] != "team_info":
                     for fr in collect_features(row):
-                        if USE_CREATIVE_FEATURES:
-                            f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f 21:%f 22:%f 23:%f 24:%f 25:%f 26:%f 27:%f 28:%f 29:%f 30:%f 31:%f 32:%f# %s\n" % tuple(fr))
-                        else:
-                            f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f # %s\n" % tuple(fr))
+                        f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f 21:%f 22:%f 23:%f 24:%f 25:%f 26:%f 27:%f 28:%f 29:%f 30:%f 31:%f 32:%f# %s\n" % tuple(fr))
 
     print("Letor conversion is completed: %s" % path2)
 
 
 def create_comments():
-    if USE_CREATIVE_FEATURES:
-        return ["#Extracting features with the following feature vector",
-                "#1:Number of tracks in playlist",
-                "#2:Number of samples in playlist",
-                "#3:Number of holdouts in playlist",
-                "#4:Length of playlist title",
-                "#5:Track occurrence",
-                "#6:Track frequency",
-                "#7:Track duration",
-                "#8:Album occurrence",
-                "#9:Album frequency",
-                "#10:Number of tracks in album",
-                "#11:Artist occurrence",
-                "#12:Artist frequency",
-                "#13:Number of albums of artist",
-                "#14:Number of tracks of artist",
-                "#15:Submission order",
-                "#16:Lucene score",
-                "#17:Prediction position",
-                "#18:Jaccard distance of playlist title and track name",
-                "#19:Jaccard distance of playlist title and album name",
-                "#20:Jaccard distance of playlist title and artist name",
-                "#21:Audio danceability",
-                "#22:Audio energy",
-                "#23:Audio key",
-                "#24:Audio loudness",
-                "#25:Audio mode",
-                "#26:Audio speechiness",
-                "#27:Audio acousticness",
-                "#28:Audio instrumentalness",
-                "#29:Audio liveness",
-                "#30:Audio valence",
-                "#31:Audio tempo",
-                "#32:Audio time signature"]
-    else:
-        return ["#Extracting features with the following feature vector",
-                "#1:Number of tracks in playlist",
-                "#2:Number of samples in playlist",
-                "#3:Number of holdouts in playlist",
-                "#4:Length of playlist title",
-                "#5:Track occurrence",
-                "#6:Track frequency",
-                "#7:Track duration",
-                "#8:Album occurrence",
-                "#9:Album frequency",
-                "#10:Number of tracks in album",
-                "#11:Artist occurrence",
-                "#12:Artist frequency",
-                "#13:Number of albums of artist",
-                "#14:Number of tracks of artist",
-                "#15:Submission order",
-                "#16:Lucene score",
-                "#17:Prediction position"
-                "#18:Jaccard distance of playlist title and track name",
-                "#19:Jaccard distance of playlist title and album name",
-                "#20:Jaccard distance of playlist title and artist name"]
+    return ["#Extracting features with the following feature vector",
+            "#1:Number of tracks in playlist",
+            "#2:Number of samples in playlist",
+            "#3:Number of holdouts in playlist",
+            "#4:Length of playlist title",
+            "#5:Track occurrence",
+            "#6:Track frequency",
+            "#7:Track duration",
+            "#8:Album occurrence",
+            "#9:Album frequency",
+            "#10:Number of tracks in album",
+            "#11:Artist occurrence",
+            "#12:Artist frequency",
+            "#13:Number of albums of artist",
+            "#14:Number of tracks of artist",
+            "#15:Submission order",
+            "#16:Lucene score",
+            "#17:Prediction position",
+            "#18:Jaccard distance of playlist title and track name",
+            "#19:Jaccard distance of playlist title and album name",
+            "#20:Jaccard distance of playlist title and artist name",
+            "#21:Audio danceability",
+            "#22:Audio energy",
+            "#23:Audio key",
+            "#24:Audio loudness",
+            "#25:Audio mode",
+            "#26:Audio speechiness",
+            "#27:Audio acousticness",
+            "#28:Audio instrumentalness",
+            "#29:Audio liveness",
+            "#30:Audio valence",
+            "#31:Audio tempo",
+            "#32:Audio time signature"]
 
 
 def collect_features(row):
@@ -287,24 +310,23 @@ def extract_features(pid, track_uri, index):
               artist_occurrence, artist_frequency, total_albums_of_artist, total_tracks_of_artist, index, lucene_score, lucene_position,
               jaccard_track, jaccard_album, jaccard_artist]
 
-    if USE_CREATIVE_FEATURES:
-        danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
-        if track_uri in audio_metadata.keys():
-            danceability = audio_metadata[track_uri][0]
-            energy = audio_metadata[track_uri][1]
-            key = audio_metadata[track_uri][2]
-            loudness = audio_metadata[track_uri][3]
-            mode = audio_metadata[track_uri][4]
-            speechiness = audio_metadata[track_uri][5]
-            acousticness = audio_metadata[track_uri][6]
-            instrumentalness = audio_metadata[track_uri][7]
-            liveness = audio_metadata[track_uri][8]
-            valence = audio_metadata[track_uri][9]
-            tempo = audio_metadata[track_uri][10]
-            time_signature = audio_metadata[track_uri][11]
+    if track_uri in audio_metadata.keys():
+        danceability = audio_metadata[track_uri][0]
+        energy = audio_metadata[track_uri][1]
+        key = audio_metadata[track_uri][2]
+        loudness = audio_metadata[track_uri][3]
+        mode = audio_metadata[track_uri][4]
+        speechiness = audio_metadata[track_uri][5]
+        acousticness = audio_metadata[track_uri][6]
+        instrumentalness = audio_metadata[track_uri][7]
+        liveness = audio_metadata[track_uri][8]
+        valence = audio_metadata[track_uri][9]
+        tempo = audio_metadata[track_uri][10]
+        time_signature = audio_metadata[track_uri][11]
 
-        values.extend([danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature])
+    values.extend([danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature])
 
     values.append(track_uri)
 
@@ -312,38 +334,21 @@ def extract_features(pid, track_uri, index):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 11:
-        print("Usage: argv0 argv1 argv2 argv3 argv4 argv5 argv6 argv7 argv8 argv9")
-        print("argv1: challenge test set json file")
-        print("argv2: track metadata csv file")
-        print("argv3: album metadata csv file")
-        print("argv4: artist metadata csv file")
-        print("argv5: audio metadata csv file")
-        print("argv6: submission csv file")
-        print("argv7: lucene score csv file")
-        print("argv8: letor output txt file")
-        print("argv9: use creative features (True or False)")
+    if len(sys.argv) != 2:
+        print("Usage: argv0 argv1")
+        print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        challenge_path = sys.argv[1]
-        track_metadata_path = sys.argv[2]
-        album_metadata_path = sys.argv[3]
-        artist_metadata_path = sys.argv[4]
-        audio_metadata_path = sys.argv[5]
-        submission_path = sys.argv[6]
-        lucene_score_path = sys.argv[7]
-        letor_path = sys.argv[8]
+        validation = read_configuration_json(sys.argv[1])
 
-        if sys.argv[9] == "True":
-            USE_CREATIVE_FEATURES = True
+        if validation:
+            read_challenge_json(conf["challenge_json"])
+            read_track_metadata_csv(conf["track_metadata_csv"])
+            read_album_metadata_csv(conf["album_metadata_csv"])
+            read_artist_metadata_csv(conf["artist_metadata_csv"])
+            read_audio_metadata_csv(conf["audio_metadata_csv"])
+            read_lucene_scores_csv(conf["lucene_score_csv"])
 
-        read_challenge_json(challenge_path)
-        read_track_metadata_csv(track_metadata_path)
-        read_album_metadata_csv(album_metadata_path)
-        read_artist_metadata_csv(artist_metadata_path)
-        read_lucene_scores_csv(lucene_score_path)
-
-        if USE_CREATIVE_FEATURES:
-            read_audio_metadata_csv(audio_metadata_path)
-
-        process_submission_csv(submission_path, letor_path)
+            process_submission_csv(conf["submission_csv"], conf["output_txt"])
+        else:
+            print(2)
