@@ -54,7 +54,7 @@ public class Indexer {
                 .withTokenizer("whitespace")
                 .addTokenFilter(ShingleFilterFactory.class,
                         "minShingleSize", "2",
-                        "maxShingleSize", "15",
+                        "maxShingleSize", "5",
                         "outputUnigrams", "false",
                         "outputUnigramsIfNoShingles", "false")
                 .addTokenFilter(FlattenGraphFilterFactory.class)
