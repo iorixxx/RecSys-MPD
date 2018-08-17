@@ -351,4 +351,5 @@ if __name__ == '__main__':
 
             process_submission_csv(conf["submission_csv"], conf["output_txt"])
         else:
-            print(2)
+            print("Configuration file cannot be validated, keys or features may be missing.")
+            print(CONFIGURATION_KEYS)

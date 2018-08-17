@@ -4,7 +4,22 @@ import sys
 from os import listdir
 from os.path import join
 
+CONFIGURATION_KEYS = {"mpd_directory", "output_directory"}
+
 track_metadata, album_metadata, artist_metadata = {}, {}, {}
+
+
+def read_configuration_json(path):
+    valid = True
+    with open(path, "r") as f:
+        global conf
+        conf = json.load(f)
+
+        if set(conf.keys()) != CONFIGURATION_KEYS:
+            valid = False
+
+    print("Configuration file is read: %s" % path)
+    return valid
 
 
 def process_dataset_json(path):
@@ -41,35 +56,38 @@ def process_dataset_json(path):
                     artist_metadata[artist_uri]["pids"].add(pid)
 
 
-def build():
-    for file in listdir(DATA_DIRECTORY):
-        print("Processing %s" % file)
-        process_dataset_json(join(DATA_DIRECTORY, file))
+def collect():
+    mpd_directory, output_directory = conf["mpd_directory"], conf["output_directory"]
 
-    with open(join(METADATA_DIRECTORY, "track_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    for file in listdir(mpd_directory):
+        print("Processing %s" % file)
+        process_dataset_json(join(mpd_directory, file))
+
+    with open(join(output_directory, "track_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in track_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), v["duration"], v["album_uri"], v["artist_uri"], v["track_name"]])
 
-    with open(join(METADATA_DIRECTORY, "album_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    with open(join(output_directory, "album_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in album_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), len(v["tracks"]), v["album_name"]])
 
-    with open(join(METADATA_DIRECTORY, "artist_metadata.csv"), "w", newline='', encoding="utf-8") as f:
+    with open(join(output_directory, "artist_metadata.csv"), "w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         for k, v in artist_metadata.items():
             writer.writerow([k, v["occurrence"], len(v["pids"]), len(v["albums"]), len(v["tracks"]), v["artist_name"]])
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Usage: argv0 argv1 argv2")
-        print("argv1: The MPD data folder path")
-        print("argv2: Metadata folder path")
+    if len(sys.argv) != 2:
+        print("Usage: argv0 argv1")
+        print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        DATA_DIRECTORY = sys.argv[1]
-        METADATA_DIRECTORY = sys.argv[2]
+        validation = read_configuration_json(sys.argv[1])
 
-        build()
+        if validation:
+            collect()
+        else:
+            print("Configuration file cannot be validated, keys may be missing.")
