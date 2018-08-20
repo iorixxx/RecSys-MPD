@@ -1,20 +1,36 @@
 import sys
 import csv
+import json
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+
+CONFIGURATION_KEYS = {"track_metadata_csv", "output_csv", "client_id", "client_secret"}
 
 MAX_BATCH = 50
 
 
-def extract_tracks():
+def read_configuration_json(path):
+    valid = True
+    with open(path, "r") as f:
+        global conf
+        conf = json.load(f)
+
+        if set(conf.keys()) != CONFIGURATION_KEYS:
+            valid = False
+
+    print("Configuration file is read: %s" % path)
+    return valid
+
+
+def extract_tracks(path):
     tracks = []
 
-    with open(TRACK_METADATA_PATH, "r", encoding="utf-8") as f1:
+    with open(path, "r", encoding="utf-8") as f1:
         reader = csv.reader(f1)
         for row in reader:
             tracks.append(row[0].split(":")[2])
 
-    print("Track metadata file is read: %s" % TRACK_METADATA_PATH)
+    print("Track metadata file is read: %s" % path)
     return tracks
 
 
@@ -28,18 +44,18 @@ def count_batches(t):
 
 
 def collect():
-    client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    client_credentials_manager = SpotifyClientCredentials(client_id=conf["client_id"], client_secret=conf["client_secret"])
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    tracks = extract_tracks()
+    tracks = extract_tracks(conf["track_metadata_csv"])
     batches = count_batches(tracks)
 
-    with open(AUDIO_FEATURES_PATH, "w", newline='') as f:
+    with open(conf["output_csv"], "w", newline='') as f:
         writer = csv.writer(f)
 
         for i in range(batches):
             print("Batch %d" % i)
-            sub_list = tracks[i*MAX_BATCH : (i+1)*MAX_BATCH]
+            sub_list = tracks[i*MAX_BATCH: (i+1)*MAX_BATCH]
             audios = sp.audio_features(sub_list)
 
             for audio in audios:
@@ -49,21 +65,18 @@ def collect():
                 except TypeError:
                     print("Audio features of a track cannot be obtained")
 
-    print("Audio features are collected: %s" % AUDIO_FEATURES_PATH)
+    print("Audio features are collected: %s" % conf["output_csv"])
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 5:
-        print("Usage: argv0 argv1 argv2 argv3 argv4")
-        print("argv1: track metadata csv file")
-        print("argv2: audio features output csv file")
-        print("argv3: Client ID")
-        print("argv4: Client Secret")
+    if len(sys.argv) != 2:
+        print("Usage: argv0 argv1")
+        print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        TRACK_METADATA_PATH = sys.argv[1]
-        AUDIO_FEATURES_PATH = sys.argv[2]
-        CLIENT_ID = sys.argv[3]
-        CLIENT_SECRET = sys.argv[4]
+        validation = read_configuration_json(sys.argv[1])
 
-        collect()
+        if validation:
+            collect()
+        else:
+            print("Configuration file cannot be validated, keys may be missing.")
