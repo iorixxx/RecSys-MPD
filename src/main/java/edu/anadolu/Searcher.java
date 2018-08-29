@@ -77,7 +77,7 @@ public class Searcher implements Closeable {
         }
     }
 
-    public void search(Format format, Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException {
+    public void search(Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException {
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
@@ -125,7 +125,7 @@ public class Searcher implements Closeable {
                 throw new RuntimeException(e);
             }
 
-            export(submission, playlist, format, out.get(), similarityConfig);
+            export(submission, playlist, out.get());
 
             out.get().flush();
             submission.clear();
@@ -139,8 +139,6 @@ public class Searcher implements Closeable {
             System.out.println("Number of entries into the Category Paths is OK!");
         else
             throw new RuntimeException("titleOnly:" + titleOnly + " random:" + random + " firstN:" + firstN);
-
-        //System.out.println("cacheKeys: " + cacheKeys());
     }
 
     @Override

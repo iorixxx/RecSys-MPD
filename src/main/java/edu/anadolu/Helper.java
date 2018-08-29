@@ -79,55 +79,15 @@ class Helper {
 
     }
 
-    static synchronized void export(LinkedHashSet<String> submission, Playlist playlist, Format format, PrintWriter out, SimilarityConfig similarityConfig) {
-        switch (format) {
-            case RECSYS:
-                out.print(playlist.pid);
+    static synchronized void export(LinkedHashSet<String> submission, Playlist playlist, PrintWriter out) {
+        out.print(playlist.pid);
 
-                for (String s : submission) {
-                    out.print(",");
-                    out.print(s);
-                }
-
-                out.println();
-                break;
-            case TREC:
-                int i = 1;
-                for (String s : submission) {
-                    out.print(playlist.pid);
-                    out.print("\tQ0\t");
-                    out.print(s);
-                    out.print("\t");
-                    out.print(i);
-                    out.print("\t");
-                    out.print(i);
-                    out.print("\t");
-                    out.print(similarityConfig);
-                    out.println();
-
-                    i++;
-                }
-                break;
-            case LTR:
-
-
-                final String typeQ = " qid:" + playlist.pid + " 1:" + playlist.num_followers + " 2:" + playlist.num_tracks + " 3:" + whiteSpace.split(playlist.name.trim()).length;
-
-                for (String s : submission) {
-
-
-                    Track track = resolveTrackFromURI(s);
-
-                    String label = actualLabel(s);
-
-                    out.print(label);
-                    out.print(typeQ);
-                    out.print(" 4:" + track.pos + " 5:" + track.duration_ms + " # " + track.track_uri);
-                    out.println();
-                }
-
-                break;
+        for (String s : submission) {
+            out.print(",");
+            out.print(s);
         }
+
+        out.println();
     }
 
 
