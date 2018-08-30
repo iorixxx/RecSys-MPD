@@ -43,8 +43,6 @@ import static edu.anadolu.Indexer.icu;
  */
 public class Searcher implements Closeable {
 
-    static final String TEAM_INFO = "team_info,Anadolu,main,aarslan2@anadolu.edu.tr";
-
     static final int RESULT_SIZE = 500;
 
     static final Pattern whiteSpace = Pattern.compile("\\s+");
@@ -80,8 +78,6 @@ public class Searcher implements Closeable {
     public void search(Path resultPath, SpanNearConfig.RelaxMode relaxMode) throws IOException {
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
-
-        out.get().println(TEAM_INFO);
 
         AtomicInteger titleOnly = new AtomicInteger(0);
         AtomicInteger firstN = new AtomicInteger(0);
