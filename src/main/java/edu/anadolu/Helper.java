@@ -80,14 +80,13 @@ class Helper {
     }
 
     static synchronized void export(LinkedHashSet<String> submission, Playlist playlist, PrintWriter out) {
-        out.print(playlist.pid);
 
         for (String s : submission) {
+            out.print(playlist.pid);
             out.print(",");
             out.print(s);
+            out.println();
         }
-
-        out.println();
     }
 
 
