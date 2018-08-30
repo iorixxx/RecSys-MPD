@@ -25,7 +25,7 @@ FEATURES = {1: "Number of tracks in playlist",
             16: "Lucene score",
             17: "Prediction position",
             18: "Jaccard distance of playlist title and track name",
-            19: "Jaccard distance of playlist title and album namet",
+            19: "Jaccard distance of playlist title and album name",
             20: "Jaccard distance of playlist title and artist name",
             21: "Audio danceability",
             22: "Audio energy",
@@ -213,45 +213,31 @@ def process_submission_csv(path1, path2):
             for row in reader:
                 if row[0] != "team_info":
                     for fr in collect_features(row):
-                        f2.write("%d qid:%d 1:%f 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f 18:%f 19:%f 20:%f 21:%f 22:%f 23:%f 24:%f 25:%f 26:%f 27:%f 28:%f 29:%f 30:%f 31:%f 32:%f# %s\n" % tuple(fr))
+                        feature_num, hit, pid, track_uri, features = 0, fr[0], fr[1], fr[2], fr[3]
+
+                        s = "%d qid:%d" % (hit, pid)
+
+                        for k, v in features.items():
+                            if k in conf["features"]:
+                                feature_num += 1
+
+                                s += " %d:%f" % (feature_num, v)
+
+                        s += "# %s\n" % track_uri
+                        f2.write(s)
 
     print("Letor conversion is completed: %s" % path2)
 
 
 def create_comments():
-    return ["#Extracting features with the following feature vector",
-            "#1:Number of tracks in playlist",
-            "#2:Number of samples in playlist",
-            "#3:Number of holdouts in playlist",
-            "#4:Length of playlist title",
-            "#5:Track occurrence",
-            "#6:Track frequency",
-            "#7:Track duration",
-            "#8:Album occurrence",
-            "#9:Album frequency",
-            "#10:Number of tracks in album",
-            "#11:Artist occurrence",
-            "#12:Artist frequency",
-            "#13:Number of albums of artist",
-            "#14:Number of tracks of artist",
-            "#15:Submission order",
-            "#16:Lucene score",
-            "#17:Prediction position",
-            "#18:Jaccard distance of playlist title and track name",
-            "#19:Jaccard distance of playlist title and album name",
-            "#20:Jaccard distance of playlist title and artist name",
-            "#21:Audio danceability",
-            "#22:Audio energy",
-            "#23:Audio key",
-            "#24:Audio loudness",
-            "#25:Audio mode",
-            "#26:Audio speechiness",
-            "#27:Audio acousticness",
-            "#28:Audio instrumentalness",
-            "#29:Audio liveness",
-            "#30:Audio valence",
-            "#31:Audio tempo",
-            "#32:Audio time signature"]
+    comments, feature_num = ["#Extracting features with the following feature vector"], 0
+
+    for k, v in FEATURES.items():
+        if k in conf["features"]:
+            feature_num += 1
+            comments.append("#%d:%s" % (feature_num, v))
+
+    return comments
 
 
 def collect_features(row):
@@ -305,11 +291,6 @@ def extract_features(pid, track_uri, index):
     jaccard_artist = jaccard_distance(name, artist_name)
     jaccard_album = jaccard_distance(name, album_name)
 
-    values = [hit, pid, num_tracks, num_samples, num_holdouts, len(name),
-              track_occurrence, track_frequency, track_duration, album_occurrence, album_frequency, num_tracks_in_album,
-              artist_occurrence, artist_frequency, total_albums_of_artist, total_tracks_of_artist, index, lucene_score, lucene_position,
-              jaccard_track, jaccard_album, jaccard_artist]
-
     danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
     if track_uri in audio_metadata.keys():
@@ -326,11 +307,40 @@ def extract_features(pid, track_uri, index):
         tempo = audio_metadata[track_uri][10]
         time_signature = audio_metadata[track_uri][11]
 
-    values.extend([danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature])
+    values = {1: num_tracks,
+              2: num_samples,
+              3: num_holdouts,
+              4: len(name),
+              5: track_occurrence,
+              6: track_frequency,
+              7: track_duration,
+              8: album_occurrence,
+              9: album_frequency,
+              10: num_tracks_in_album,
+              11: artist_occurrence,
+              12: artist_frequency,
+              13: total_albums_of_artist,
+              14: total_tracks_of_artist,
+              15: index,
+              16: lucene_score,
+              17: lucene_position,
+              18: jaccard_track,
+              19: jaccard_album,
+              20: jaccard_artist,
+              21: danceability,
+              22: energy,
+              23: key,
+              24: loudness,
+              25: mode,
+              26: speechiness,
+              27: acousticness,
+              28: instrumentalness,
+              29: liveness,
+              30: valence,
+              31: tempo,
+              32: time_signature}
 
-    values.append(track_uri)
-
-    return values
+    return hit, pid, track_uri, values
 
 
 if __name__ == '__main__':
