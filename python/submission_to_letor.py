@@ -2,10 +2,11 @@ import csv
 import json
 import sys
 import re
+import collections
 
 
 CONFIGURATION_KEYS = {"challenge_json", "track_metadata_csv", "album_metadata_csv", "artist_metadata_csv",
-                      "audio_metadata_csv", "submission_csv", "lucene_score_csv", "output_txt", "features"}
+                      "audio_metadata_csv", "recommendation_csv", "output_txt", "features"}
 
 FEATURES = {1: "Number of tracks in playlist",
             2: "Number of samples in playlist",
@@ -41,7 +42,7 @@ FEATURES = {1: "Number of tracks in playlist",
             32: "Audio time signature"}
 
 
-challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, lucene_scores = {}, {}, {}, {}, {}, {}
+challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, recommendations = {}, {}, {}, {}, {}, {}
 
 
 def jaccard_distance(a, b):
@@ -178,73 +179,60 @@ def read_audio_metadata_csv(path):
     print("Audio metadata file is read: %s" % path)
 
 
-def read_lucene_scores_csv(path):
+def read_recommendation_csv(path):
     with open(path, "r") as file:
         reader = csv.reader(file)
         for row in reader:
-            if row[0] != "team_info":
-                pid = int(row[0])
-                scores = [x.strip() for x in row[1:]]
+            pid = int(row[0])
+            track_uri = row[1]
+            lucene_score = 999.0
+            lucene_position = 888.0
+            # todo implement lucene score and position
 
-                for s in scores:
-                    p1, p2 = s.find("("), s.find(")")
-                    track_uri = s[:p1]
-                    value = s[p1+1:p2]
-                    score = float(value.split("=")[0])
-                    position = int(value.split("=")[1])
+            if pid not in recommendations:
+                recommendations[pid] = collections.OrderedDict()
 
-                    if pid not in lucene_scores:
-                        lucene_scores[pid] = {}
+            recommendations[pid][track_uri] = (lucene_score, lucene_position)
 
-                    lucene_scores[pid][track_uri] = (score, position)
-
-    print("Lucene scores file is read: %s" % path)
+    print("Recommendation file is read: %s" % path)
 
 
-def process_submission_csv(path1, path2):
+def convert(path):
     comments = create_comments()
 
-    with open(path1, "r") as f1:
-        reader = csv.reader(f1)
-        with open(path2, "w") as f2:
-            for c in comments:
-                f2.write("%s\n" % c)
+    with open(path, "w") as file:
+        for c in comments:
+            file.write("%s\n" % c)
 
-            for row in reader:
-                if row[0] != "team_info":
-                    for fr in collect_features(row):
-                        feature_num, hit, pid, track_uri, features = 0, fr[0], fr[1], fr[2], fr[3]
+        for pid, tracks in recommendations.items():
+            for fr in collect_features(pid, list(tracks.keys())):
+                feature_num = 0
+                hit, track_uri, features = fr[0], fr[1], fr[2]
 
-                        s = "%d qid:%d" % (hit, pid)
+                s = "%d qid:%d" % (hit, pid)
 
-                        for k, v in features.items():
-                            if k in conf["features"]:
-                                feature_num += 1
+                for f in conf["features"]:
+                    feature_num += 1
+                    s += " %d:%f" % (feature_num, features[f])
 
-                                s += " %d:%f" % (feature_num, v)
+                s += "# %s\n" % track_uri
+                file.write(s)
 
-                        s += "# %s\n" % track_uri
-                        f2.write(s)
-
-    print("Letor conversion is completed: %s" % path2)
+    print("Letor conversion is completed: %s" % path)
 
 
 def create_comments():
     comments, feature_num = ["#Extracting features with the following feature vector"], 0
 
-    for k, v in FEATURES.items():
-        if k in conf["features"]:
-            feature_num += 1
-            comments.append("#%d:%s" % (feature_num, v))
+    for f in conf["features"]:
+        feature_num += 1
+        comments.append("#%d:%s" % (feature_num, FEATURES[f]))
 
     return comments
 
 
-def collect_features(row):
+def collect_features(pid, track_uris):
     features = []
-
-    pid = int(row[0])
-    track_uris = [x.strip() for x in row[1:]]
 
     i = len(track_uris)
     for track_uri in track_uris:
@@ -282,10 +270,8 @@ def extract_features(pid, track_uri, index):
     total_tracks_of_artist = artist_metadata[artist_uri][3]
     artist_name = artist_metadata[artist_uri][4]
 
-    lucene_score, lucene_position = 0, 0
-    if pid in lucene_scores.keys() and track_uri in lucene_scores[pid].keys():
-        lucene_score = lucene_scores[pid][track_uri][0]
-        lucene_position = lucene_scores[pid][track_uri][1]
+    lucene_score = recommendations[pid][track_uri][0]
+    lucene_position = recommendations[pid][track_uri][1]
 
     jaccard_track = jaccard_distance(name, track_name)
     jaccard_artist = jaccard_distance(name, artist_name)
@@ -340,7 +326,7 @@ def extract_features(pid, track_uri, index):
               31: tempo,
               32: time_signature}
 
-    return hit, pid, track_uri, values
+    return hit, track_uri, values
 
 
 if __name__ == '__main__':
@@ -352,14 +338,16 @@ if __name__ == '__main__':
         validation = read_configuration_json(sys.argv[1])
 
         if validation:
+            conf["features"].sort()
+
             read_challenge_json(conf["challenge_json"])
             read_track_metadata_csv(conf["track_metadata_csv"])
             read_album_metadata_csv(conf["album_metadata_csv"])
             read_artist_metadata_csv(conf["artist_metadata_csv"])
             read_audio_metadata_csv(conf["audio_metadata_csv"])
-            read_lucene_scores_csv(conf["lucene_score_csv"])
+            read_recommendation_csv(conf["recommendation_csv"])
 
-            process_submission_csv(conf["submission_csv"], conf["output_txt"])
+            convert(conf["output_txt"])
         else:
             print("Configuration file cannot be validated, keys or features may be missing.")
             print(CONFIGURATION_KEYS)

@@ -4,8 +4,7 @@
   "album_metadata_csv": "",
   "artist_metadata_csv": "",
   "audio_metadata_csv": "",
-  "submission_csv": "",
-  "lucene_score_csv": "",
+  "recommendation_csv": "",
   "output_txt": "",
   "features": []
 }
