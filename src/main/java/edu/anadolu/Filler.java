@@ -252,7 +252,6 @@ public class Filler {
     private Path dumpJustPIDs(Path path) {
 
         try (PrintWriter out = new PrintWriter(Files.newBufferedWriter(path, StandardCharsets.US_ASCII))) {
-            out.println(Searcher.TEAM_INFO);
             Arrays.stream(challenge.playlists).map(p -> p.pid).forEach(out::println);
             out.flush();
 
