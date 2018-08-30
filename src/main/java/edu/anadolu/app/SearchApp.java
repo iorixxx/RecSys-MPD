@@ -14,14 +14,14 @@ import java.nio.file.Paths;
 public class SearchApp {
 
     public static void main(String[] args) throws IOException {
-        if (args.length == 8) {
+        if (args.length == 7) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
-            SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[4]);
-            boolean useOnlyLonger = Boolean.valueOf(args[5]);
-            SpanNearConfig.RelaxMode relaxMode = SpanNearConfig.RelaxMode.valueOf(args[6]);
-            boolean sortByFollower = Boolean.valueOf(args[7]);
+            SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[3]);
+            boolean useOnlyLonger = Boolean.valueOf(args[4]);
+            SpanNearConfig.RelaxMode relaxMode = SpanNearConfig.RelaxMode.valueOf(args[5]);
+            boolean sortByFollower = Boolean.valueOf(args[6]);
             try (Searcher searcher = new Searcher(indexPath, challengePath, similarityConfig, useOnlyLonger, sortByFollower)) {
                 searcher.search(resultPath, relaxMode);
             }
