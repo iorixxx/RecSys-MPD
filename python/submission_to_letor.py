@@ -185,9 +185,8 @@ def read_recommendation_csv(path):
         for row in reader:
             pid = int(row[0])
             track_uri = row[1]
-            lucene_score = 999.0
-            lucene_position = 888.0
-            # todo implement lucene score and position
+            lucene_score = float(row[2])
+            lucene_position = int(row[3])
 
             if pid not in recommendations:
                 recommendations[pid] = collections.OrderedDict()
