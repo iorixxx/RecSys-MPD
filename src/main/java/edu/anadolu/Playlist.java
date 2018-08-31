@@ -11,4 +11,16 @@ public class Playlist {
     int num_tracks;
 
     int num_followers;
+
+    public boolean isSequential() {
+        int currentPos = 0;
+
+        for (Track track : tracks) {
+            if (currentPos != track.pos) return false;
+
+            currentPos ++;
+        }
+
+        return true;
+    }
 }

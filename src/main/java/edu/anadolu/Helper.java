@@ -111,9 +111,8 @@ class Helper {
 
     }
 
-
     /**
-     * If certain algorithm collects less than RESULT_SIZE tracks,
+     * If certain algorithm collects less than MAX_RESULT_SIZE tracks,
      * then fill remaining tracks using most frequent tracks as a last resort.
      */
     static void fallBackTo(LinkedHashSet<String> submission, Set<String> seeds, List<String> followerFreq) {
@@ -141,28 +140,6 @@ class Helper {
         }
         return false;
     }
-
-
-    static void incrementPageCountMap(LinkedHashMap<Integer, Integer> pageCount, int i) {
-        // count max page count: How many results do we iterate to fill quota of 500?
-        if (pageCount.containsKey(i + 1)) {
-            int count = pageCount.get(i + 1);
-            count++;
-            pageCount.put(i + 1, count);
-        } else {
-            int count = pageCount.get(-1);
-            count++;
-            pageCount.put(-1, count);
-        }
-    }
-
-    static void printPageCountMap(LinkedHashMap<Integer, Integer> pageCount) {
-        pageCount.entrySet().stream()
-                .filter(o -> o.getValue() > 0)
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .forEach(o -> System.out.println(o.getKey() + "\t" + o.getValue()));
-    }
-
 
     static <T> List<T> reverse(PriorityQueue<T> priorityQueue) {
         List<T> reverse = new ArrayList<>(priorityQueue.size());
