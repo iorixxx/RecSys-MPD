@@ -8,6 +8,7 @@ from collections import OrderedDict
 from tabulate import tabulate
 
 CONFIGURATION_KEYS = {"challenge_json", "recommendation_csv_list"}
+METRICS = ["precision", "recall", "ndcg", "extender"]
 
 challenges = {}
 
@@ -135,7 +136,7 @@ def measure(path):
         results[category]["ndcg"].append(ndcg)
         results[category]["extender"].append(extender)
 
-    summary = []
+    summary, m_instances = [], 0
 
     for c in sorted(results.keys()):
         v1, v2, v3, v4 = results[c]["precision"], results[c]["recall"], results[c]["ndcg"], results[c]["extender"]
@@ -145,12 +146,47 @@ def measure(path):
         c_ndcg = statistics.mean(v3)
         c_extender = statistics.mean(v4)
 
-        summary.append([c, c_precision, c_recall, c_ndcg, c_extender])
+        c_instances = len(v1)
+        m_instances += c_instances
 
-    summary.append(["mean", 0, 0, 0, 0])
+        summary.append([c, c_instances, c_precision, c_recall, c_ndcg, c_extender])
 
-    print(tabulate(summary, headers=["category", "precision", "recall", "ndcg", "extender"]))
+    m = compute_overall_mean(results)
+
+    summary.append(["mean", m_instances, m[0], m[1], m[2], m[3]])
+
+    print(tabulate(summary, headers=["category", "instances", "precision", "recall", "ndcg", "extender"]))
     return summary
+
+
+def compute_overall_mean(results):
+    metrics = ["precision", "recall", "ndcg", "extender"]
+    m = [[0, 0] for _ in range(4)]
+
+    for c in results.keys():
+        for i in range(len(metrics)):
+            m[i][0] += sum(results[c][metrics[i]])
+            m[i][1] += len(results[c][metrics[i]])
+
+    return [x[0] / x[1] for x in m]
+
+
+def show_results(summary):
+    print("Summarizing all recommendation files...")
+    v = []
+
+    for i in range(len(summary[0])):
+        line = []
+
+        for j in range(len(summary)):
+            if j == 0:
+                line.extend(summary[j][i])
+            else:
+                line.extend(summary[j][i][2:])
+
+        v.append(line)
+
+    print(tabulate(v, headers=["category", "instances"] + METRICS * len(summary)))
 
 
 if __name__ == '__main__':
@@ -164,7 +200,12 @@ if __name__ == '__main__':
         if validation:
             read_challenge_json(conf["challenge_json"])
 
+            summary_list = []
+
             for recommendation_csv in conf["recommendation_csv_list"]:
-                measure(recommendation_csv)
+                s = measure(recommendation_csv)
+                summary_list.append(s)
+
+            show_results(summary_list)
         else:
             print("Configuration file cannot be validated, keys or recommendation csv files may be missing.")
