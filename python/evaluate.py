@@ -3,7 +3,9 @@ import csv
 import json
 import numpy as np
 import statistics
+
 from collections import OrderedDict
+from tabulate import tabulate
 
 CONFIGURATION_KEYS = {"challenge_json", "recommendation_csv_list"}
 
@@ -133,13 +135,22 @@ def measure(path):
         results[category]["ndcg"].append(ndcg)
         results[category]["extender"].append(extender)
 
-    for c in sorted(results.keys()):
-        c_precision = statistics.mean(results[c]["precision"])
-        c_recall = statistics.mean(results[c]["recall"])
-        c_ndcg = statistics.mean(results[c]["ndcg"])
-        c_extender = statistics.mean(results[c]["extender"])
+    summary = []
 
-        print("%s\t%f\t%f\t%f\t%f" % (c, c_precision, c_recall, c_ndcg, c_extender))
+    for c in sorted(results.keys()):
+        v1, v2, v3, v4 = results[c]["precision"], results[c]["recall"], results[c]["ndcg"], results[c]["extender"]
+
+        c_precision = statistics.mean(v1)
+        c_recall = statistics.mean(v2)
+        c_ndcg = statistics.mean(v3)
+        c_extender = statistics.mean(v4)
+
+        summary.append([c, c_precision, c_recall, c_ndcg, c_extender])
+
+    summary.append(["mean", 0, 0, 0, 0])
+
+    print(tabulate(summary, headers=["category", "precision", "recall", "ndcg", "extender"]))
+    return summary
 
 
 if __name__ == '__main__':
@@ -156,4 +167,4 @@ if __name__ == '__main__':
             for recommendation_csv in conf["recommendation_csv_list"]:
                 measure(recommendation_csv)
         else:
-            print("Configuration file cannot be validated, keys may be missing.")
+            print("Configuration file cannot be validated, keys or recommendation csv files may be missing.")
