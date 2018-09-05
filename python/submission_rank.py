@@ -1,10 +1,23 @@
 import sys
+import json
 import csv
 
-HEADER = ["team_info", "Anadolu", "main", "aarslan2@anadolu.edu.tr"]
+CONFIGURATION_KEYS = {"letor_txt", "predicted_score_txt", "output_csv"}
 
-letor_mapping = {}
-prediction_mapping = {}
+letor_mapping, prediction_mapping = {}, {}
+
+
+def read_configuration_json(path):
+    valid = True
+    with open(path, "r") as f:
+        global conf
+        conf = json.load(f)
+
+        if set(conf.keys()) != CONFIGURATION_KEYS:
+            valid = False
+
+    print("Configuration file is read: %s" % path)
+    return valid
 
 
 def read_letor_txt(path):
@@ -26,7 +39,7 @@ def read_letor_txt(path):
     print("Letor file is read: %s" % path)
 
 
-def read_prediction_txt(path):
+def read_predicted_score_txt(path):
     line_num = 0
 
     with open(path, "r") as file:
@@ -37,8 +50,8 @@ def read_prediction_txt(path):
     print("Prediction file is read: %s" % path)
 
 
-def sort_by_predictions(path):
-    csv_content = [HEADER]
+def rank_by_scores(path):
+    csv_content = []
 
     for pid, tracks in letor_mapping.items():
         tuples, submission = [], [pid]
@@ -56,23 +69,22 @@ def sort_by_predictions(path):
         writer = csv.writer(f)
         writer.writerows(csv_content)
 
-    print("Sorted submission file is created: %s" % path)
+    print("Re-ranked result file is created: %s" % path)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print("Usage: argv0 argv1 argv2 argv3")
-        print("argv1: letor txt file")
-        print("argv2: prediction txt file")
-        print("argv3: submission csv file")
+    if len(sys.argv) != 2:
+        print("Usage: argv0 argv1")
+        print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        letor_path = sys.argv[1]
-        prediction_path = sys.argv[2]
-        submission_path = sys.argv[3]
+        validation = read_configuration_json(sys.argv[1])
 
-        read_letor_txt(letor_path)
-        read_prediction_txt(prediction_path)
+        if validation:
+            read_letor_txt(conf["letor_txt"])
+            read_predicted_score_txt(conf["predicted_score_txt"])
 
-        sort_by_predictions(submission_path)
-
+            rank_by_scores(conf["output_csv"])
+        else:
+            print("Configuration file cannot be validated, keys may be missing.")
+            print(CONFIGURATION_KEYS)
