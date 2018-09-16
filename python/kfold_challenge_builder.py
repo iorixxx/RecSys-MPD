@@ -7,7 +7,7 @@ from os.path import join
 
 CONFIGURATION_KEYS = {"mpd_directory", "output_directory", "k"}
 
-challenges = {}
+MPD_SIZE = 10000
 
 
 def read_configuration_json(path):
@@ -30,27 +30,23 @@ def read_dataset_json(path):
     return data["playlists"]
 
 
-def export():
-    for k, v in sorted(challenges.items()):
-        with open(join(conf["output_directory"], "fold-{0:03d}.json".format(k)), "w") as f:
-            json.dump(v, f, indent=4)
-        print("Playlists in fold %d: %d" % (k, len(v["playlists"])))
-
-
 def build():
-    k, turn = int(conf["k"]), 0
+    k, count, current_k = int(conf["k"]), 0, 1
+    partition_size = int(MPD_SIZE / k)
 
     files = listdir(conf["mpd_directory"])
     random.shuffle(files)
 
-    for file in files:
+    challenges = dict(playlists=[])
+
+    for file in files[0:10]:
         print("Processing %s" % file)
 
         items = read_dataset_json(join(conf["mpd_directory"], file))
         random.shuffle(items)
 
         for item in items:
-            turn += 1
+            count += 1
             playlist_json = dict(pid=item["pid"], name=item["name"], category="cat1")
 
             random.shuffle(item["tracks"])
@@ -65,16 +61,20 @@ def build():
             playlist_json["tracks"] = sorted(item["tracks"][0:num_samples], key=lambda x: x["pos"], reverse=False)
             playlist_json["holdouts"] = sorted(item["tracks"][num_samples:], key=lambda x: x["pos"], reverse=False)
 
-            if turn not in challenges:
-                challenges[turn] = dict(playlists=[])
+            challenges["playlists"].append(playlist_json)
 
-            challenges[turn]["playlists"].append(playlist_json)
+            if count == partition_size:
+                with open(join(conf["output_directory"], "fold-{0:03d}.json".format(current_k)), "w") as f:
+                    json.dump(challenges, f, indent=4)
 
-            if turn % k == 0:
-                turn = 0
+                print("Fold %d is created with %d playlists" % (current_k, len(challenges["playlists"])))
 
-    export()
-    print("Challenge files are created in: %s" % conf["output_directory"])
+                count = 0
+                current_k += 1
+
+                del challenges["playlists"][:]
+
+    print("%d-fold cv files are created in folder: %s" % (k, conf["output_directory"]))
 
 
 if __name__ == '__main__':
