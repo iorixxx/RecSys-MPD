@@ -7,7 +7,7 @@ from os.path import join
 
 CONFIGURATION_KEYS = {"mpd_directory", "output_directory", "k"}
 
-MPD_SIZE = 10000
+MPD_SIZE = 1000000
 
 
 def read_configuration_json(path):
@@ -39,7 +39,7 @@ def build():
 
     challenges = dict(playlists=[])
 
-    for file in files[0:10]:
+    for file in files:
         print("Processing %s" % file)
 
         items = read_dataset_json(join(conf["mpd_directory"], file))
