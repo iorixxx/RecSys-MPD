@@ -2,6 +2,7 @@ import csv
 import json
 import sys
 import re
+import util
 import collections
 
 
@@ -76,31 +77,30 @@ def read_configuration_json(path):
 
 
 def read_challenge_json(path):
-    with open(path, "r") as f:
-        challenges = json.load(f)
+    challenges = util.read_dataset_json(path)
 
-        for challenge in challenges["playlists"]:
-            pid = challenge["pid"]
+    for challenge in challenges:
+        pid = challenge["pid"]
 
-            if "name" in challenge.keys():
-                name = challenge["name"].strip()
-            else:
-                name = ""
+        if "name" in challenge.keys():
+            name = challenge["name"].strip()
+        else:
+            name = ""
 
-            num_tracks = challenge["num_tracks"]
-            num_samples = challenge["num_samples"]
-            num_holdouts = challenge["num_holdouts"]
+        num_tracks = challenge["num_tracks"]
+        num_samples = challenge["num_samples"]
+        num_holdouts = challenge["num_holdouts"]
 
-            holdouts = []
-            if "holdouts" in challenge.keys():
-                for holdout in challenge["holdouts"]:
-                    holdouts.append(holdout["track_uri"])
+        holdouts = []
+        if "holdouts" in challenge.keys():
+            for holdout in challenge["holdouts"]:
+                holdouts.append(holdout["track_uri"])
 
-            tracks = []
-            for track in challenge["tracks"]:
-                tracks.append(track["track_uri"])
+        tracks = []
+        for track in challenge["tracks"]:
+            tracks.append(track["track_uri"])
 
-            challenge_metadata[pid] = (name, num_tracks, num_samples, num_holdouts, holdouts, tracks)
+        challenge_metadata[pid] = (name, num_tracks, num_samples, num_holdouts, holdouts, tracks)
 
     print("Challenge file is read: %s" % path)
 

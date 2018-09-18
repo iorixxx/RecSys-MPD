@@ -1,6 +1,7 @@
 import sys
 import csv
 import json
+import util
 import numpy as np
 import statistics
 
@@ -44,18 +45,17 @@ def read_recommendation_csv(path):
 
 
 def read_challenge_json(path):
-    with open(path, "r") as f:
-        data_holder = json.load(f)
+    playlists = util.read_dataset_json(path)
 
-        for item in data_holder["playlists"]:
-            pid = item["pid"]
-            category = int(item["category"].replace("cat", ""))
-            holdouts = []
+    for playlist in playlists:
+        pid = playlist["pid"]
+        category = int(playlist["category"].replace("cat", ""))
+        holdouts = []
 
-            for h in item["holdouts"]:
-                holdouts.append(h["track_uri"])
+        for h in playlist["holdouts"]:
+            holdouts.append(h["track_uri"])
 
-            challenges[pid] = dict(category=category, holdouts=holdouts)
+        challenges[pid] = dict(category=category, holdouts=holdouts)
 
     print("Challenge file is read: %s" % path)
 

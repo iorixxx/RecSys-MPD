@@ -1,6 +1,7 @@
 import json
 import sys
 import random
+import util
 
 from os import listdir
 from os.path import join
@@ -23,18 +24,10 @@ def read_configuration_json(path):
     return valid
 
 
-def read_dataset_json(path):
-    with open(path, "r") as f:
-        data = json.load(f)
+def build(mpd_path, output_path, k):
+    count, current_k, partition_size = 0, 1, int(MPD_SIZE / k)
 
-    return data["playlists"]
-
-
-def build():
-    k, count, current_k = int(conf["k"]), 0, 1
-    partition_size = int(MPD_SIZE / k)
-
-    files = listdir(conf["mpd_directory"])
+    files = listdir(mpd_path)
     random.shuffle(files)
 
     challenges = dict(playlists=[])
@@ -42,7 +35,7 @@ def build():
     for file in files:
         print("Processing %s" % file)
 
-        items = read_dataset_json(join(conf["mpd_directory"], file))
+        items = util.read_dataset_json(join(mpd_path, file))
         random.shuffle(items)
 
         for item in items:
@@ -64,7 +57,7 @@ def build():
             challenges["playlists"].append(playlist_json)
 
             if count == partition_size:
-                with open(join(conf["output_directory"], "fold-{0:03d}.json".format(current_k)), "w") as f:
+                with open(join(output_path, "fold-{0:03d}.json".format(current_k)), "w") as f:
                     json.dump(challenges, f, indent=4)
 
                 print("Fold %d is created with %d playlists" % (current_k, len(challenges["playlists"])))
@@ -74,7 +67,7 @@ def build():
 
                 del challenges["playlists"][:]
 
-    print("%d-fold cv files are created in folder: %s" % (k, conf["output_directory"]))
+    print("%d-fold cv files are created in folder: %s" % (k, output_path))
 
 
 if __name__ == '__main__':
@@ -86,6 +79,6 @@ if __name__ == '__main__':
         validation = read_configuration_json(sys.argv[1])
 
         if validation:
-            build()
+            build(mpd_path=conf["mpd_directory"], output_path=conf["output_directory"], k=conf["k"])
         else:
             print("Configuration file cannot be validated, keys may be missing.")
