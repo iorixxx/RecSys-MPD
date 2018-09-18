@@ -1,4 +1,13 @@
 import json
+import random
+
+CATEGORIES = [dict(id=1, shuffle=True)]
+
+
+def random_category():
+    """ Return random category from CATEGORIES list
+    """
+    return random.choice(CATEGORIES)
 
 
 def read_dataset_json(path):

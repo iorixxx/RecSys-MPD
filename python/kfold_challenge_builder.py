@@ -27,9 +27,11 @@ def build(mpd_path, output_path, k):
 
         for item in items:
             count += 1
-            playlist_json = dict(pid=item["pid"], name=item["name"], category="cat1")
+            category = util.random_category()
+            playlist_json = dict(pid=item["pid"], name=item["name"], category=category["id"])
 
-            random.shuffle(item["tracks"])
+            if category["shuffle"]:
+                random.shuffle(item["tracks"])
 
             num_tracks = len(item["tracks"])
             num_samples = int(num_tracks / 2)
@@ -66,7 +68,7 @@ if __name__ == '__main__':
         validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
-            build(mpd_path=conf["mpd_directory"], output_path=conf["output_directory"], k=conf["k"])
+            build(mpd_path=conf["mpd_directory"], output_path=conf["output_directory"], k=int(conf["k"]))
         else:
             print("Configuration file cannot be validated, following keys must be satisfied.")
             print(CONFIGURATION_KEYS)
