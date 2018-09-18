@@ -1,25 +1,12 @@
 import sys
 import csv
-import json
+import util
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 CONFIGURATION_KEYS = {"track_metadata_csv", "output_csv", "client_id", "client_secret"}
 
 MAX_BATCH = 50
-
-
-def read_configuration_json(path):
-    valid = True
-    with open(path, "r") as f:
-        global conf
-        conf = json.load(f)
-
-        if set(conf.keys()) != CONFIGURATION_KEYS:
-            valid = False
-
-    print("Configuration file is read: %s" % path)
-    return valid
 
 
 def extract_tracks(path):
@@ -43,14 +30,14 @@ def count_batches(t):
         return int(length_t / MAX_BATCH) + 1
 
 
-def collect():
-    client_credentials_manager = SpotifyClientCredentials(client_id=conf["client_id"], client_secret=conf["client_secret"])
+def collect(track_metadata_path, output_path, client_id, client_secret):
+    client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    tracks = extract_tracks(conf["track_metadata_csv"])
+    tracks = extract_tracks(track_metadata_path)
     batches = count_batches(tracks)
 
-    with open(conf["output_csv"], "w", newline='') as f:
+    with open(output_path, "w", newline='') as f:
         writer = csv.writer(f)
 
         for i in range(batches):
@@ -65,7 +52,7 @@ def collect():
                 except TypeError:
                     print("Audio features of a track cannot be obtained")
 
-    print("Audio features are collected: %s" % conf["output_csv"])
+    print("Audio features are collected: %s" % output_path)
 
 
 if __name__ == '__main__':
@@ -74,9 +61,11 @@ if __name__ == '__main__':
         print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        validation = read_configuration_json(sys.argv[1])
+        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
-            collect()
+            collect(track_metadata_path=conf["track_metadata_csv"], output_path=conf["output_csv"],
+                    client_id=conf["client_id"], client_secret=conf["client_secret"])
         else:
-            print("Configuration file cannot be validated, keys may be missing.")
+            print("Configuration file cannot be validated, following keys must be satisfied.")
+            print(CONFIGURATION_KEYS)

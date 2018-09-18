@@ -1,4 +1,3 @@
-import json
 import csv
 import sys
 import util
@@ -9,19 +8,6 @@ from os.path import join
 CONFIGURATION_KEYS = {"mpd_directory", "output_directory"}
 
 track_metadata, album_metadata, artist_metadata = {}, {}, {}
-
-
-def read_configuration_json(path):
-    valid = True
-    with open(path, "r") as f:
-        global conf
-        conf = json.load(f)
-
-        if set(conf.keys()) != CONFIGURATION_KEYS:
-            valid = False
-
-    print("Configuration file is read: %s" % path)
-    return valid
 
 
 def process_dataset_json(path):
@@ -57,8 +43,7 @@ def process_dataset_json(path):
                 artist_metadata[artist_uri]["pids"].add(pid)
 
 
-def collect():
-    mpd_directory, output_directory = conf["mpd_directory"], conf["output_directory"]
+def collect(mpd_directory, output_directory):
 
     for file in listdir(mpd_directory):
         print("Processing %s" % file)
@@ -86,9 +71,10 @@ if __name__ == '__main__':
         print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        validation = read_configuration_json(sys.argv[1])
+        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
-            collect()
+            collect(mpd_directory=conf["mpd_directory"], output_directory=conf["output_directory"])
         else:
-            print("Configuration file cannot be validated, keys may be missing.")
+            print("Configuration file cannot be validated, following keys must be satisfied.")
+            print(CONFIGURATION_KEYS)

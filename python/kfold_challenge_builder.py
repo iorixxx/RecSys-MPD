@@ -11,19 +11,6 @@ CONFIGURATION_KEYS = {"mpd_directory", "output_directory", "k"}
 MPD_SIZE = 1000000
 
 
-def read_configuration_json(path):
-    valid = True
-    with open(path, "r") as f:
-        global conf
-        conf = json.load(f)
-
-        if set(conf.keys()) != CONFIGURATION_KEYS:
-            valid = False
-
-    print("Configuration file is read: %s" % path)
-    return valid
-
-
 def build(mpd_path, output_path, k):
     count, current_k, partition_size = 0, 1, int(MPD_SIZE / k)
 
@@ -76,9 +63,10 @@ if __name__ == '__main__':
         print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        validation = read_configuration_json(sys.argv[1])
+        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
             build(mpd_path=conf["mpd_directory"], output_path=conf["output_directory"], k=conf["k"])
         else:
-            print("Configuration file cannot be validated, keys may be missing.")
+            print("Configuration file cannot be validated, following keys must be satisfied.")
+            print(CONFIGURATION_KEYS)

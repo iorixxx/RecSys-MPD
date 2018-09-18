@@ -1,23 +1,10 @@
 import sys
-import json
+import util
 import csv
 
 CONFIGURATION_KEYS = {"letor_txt", "predicted_score_txt", "output_csv"}
 
 letor_mapping, prediction_mapping = {}, {}
-
-
-def read_configuration_json(path):
-    valid = True
-    with open(path, "r") as f:
-        global conf
-        conf = json.load(f)
-
-        if set(conf.keys()) != CONFIGURATION_KEYS:
-            valid = False
-
-    print("Configuration file is read: %s" % path)
-    return valid
 
 
 def read_letor_txt(path):
@@ -78,7 +65,7 @@ if __name__ == '__main__':
         print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        validation = read_configuration_json(sys.argv[1])
+        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
             read_letor_txt(conf["letor_txt"])
@@ -86,5 +73,5 @@ if __name__ == '__main__':
 
             rank_by_scores(conf["output_csv"])
         else:
-            print("Configuration file cannot be validated, keys may be missing.")
+            print("Configuration file cannot be validated, following keys must be satisfied.")
             print(CONFIGURATION_KEYS)

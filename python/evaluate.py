@@ -1,6 +1,5 @@
 import sys
 import csv
-import json
 import util
 import numpy as np
 import statistics
@@ -12,20 +11,6 @@ CONFIGURATION_KEYS = {"challenge_json", "recommendation_csv_list"}
 METRICS = ["precision", "recall", "ndcg", "extender"]
 
 challenges = {}
-
-
-def read_configuration_json(path):
-    valid = True
-    with open(path, "r") as f:
-        global conf
-        conf = json.load(f)
-
-        if set(conf.keys()) != CONFIGURATION_KEYS or \
-                ("recommendation_csv_list" in conf.keys() and len(conf["recommendation_csv_list"]) == 0):
-            valid = False
-
-    print("Configuration file is read: %s" % path)
-    return valid
 
 
 def read_recommendation_csv(path):
@@ -195,7 +180,7 @@ if __name__ == '__main__':
         print("argv1: Configuration json file")
         sys.exit(2)
     else:
-        validation = read_configuration_json(sys.argv[1])
+        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
             read_challenge_json(conf["challenge_json"])
@@ -208,4 +193,5 @@ if __name__ == '__main__':
 
             show_results(summary_list)
         else:
-            print("Configuration file cannot be validated, keys or recommendation csv files may be missing.")
+            print("Configuration file cannot be validated, following keys must be satisfied.")
+            print(CONFIGURATION_KEYS)
