@@ -1,10 +1,3 @@
 {
-  "challenge_json": "",
-  "track_metadata_csv": "",
-  "album_metadata_csv": "",
-  "artist_metadata_csv": "",
-  "audio_metadata_csv": "",
-  "recommendation_csv": "",
-  "output_txt": "",
-  "features": []
+  "challenge_json_list": []
 }
