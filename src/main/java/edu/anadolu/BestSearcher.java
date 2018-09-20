@@ -48,7 +48,9 @@ public class BestSearcher implements Closeable {
 
     private final AtomicReference<PrintWriter> out;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig) throws Exception {
+    private final Integer maxP;
+
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxP) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -60,6 +62,7 @@ public class BestSearcher implements Closeable {
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(this.similarityConfig.getSimilarity());
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
+        this.maxP = maxP;
 
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
@@ -132,18 +135,6 @@ public class BestSearcher implements Closeable {
                     else {
                         tracksOnly(playlist.tracks, playlist.pid, results);
                     }
-
-                    // todo discuss this if statement, it may be buggy
-                    /*
-                    Track lastTrack = playlist.tracks[playlist.tracks.length - 1];
-
-                    if (lastTrack.pos == playlist.tracks.length - 1 && playlist.tracks[0].pos == 0) {
-                        firstNTracks(playlist.tracks, playlist.pid);
-                    }
-                    else {
-                        tracksOnly(playlist.tracks, playlist.pid);
-                    }
-                    */
                 }
 
                 results.clear();
@@ -172,7 +163,9 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
 
-        ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+        // todo ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+        ScoreDoc[] hits = searcher.search(query, maxP).scoreDocs;
+
 
         /*
          * Try with OR operator, relaxed mode.
@@ -180,7 +173,8 @@ public class BestSearcher implements Closeable {
         if (hits.length == 0) {
             queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-            hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+            // todo hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+            hits = searcher.search(query, maxP).scoreDocs;
         }
 
         for (ScoreDoc hit : hits) {
@@ -231,7 +225,8 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
-        ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+        // todo ScoreDoc[] hits = searcher.search(query, Integer.MAX_VALUE).scoreDocs;
+        ScoreDoc[] hits = searcher.search(query, maxP).scoreDocs;
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc, pos = -1;
@@ -296,7 +291,8 @@ public class BestSearcher implements Closeable {
                     clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
 
 
-        ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+        // todo ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
+        ScoreDoc[] hits = searcher.search(spanFirstQuery, maxP).scoreDocs;
 
         if (hits.length == 0) {
             System.out.println("SpanFirst found zero result found for playlistID : " + playlistID + " first " + tracks.length);
