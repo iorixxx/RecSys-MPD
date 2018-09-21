@@ -241,7 +241,7 @@ public class BestSearcher implements Closeable {
                 System.out.println("**** document length " + trackURIs.length + " is less than or equal to query length " + seeds.size());
 
             for (String trackURI : trackURIs) {
-                if (!results.contains(trackURI)) {
+                if (!results.contains(trackURI) && !seeds.contains(trackURI)) {
                     if (results.size() < MAX_RESULT_SIZE) {
                         pos ++;
                         results.add(trackURI);
@@ -254,6 +254,8 @@ public class BestSearcher implements Closeable {
         }
 
         seeds.clear();
+
+        System.out.println("Tracks only search for pid: " + playlistID);
     }
 
     /**
