@@ -34,7 +34,7 @@ def read_challenge_json(path):
 
     for playlist in playlists:
         pid = playlist["pid"]
-        category = int(playlist["category"].replace("cat", ""))
+        category = int(playlist["category"])
         holdouts = []
 
         for h in playlist["holdouts"]:
@@ -157,7 +157,7 @@ def compute_overall_mean(results):
 
 
 def show_results(summary):
-    print("Summarizing all recommendation files...")
+    print("\nSummarizing all recommendation files...")
     v = []
 
     for i in range(len(summary[0])):
