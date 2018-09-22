@@ -11,7 +11,7 @@ def merge(output_path, files):
                 for line in i:
                     out.write(line)
 
-    print("Files are merged into: %s", output_path)
+    print("Files are merged into: %s" % output_path)
 
 
 if __name__ == '__main__':
