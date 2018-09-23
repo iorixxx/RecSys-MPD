@@ -1,13 +1,18 @@
-import sys
-import util
 import csv
+import argparse
 
-CONFIGURATION_KEYS = {"recommendation_csv", "predicted_score_txt", "output_csv"}
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("output", help="Absolute path of the output csv")
+CLI.add_argument("recommendations", help="Absolute path of the recommendations csv")
+CLI.add_argument("predictions", help="Absolute path of the predictions txt")
+
 
 letor_mapping, prediction_mapping = {}, {}
 
 
-def read_recommendation_csv(path):
+def read_recommendations(path):
     line_num = 0
     with open(path, "r") as file:
         reader = csv.reader(file)
@@ -23,7 +28,7 @@ def read_recommendation_csv(path):
     print("Recommendation file is read: %s" % path)
 
 
-def read_predicted_score_txt(path):
+def read_predictions(path):
     line_num = 0
     with open(path, "r") as file:
         for line in file:
@@ -33,7 +38,7 @@ def read_predicted_score_txt(path):
     print("Prediction file is read: %s" % path)
 
 
-def rank_by_scores(path):
+def rank(path):
     with open(path, "w", newline='') as f:
         writer = csv.writer(f)
 
@@ -54,18 +59,9 @@ def rank_by_scores(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            read_recommendation_csv(conf["recommendation_csv"])
-            read_predicted_score_txt(conf["predicted_score_txt"])
+    read_recommendations(path=args.recommendations)
+    read_predictions(path=args.predictions)
 
-            rank_by_scores(conf["output_csv"])
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    rank(path=args.output)

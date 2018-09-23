@@ -1,7 +1,10 @@
-import util
-import sys
+import argparse
 
-CONFIGURATION_KEYS = {"letor_txt_files", "output_txt"}
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("output", help="Absolute path of the output file")
+CLI.add_argument("-m", "--merge", nargs="+", help="Absolute path of the output file", required=True)
 
 
 def merge(output_path, files):
@@ -15,15 +18,7 @@ def merge(output_path, files):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            merge(output_path=conf["output_txt"], files=conf["letor_txt_files"])
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    merge(output_path=args.output, files=args.merge)
+
