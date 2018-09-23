@@ -1,5 +1,5 @@
 import csv
-import json
+import ast
 import sys
 import re
 import util
@@ -183,8 +183,8 @@ def read_recommendation_csv(path):
     print("Recommendation file is read: %s" % path)
 
 
-def convert(path):
-    comments = create_comments()
+def convert(path, active_features):
+    comments = create_comments(active_features)
 
     with open(path, "w") as file:
         for c in comments:
@@ -197,7 +197,7 @@ def convert(path):
 
                 s = "%d qid:%d" % (hit, pid)
 
-                for f in conf["features"]:
+                for f in active_features:
                     feature_num += 1
                     s += " %d:%f" % (feature_num, features[f])
 
@@ -207,10 +207,10 @@ def convert(path):
     print("Letor conversion is completed: %s" % path)
 
 
-def create_comments():
+def create_comments(active_features):
     comments, feature_num = ["#Extracting features with the following feature vector"], 0
 
-    for f in conf["features"]:
+    for f in active_features:
         feature_num += 1
         comments.append("#%d:%s" % (feature_num, FEATURES[f]))
 
@@ -316,11 +316,9 @@ def extract_features(pid, track_uri, index):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
+    total_args = len(sys.argv)
+
+    if total_args == 2:
         validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
@@ -333,7 +331,23 @@ if __name__ == '__main__':
             read_audio_metadata_csv(conf["audio_metadata_csv"])
             read_recommendation_csv(conf["recommendation_csv"])
 
-            convert(conf["output_txt"])
+            convert(conf["output_txt"], conf["features"])
         else:
             print("Configuration file cannot be validated, following keys must be satisfied.")
             print(CONFIGURATION_KEYS)
+    elif total_args == 9:
+        read_challenge_json(sys.argv[1])
+        read_track_metadata_csv(sys.argv[2])
+        read_album_metadata_csv(sys.argv[3])
+        read_artist_metadata_csv(sys.argv[4])
+        read_audio_metadata_csv(sys.argv[5])
+        read_recommendation_csv(sys.argv[6])
+
+        feature_input = ast.literal_eval(sys.argv[7])
+        feature_input.sort()
+
+        convert(sys.argv[8], feature_input)
+    else:
+        print("JSON file based usage: argv0 argv1")
+        print("Array based usage: argv0 argv1 argv2 argv3 argv4 argv5 argv6 argv7 argv8")
+        sys.exit(2)
