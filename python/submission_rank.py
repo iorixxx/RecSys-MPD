@@ -2,33 +2,29 @@ import sys
 import util
 import csv
 
-CONFIGURATION_KEYS = {"letor_txt", "predicted_score_txt", "output_csv"}
+CONFIGURATION_KEYS = {"recommendation_csv", "predicted_score_txt", "output_csv"}
 
 letor_mapping, prediction_mapping = {}, {}
 
 
-def read_letor_txt(path):
+def read_recommendation_csv(path):
     line_num = 0
-
     with open(path, "r") as file:
-        for line in file:
-            if not line.startswith("#"):
-                line_num += 1
-                tokens = line.split()
-                pid = tokens[1].replace("qid:", "")
-                track_uri = tokens[-1]
+        reader = csv.reader(file)
+        for row in reader:
+            line_num += 1
+            pid = int(row[0])
+            track_uri = row[1]
 
-                if pid not in letor_mapping:
-                    letor_mapping[pid] = {}
+            if pid not in letor_mapping:
+                letor_mapping[pid] = {}
+            letor_mapping[pid][track_uri] = line_num
 
-                letor_mapping[pid][track_uri] = line_num
-
-    print("Letor file is read: %s" % path)
+    print("Recommendation file is read: %s" % path)
 
 
 def read_predicted_score_txt(path):
     line_num = 0
-
     with open(path, "r") as file:
         for line in file:
             line_num += 1
@@ -38,23 +34,21 @@ def read_predicted_score_txt(path):
 
 
 def rank_by_scores(path):
-    csv_content = []
-
-    for pid, tracks in letor_mapping.items():
-        tuples, submission = [], [pid]
-
-        for track in tracks:
-            line_num = tracks[track]
-            score = prediction_mapping[line_num]
-            tuples.append((track, score))
-
-        tuples.sort(key=lambda tup: tup[1], reverse=True)
-        submission.extend(i[0] for i in tuples)
-        csv_content.append(submission)
-
     with open(path, "w", newline='') as f:
         writer = csv.writer(f)
-        writer.writerows(csv_content)
+
+        for pid, tracks in letor_mapping.items():
+            tuples = []
+
+            for track in tracks:
+                line_num = tracks[track]
+                score = prediction_mapping[line_num]
+                tuples.append((track, score))
+
+            tuples.sort(key=lambda tup: tup[1], reverse=True)
+
+            for t in tuples:
+                writer.writerow([pid, t[0], t[1]])
 
     print("Re-ranked result file is created: %s" % path)
 
@@ -68,7 +62,7 @@ if __name__ == '__main__':
         validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
 
         if validation:
-            read_letor_txt(conf["letor_txt"])
+            read_recommendation_csv(conf["recommendation_csv"])
             read_predicted_score_txt(conf["predicted_score_txt"])
 
             rank_by_scores(conf["output_csv"])
