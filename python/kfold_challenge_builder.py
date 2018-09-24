@@ -10,7 +10,7 @@ MPD_SIZE = 1000000
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("k", help="Number of folds")
+CLI.add_argument("k", help="Number of folds", type=int)
 CLI.add_argument("mpd", help="Absolute path of the mpd data folder")
 CLI.add_argument("output", help="Absolute path of the output folder")
 
@@ -66,4 +66,4 @@ def build(mpd_path, output_path, k):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    build(mpd_path=args.mpd, output_path=args.output, k=int(args.k))
+    build(mpd_path=args.mpd, output_path=args.output, k=args.k)

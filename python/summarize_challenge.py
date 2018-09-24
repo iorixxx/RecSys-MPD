@@ -7,7 +7,7 @@ from tabulate import tabulate
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("--folds", nargs="+", help="Absolute paths of fold json files to be summarized", required=True)
+CLI.add_argument("--folds", help="Absolute paths of fold json files to be summarized", nargs="+", required=True)
 
 
 def summarize(path):

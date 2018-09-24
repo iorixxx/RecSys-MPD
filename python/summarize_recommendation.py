@@ -5,7 +5,7 @@ from tabulate import tabulate
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("--recommendations", nargs="+", help="Absolute paths of recommendation csv files to be summarized", required=True)
+CLI.add_argument("--recommendations", help="Absolute paths of recommendation csv files to be summarized", nargs="+", required=True)
 
 
 def summarize(path):

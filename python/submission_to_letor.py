@@ -13,7 +13,7 @@ CLI.add_argument("trackMeta", help="Absolute path of the track metadata csv file
 CLI.add_argument("albumMeta", help="Absolute path of the album metadata csv file")
 CLI.add_argument("artistMeta", help="Absolute path of the artist metadata csv file")
 CLI.add_argument("audioMeta", help="Absolute path of the audio metadata csv file")
-CLI.add_argument("--features", nargs="+", help="Features to be included in letor conversion", required=True)
+CLI.add_argument("--features", help="Features to be included in letor conversion", nargs="+", type=int, required=True)
 
 
 FEATURES = {1: "Number of tracks in playlist",
