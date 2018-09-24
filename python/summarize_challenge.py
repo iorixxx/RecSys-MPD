@@ -1,11 +1,13 @@
-import sys
+import argparse
 import util
 import statistics
 
 from tabulate import tabulate
 
 
-CONFIGURATION_KEYS = {"challenge_json_list"}
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("--folds", nargs="+", help="Absolute paths of fold json files to be summarized", required=True)
 
 
 def summarize(path):
@@ -45,16 +47,7 @@ def summarize(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            for path in conf["challenge_json_list"]:
-                summarize(path)
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    for f in args.folds:
+        summarize(path=f)

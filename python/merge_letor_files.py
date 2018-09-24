@@ -3,8 +3,8 @@ import argparse
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("output", help="Absolute path of the output file")
-CLI.add_argument("-m", "--merge", nargs="+", help="Absolute path of the output file", required=True)
+CLI.add_argument("output", help="Absolute path of the output txt file")
+CLI.add_argument("--letors", nargs="+", help="Absolute paths of letor txt files to be merged", required=True)
 
 
 def merge(output_path, files):
@@ -20,5 +20,4 @@ def merge(output_path, files):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    merge(output_path=args.output, files=args.merge)
-
+    merge(output_path=args.output, files=args.letors)

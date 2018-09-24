@@ -1,14 +1,18 @@
 import json
-import sys
 import random
 import util
+import argparse
 
 from os import listdir
 from os.path import join
 
-CONFIGURATION_KEYS = {"mpd_directory", "output_directory", "k"}
-
 MPD_SIZE = 1000000
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("k", help="Number of folds")
+CLI.add_argument("mpd", help="Absolute path of the mpd data folder")
+CLI.add_argument("output", help="Absolute path of the output directory")
 
 
 def build(mpd_path, output_path, k):
@@ -60,15 +64,6 @@ def build(mpd_path, output_path, k):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            build(mpd_path=conf["mpd_directory"], output_path=conf["output_directory"], k=int(conf["k"]))
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    build(mpd_path=args.mpd, output_path=args.output, k=int(args.k))

@@ -1,13 +1,18 @@
-import sys
 import csv
 import util
 import numpy as np
 import statistics
+import argparse
 
 from collections import OrderedDict
 from tabulate import tabulate
 
-CONFIGURATION_KEYS = {"challenge_json", "recommendation_csv_list"}
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("fold", help="Absolute path of the fold json file")
+CLI.add_argument("--results", nargs="+", help="Absolute paths of result csv files", required=True)
+
+
 METRICS = ["precision", "recall", "ndcg", "extender"]
 
 challenges = {}
@@ -175,23 +180,14 @@ def show_results(summary):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            read_challenge_json(conf["challenge_json"])
+    read_challenge_json(path=args.fold)
 
-            summary_list = []
+    summary_list = []
 
-            for recommendation_csv in conf["recommendation_csv_list"]:
-                s = measure(recommendation_csv)
-                summary_list.append(s)
+    for f in args.results:
+        s = measure(f)
+        summary_list.append(s)
 
-            show_results(summary_list)
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    show_results(summary_list)

@@ -1,13 +1,20 @@
 import csv
 import ast
-import sys
 import re
 import util
 import collections
+import argparse
 
+CLI = argparse.ArgumentParser()
 
-CONFIGURATION_KEYS = {"challenge_json", "track_metadata_csv", "album_metadata_csv", "artist_metadata_csv",
-                      "audio_metadata_csv", "recommendation_csv", "output_txt", "features"}
+CLI.add_argument("fold", help="Absolute path of the fold json file")
+CLI.add_argument("output", help="Absolute path of the output txt file")
+CLI.add_argument("trackMeta", help="Absolute path of the track metadata csv file")
+CLI.add_argument("albumMeta", help="Absolute path of the album metadata csv file")
+CLI.add_argument("artistMeta", help="Absolute path of the artist metadata csv file")
+CLI.add_argument("audioMeta", help="Absolute path of the audio metadata csv file")
+CLI.add_argument("--features", nargs="+", help="Features to be included in letor conversion", required=True)
+
 
 FEATURES = {1: "Number of tracks in playlist",
             2: "Number of samples in playlist",
@@ -316,38 +323,13 @@ def extract_features(pid, track_uri, index):
 
 
 if __name__ == '__main__':
-    total_args = len(sys.argv)
+    args = CLI.parse_args()
 
-    if total_args == 2:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    read_challenge_json(args.fold)
+    read_track_metadata_csv(args.trackMeta)
+    read_album_metadata_csv(args.albumMeta)
+    read_artist_metadata_csv(args.artistMeta)
+    read_audio_metadata_csv(args.audioMeta)
+    read_recommendation_csv(args.result)
 
-        if validation:
-            conf["features"].sort()
-
-            read_challenge_json(conf["challenge_json"])
-            read_track_metadata_csv(conf["track_metadata_csv"])
-            read_album_metadata_csv(conf["album_metadata_csv"])
-            read_artist_metadata_csv(conf["artist_metadata_csv"])
-            read_audio_metadata_csv(conf["audio_metadata_csv"])
-            read_recommendation_csv(conf["recommendation_csv"])
-
-            convert(conf["output_txt"], conf["features"])
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
-    elif total_args == 9:
-        read_challenge_json(sys.argv[1])
-        read_track_metadata_csv(sys.argv[2])
-        read_album_metadata_csv(sys.argv[3])
-        read_artist_metadata_csv(sys.argv[4])
-        read_audio_metadata_csv(sys.argv[5])
-        read_recommendation_csv(sys.argv[6])
-
-        feature_input = ast.literal_eval(sys.argv[7])
-        feature_input.sort()
-
-        convert(sys.argv[8], feature_input)
-    else:
-        print("JSON file based usage: argv0 argv1")
-        print("Array based usage: argv0 argv1 argv2 argv3 argv4 argv5 argv6 argv7 argv8")
-        sys.exit(2)
+    convert(path=args.output, active_features=sorted(args.features))

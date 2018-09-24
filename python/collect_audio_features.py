@@ -1,12 +1,17 @@
-import sys
 import csv
-import util
 import spotipy
+import argparse
+
 from spotipy.oauth2 import SpotifyClientCredentials
 
-CONFIGURATION_KEYS = {"track_metadata_csv", "output_csv", "client_id", "client_secret"}
-
 MAX_BATCH = 50
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("clientId", help="Spotify client id")
+CLI.add_argument("clientSecret", help="Spotify client secret")
+CLI.add_argument("output", help="Absolute path of the output csv file")
+CLI.add_argument("trackMeta", help="Absolute path of the track metadata csv file")
 
 
 def extract_tracks(path):
@@ -56,16 +61,6 @@ def collect(track_metadata_path, output_path, client_id, client_secret):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            collect(track_metadata_path=conf["track_metadata_csv"], output_path=conf["output_csv"],
-                    client_id=conf["client_id"], client_secret=conf["client_secret"])
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    collect(track_metadata_path=args.trackMeta, output_path=args.output, client_id=args.clientId, client_secret=args.clientSecret)

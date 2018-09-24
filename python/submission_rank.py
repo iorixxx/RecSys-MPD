@@ -4,9 +4,9 @@ import argparse
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("output", help="Absolute path of the output csv")
-CLI.add_argument("recommendations", help="Absolute path of the recommendations csv")
-CLI.add_argument("predictions", help="Absolute path of the predictions txt")
+CLI.add_argument("output", help="Absolute path of the output csv file")
+CLI.add_argument("recommendations", help="Absolute path of the recommendations csv file")
+CLI.add_argument("predictions", help="Absolute path of the predictions txt file")
 
 
 letor_mapping, prediction_mapping = {}, {}

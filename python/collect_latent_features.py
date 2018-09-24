@@ -1,11 +1,15 @@
 import csv
-import sys
 import util
+import argparse
 
 from os import listdir
 from os.path import join
 
-CONFIGURATION_KEYS = {"mpd_directory", "output_directory"}
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("mpd", help="Absolute path of the mpd data folder")
+CLI.add_argument("output", help="Absolute path of the output txt file")
 
 track_metadata, album_metadata, artist_metadata = {}, {}, {}
 
@@ -66,15 +70,6 @@ def collect(mpd_directory, output_directory):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: argv0 argv1")
-        print("argv1: Configuration json file")
-        sys.exit(2)
-    else:
-        validation, conf = util.read_configuration_json(sys.argv[1], CONFIGURATION_KEYS)
+    args = CLI.parse_args()
 
-        if validation:
-            collect(mpd_directory=conf["mpd_directory"], output_directory=conf["output_directory"])
-        else:
-            print("Configuration file cannot be validated, following keys must be satisfied.")
-            print(CONFIGURATION_KEYS)
+    collect(mpd_directory=args.mpd, output_directory=args.output)
