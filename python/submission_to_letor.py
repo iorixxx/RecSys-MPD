@@ -1,5 +1,4 @@
 import csv
-import ast
 import re
 import util
 import collections
@@ -8,6 +7,7 @@ import argparse
 CLI = argparse.ArgumentParser()
 
 CLI.add_argument("fold", help="Absolute path of the fold json file")
+CLI.add_argument("recommendation", help="Absolute path of the recommendation csv file")
 CLI.add_argument("output", help="Absolute path of the output txt file")
 CLI.add_argument("trackMeta", help="Absolute path of the track metadata csv file")
 CLI.add_argument("albumMeta", help="Absolute path of the album metadata csv file")
@@ -325,11 +325,11 @@ def extract_features(pid, track_uri, index):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    read_challenge_json(args.fold)
-    read_track_metadata_csv(args.trackMeta)
-    read_album_metadata_csv(args.albumMeta)
-    read_artist_metadata_csv(args.artistMeta)
-    read_audio_metadata_csv(args.audioMeta)
-    read_recommendation_csv(args.result)
+    read_challenge_json(path=args.fold)
+    read_track_metadata_csv(path=args.trackMeta)
+    read_album_metadata_csv(path=args.albumMeta)
+    read_artist_metadata_csv(path=args.artistMeta)
+    read_audio_metadata_csv(path=args.audioMeta)
+    read_recommendation_csv(path=args.recommendation)
 
     convert(path=args.output, active_features=sorted(args.features))
