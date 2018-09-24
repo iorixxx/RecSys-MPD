@@ -9,7 +9,7 @@ from os.path import join
 CLI = argparse.ArgumentParser()
 
 CLI.add_argument("mpd", help="Absolute path of the mpd data folder")
-CLI.add_argument("output", help="Absolute path of the output txt file")
+CLI.add_argument("output", help="Absolute path of the output folder")
 
 track_metadata, album_metadata, artist_metadata = {}, {}, {}
 

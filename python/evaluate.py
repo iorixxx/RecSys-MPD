@@ -10,7 +10,7 @@ from tabulate import tabulate
 CLI = argparse.ArgumentParser()
 
 CLI.add_argument("fold", help="Absolute path of the fold json file")
-CLI.add_argument("--results", nargs="+", help="Absolute paths of result csv files", required=True)
+CLI.add_argument("--recommendations", nargs="+", help="Absolute paths of recommendation csv files", required=True)
 
 
 METRICS = ["precision", "recall", "ndcg", "extender"]
@@ -186,7 +186,7 @@ if __name__ == '__main__':
 
     summary_list = []
 
-    for f in args.results:
+    for f in args.recommendations:
         s = measure(f)
         summary_list.append(s)
 

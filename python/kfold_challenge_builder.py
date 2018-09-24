@@ -12,7 +12,7 @@ CLI = argparse.ArgumentParser()
 
 CLI.add_argument("k", help="Number of folds")
 CLI.add_argument("mpd", help="Absolute path of the mpd data folder")
-CLI.add_argument("output", help="Absolute path of the output directory")
+CLI.add_argument("output", help="Absolute path of the output folder")
 
 
 def build(mpd_path, output_path, k):

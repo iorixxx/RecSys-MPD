@@ -5,8 +5,8 @@ import argparse
 CLI = argparse.ArgumentParser()
 
 CLI.add_argument("output", help="Absolute path of the output csv file")
-CLI.add_argument("recommendations", help="Absolute path of the recommendations csv file")
-CLI.add_argument("predictions", help="Absolute path of the predictions txt file")
+CLI.add_argument("recommendation", help="Absolute path of the recommendation csv file")
+CLI.add_argument("prediction", help="Absolute path of the prediction txt file")
 
 
 letor_mapping, prediction_mapping = {}, {}
@@ -61,7 +61,7 @@ def rank(path):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    read_recommendations(path=args.recommendations)
-    read_predictions(path=args.predictions)
+    read_recommendations(path=args.recommendation)
+    read_predictions(path=args.prediction)
 
     rank(path=args.output)
