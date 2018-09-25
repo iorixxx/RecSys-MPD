@@ -30,7 +30,6 @@ def read_recommendation_csv(path):
 
             target_dict[pid].append(row[1])
 
-    print("Recommendation file is read: %s" % path)
     return target_dict
 
 
@@ -101,7 +100,6 @@ def playlist_extender_clicks(targets, predictions, max_n_predictions=500):
 
 
 def measure(path):
-    print("Evaluating recommendation file: %s" % path)
     results = {}
     recommendations = read_recommendation_csv(path)
 
@@ -142,10 +140,8 @@ def measure(path):
         summary.append([c, c_instances, c_precision, c_recall, c_ndcg, c_extender])
 
     m = compute_overall_mean(results)
-
     summary.append(["mean", m_instances, m[0], m[1], m[2], m[3]])
 
-    print(tabulate(summary, headers=["category", "instances", "precision", "recall", "ndcg", "extender"]))
     return summary
 
 
@@ -162,7 +158,6 @@ def compute_overall_mean(results):
 
 
 def show_results(summary):
-    print("\nSummarizing all recommendation files...")
     v = []
 
     for i in range(len(summary[0])):
