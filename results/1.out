@@ -1,0 +1,6 @@
+Challenge file is read: /apc/dataset/test/10fold_100K_a/fold-001.json
+
+category      instances    precision    recall      ndcg    extender    precision     recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------  -----------  ---------  --------  ----------
+1                 10000     0.116138  0.486703  0.287173     4.1627     0.0302546	0.486703  0.211938	   7.5037
+mean              10000     0.116138  0.486703  0.287173     4.1627     0.0302546	0.486703  0.211938	   7.5037
