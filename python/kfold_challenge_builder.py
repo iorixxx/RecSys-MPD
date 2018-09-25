@@ -38,7 +38,7 @@ def build(mpd_path, output_path, k):
                 random.shuffle(item["tracks"])
 
             num_tracks = len(item["tracks"])
-            num_samples = int(num_tracks / 2)
+            num_samples = int(num_tracks * category["fraction"])
 
             playlist_json["num_tracks"] = num_tracks
             playlist_json["num_samples"] = num_samples

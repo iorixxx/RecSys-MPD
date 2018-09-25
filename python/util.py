@@ -1,7 +1,9 @@
 import json
 import random
 
-CATEGORIES = [dict(id=1, shuffle=True)]
+CATEGORIES = [dict(id=1, shuffle=True, fraction=0.5),
+              dict(id=2, shuffle=True, fraction=0.33),
+              dict(id=3, shuffle=True, fraction=0.25)]
 
 
 def random_category():
@@ -20,18 +22,3 @@ def read_dataset_json(path):
 
     return data["playlists"]
 
-
-def read_configuration_json(path, keys):
-    """ Read and validate configuration json file
-        Parameters:
-            - path - absolute path of the file
-            - keys - key names that must exist in the file
-    """
-    valid = True
-    with open(path, "r") as f:
-        conf = json.load(f)
-
-    if set(conf.keys()) != keys:
-        valid = False
-
-    return valid, conf
