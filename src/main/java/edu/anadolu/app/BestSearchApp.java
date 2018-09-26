@@ -1,7 +1,6 @@
 package edu.anadolu.app;
 
 import edu.anadolu.BestSearcher;
-import edu.anadolu.Filler;
 import edu.anadolu.SimilarityConfig;
 
 import java.nio.file.Path;
@@ -18,9 +17,9 @@ public class BestSearchApp {
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[3]);
-            Integer maxP = Integer.valueOf(args[4]);
+            Integer maxPlaylist = Integer.valueOf(args[4]);
 
-            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxP)) {
+            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist)) {
                 searcher.search();
             } catch (Exception e) {
                 e.printStackTrace();

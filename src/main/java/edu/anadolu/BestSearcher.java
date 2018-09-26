@@ -42,9 +42,9 @@ public class BestSearcher implements Closeable {
 
     private final AtomicReference<PrintWriter> out;
 
-    private final Integer maxP;
+    private final Integer maxPlaylist;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxP) throws Exception {
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -54,7 +54,7 @@ public class BestSearcher implements Closeable {
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.searcher = new IndexSearcher(reader);
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
-        this.maxP = maxP;
+        this.maxPlaylist = maxPlaylist;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -107,7 +107,7 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(title));
 
-        ScoreDoc[] hits = searcher.search(query, maxP).scoreDocs;
+        ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         /*
          * Try with OR operator, relaxed mode.
@@ -115,7 +115,7 @@ public class BestSearcher implements Closeable {
         if (hits.length == 0) {
             queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
-            hits = searcher.search(query, maxP).scoreDocs;
+            hits = searcher.search(query, maxPlaylist).scoreDocs;
         }
 
         for (ScoreDoc hit : hits) {
@@ -165,7 +165,7 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
-        ScoreDoc[] hits = searcher.search(query, maxP).scoreDocs;
+        ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc, pos = -1;
@@ -220,32 +220,28 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
-        ScoreDoc[] hits = searcher.search(query, maxP).scoreDocs;
+        ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         for (ScoreDoc hit : hits) {
-            if (recommendations.size() < MAX_RESULT_SIZE) {
-                int docID = hit.doc, pos = -1;
+            int docID = hit.doc, pos = -1;
 
-                Document doc = searcher.doc(docID);
+            Document doc = searcher.doc(docID);
 
-                if (Integer.parseInt(doc.get("id")) == playlistID) continue;
+            if (Integer.parseInt(doc.get("id")) == playlistID) continue;
 
-                String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
+            String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
 
-                for (String trackURI : trackURIs) {
-                    if (!seeds.contains(trackURI)) {
-                        if (!recommendations.containsKey(trackURI)) {
-                            recommendations.put(trackURI, 1);
-                        }
-                        else {
-                            recommendations.put(trackURI, recommendations.get(trackURI) + 1);
-                        }
+            for (String trackURI : trackURIs) {
+                if (!seeds.contains(trackURI)) {
+                    if (!recommendations.containsKey(trackURI)) {
+                        recommendations.put(trackURI, 1);
+                    }
+                    else {
+                        recommendations.put(trackURI, recommendations.get(trackURI) + 1);
                     }
                 }
             }
-            else {
-                break;
-            }
+
         }
 
         Map<String, Integer> sorted = recommendations
@@ -254,8 +250,15 @@ public class BestSearcher implements Closeable {
                 .sorted(Collections.reverseOrder(comparingByValue()))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 
+        int count = 0;
+
         for (String track : sorted.keySet()) {
-            export(playlistID, track, 0, 0);
+            count ++;
+
+            export(playlistID, track, recommendations.get(track), 0);
+
+            if (count == MAX_RESULT_SIZE)
+                break;
         }
 
         seeds.clear();
@@ -299,7 +302,7 @@ public class BestSearcher implements Closeable {
 
 
         // todo ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
-        ScoreDoc[] hits = searcher.search(spanFirstQuery, maxP).scoreDocs;
+        ScoreDoc[] hits = searcher.search(spanFirstQuery, maxPlaylist).scoreDocs;
 
         if (hits.length == 0) {
             System.out.println("SpanFirst found zero result found for playlistID : " + playlistID + " first " + tracks.length);
