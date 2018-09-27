@@ -134,7 +134,7 @@ public class BestSearcher implements Closeable {
                         pos ++;
                         results.add(trackURI);
 
-                        export(playlistID, trackURI, hit.score, trackURIs.length - pos);
+                        //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
                     }
                     else break;
                 }
@@ -217,14 +217,14 @@ public class BestSearcher implements Closeable {
             seeds.add(trackURI);
         }
 
-        HashMap<String, Integer> recommendations = new HashMap<>();
+        HashMap<String, RecommendedTrack> recommendations = new HashMap<>();
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
         ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         for (ScoreDoc hit : hits) {
-            int docID = hit.doc, pos = -1;
+            int docID = hit.doc;
 
             Document doc = searcher.doc(docID);
 
@@ -235,34 +235,43 @@ public class BestSearcher implements Closeable {
             for (String trackURI : trackURIs) {
                 if (!seeds.contains(trackURI)) {
                     if (!recommendations.containsKey(trackURI)) {
-                        recommendations.put(trackURI, 1);
+                        RecommendedTrack rt = new RecommendedTrack(trackURI);
+
+                        rt.searchResultFrequency = 1;
+                        rt.maxScore = hit.score;
+
+                        recommendations.put(trackURI, rt);
                     }
                     else {
-                        recommendations.put(trackURI, recommendations.get(trackURI) + 1);
+                        RecommendedTrack rt = recommendations.get(trackURI);
+
+                        rt.searchResultFrequency += 1;
+
+                        if (rt.maxScore < hit.score)
+                            rt.maxScore = hit.score;
                     }
                 }
             }
-
         }
 
-        Map<String, Integer> sorted = recommendations
-                .entrySet()
-                .stream()
-                .sorted(Collections.reverseOrder(comparingByValue()))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+        List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
+
+        recommendedTracks.sort(Comparator
+                .comparingInt(RecommendedTrack::getSearchResultFrequency)
+                .thenComparingDouble(RecommendedTrack::getMaxScore)
+                .reversed()
+        );
 
         int count = 0;
 
-        for (String track : sorted.keySet()) {
+        for (RecommendedTrack rt : recommendedTracks) {
             count ++;
 
-            export(playlistID, track, recommendations.get(track), 0);
+            export(playlistID, rt.trackURI, rt.searchResultFrequency, rt.maxScore);
 
             if (count == maxTrack)
                 break;
         }
-
-        seeds.clear();
 
         System.out.println("Tracks only search for pid: " + playlistID);
     }
@@ -325,7 +334,7 @@ public class BestSearcher implements Closeable {
                         pos ++;
                         results.add(trackURI);
 
-                        export(playlistID, trackURI, hit.score, trackURIs.length - pos);
+                        //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
                     }
                     else break;
                 }
@@ -336,14 +345,14 @@ public class BestSearcher implements Closeable {
         clauses.clear();
     }
 
-    private synchronized void export(int playlistID, String trackURI, double score, int position) {
+    private synchronized void export(int playlistID, String trackURI, int searchResultFrequency, double maxScore) {
         out.get().print(playlistID);
         out.get().print(",");
         out.get().print(trackURI);
         out.get().print(",");
-        out.get().print(score);
+        out.get().print(searchResultFrequency);
         out.get().print(",");
-        out.get().print(position);
+        out.get().print(maxScore);
         out.get().println();
     }
 }
