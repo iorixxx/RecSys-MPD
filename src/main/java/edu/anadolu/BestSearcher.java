@@ -32,8 +32,6 @@ import static java.util.stream.Collectors.toMap;
  */
 public class BestSearcher implements Closeable {
 
-    public static final int MAX_RESULT_SIZE = 500;
-
     private static final Pattern whiteSpaceSplitter = Pattern.compile("\\s+");
 
     private final MPD challenge;
@@ -44,7 +42,9 @@ public class BestSearcher implements Closeable {
 
     private final Integer maxPlaylist;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist) throws Exception {
+    private final Integer maxTrack;
+
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -55,6 +55,7 @@ public class BestSearcher implements Closeable {
         this.searcher = new IndexSearcher(reader);
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
         this.maxPlaylist = maxPlaylist;
+        this.maxTrack = maxTrack;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -129,7 +130,7 @@ public class BestSearcher implements Closeable {
 
             for (String trackURI : trackURIs) {
                 if (!results.contains(trackURI)) {
-                    if (results.size() < MAX_RESULT_SIZE) {
+                    if (results.size() < maxTrack) {
                         pos ++;
                         results.add(trackURI);
 
@@ -257,7 +258,7 @@ public class BestSearcher implements Closeable {
 
             export(playlistID, track, recommendations.get(track), 0);
 
-            if (count == MAX_RESULT_SIZE)
+            if (count == maxTrack)
                 break;
         }
 
@@ -320,7 +321,7 @@ public class BestSearcher implements Closeable {
 
             for (String trackURI : trackURIs) {
                 if (!results.contains(trackURI)) {
-                    if (results.size() < MAX_RESULT_SIZE) {
+                    if (results.size() < maxTrack) {
                         pos ++;
                         results.add(trackURI);
 

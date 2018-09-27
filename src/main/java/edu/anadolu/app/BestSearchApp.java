@@ -12,14 +12,15 @@ import java.nio.file.Paths;
 public class BestSearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 5) {
+        if (args.length == 6) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
             SimilarityConfig similarityConfig = SimilarityConfig.valueOf(args[3]);
             Integer maxPlaylist = Integer.valueOf(args[4]);
+            Integer maxTrack = Integer.valueOf(args[5]);
 
-            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist)) {
+            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist, maxTrack)) {
                 searcher.search();
             } catch (Exception e) {
                 e.printStackTrace();
