@@ -31,8 +31,8 @@ FEATURES = {1: "Number of tracks in playlist",
             13: "Number of albums of artist",
             14: "Number of tracks of artist",
             15: "Submission order",
-            16: "Lucene score",
-            17: "Prediction position",
+            16: "Search result frequency",
+            17: "Max Lucene score",
             18: "Jaccard distance of playlist title and track name",
             19: "Jaccard distance of playlist title and album name",
             20: "Jaccard distance of playlist title and artist name",
@@ -179,13 +179,13 @@ def read_recommendation_csv(path):
         for row in reader:
             pid = int(row[0])
             track_uri = row[1]
-            lucene_score = float(row[2])
-            lucene_position = int(row[3])
+            search_frequency = int(row[2])
+            lucene_score = float(row[3])
 
             if pid not in recommendations:
                 recommendations[pid] = collections.OrderedDict()
 
-            recommendations[pid][track_uri] = (lucene_score, lucene_position)
+            recommendations[pid][track_uri] = (search_frequency, lucene_score)
 
     print("Recommendation file is read: %s" % path)
 
@@ -263,8 +263,8 @@ def extract_features(pid, track_uri, index):
     total_tracks_of_artist = artist_metadata[artist_uri][3]
     artist_name = artist_metadata[artist_uri][4]
 
-    lucene_score = recommendations[pid][track_uri][0]
-    lucene_position = recommendations[pid][track_uri][1]
+    search_frequency = recommendations[pid][track_uri][0]
+    lucene_score = recommendations[pid][track_uri][1]
 
     jaccard_track = jaccard_distance(name, track_name)
     jaccard_artist = jaccard_distance(name, artist_name)
@@ -301,8 +301,8 @@ def extract_features(pid, track_uri, index):
               13: total_albums_of_artist,
               14: total_tracks_of_artist,
               15: index,
-              16: lucene_score,
-              17: lucene_position,
+              16: search_frequency,
+              17: lucene_score,
               18: jaccard_track,
               19: jaccard_album,
               20: jaccard_artist,
