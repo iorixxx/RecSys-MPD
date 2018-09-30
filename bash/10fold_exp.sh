@@ -1,7 +1,7 @@
 
 #!/usr/bin/env bash
 
-ID=201
+ID=0
 
 EXP="/apc/experiments"
 
@@ -9,47 +9,57 @@ FULLEXP=$EXP"/"$ID
 
 META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/10fold_1K_b"
+TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
+RANKING="/apc/ranking.properties"
 
-JXMS="-Xms20g"
-JXMX="-Xmx40g"
+JXMS="-Xms40g"
+JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
 
 TOPK=200
 TOPT=400
 
+FEATURES=(1 2 19 20 22)
 
-# go to source folder
+
+# go to source folder, pull changes from the repository, and build project
 cd $SRC
 git pull
 mvn clean package
 
-# go to experiments, create new folder with id
+
+# go to experiments folder, create a new folder with id
 mkdir $FULLEXP
 cd $FULLEXP
 
 
+# generate sampling data
 for i in {1..10}
 do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 
-	java -server $JXMS $JXMX -cp $SRC"/"target/mpd.jar edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT
+	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT
 done
 
 
+# extract learning-to-rank features
 for i in {1..10}
 do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 	letor=$(printf "letor-%d.txt" $i)
 
-	python3 $SRC"/"python/submission_to_letor.py $TEST"/"$playlist $result $letor $META"/"track_metadata.csv $META"/"album_metadata.csv $META"/"artist_metadata.csv $META"/"audio_metadata.csv --features 6 9 12 14 16
+	flist=$(printf " %d" "${FEATURES[@]}")
+	flist=${flist:1}
+
+	python3 $SRC"/python/submission_to_letor.py" $TEST"/"$playlist $result $letor $META"/"track_metadata.csv $META"/"album_metadata.csv $META"/"artist_metadata.csv $META"/"audio_metadata.csv --features $flist
 done
 
 
+# merge feature partitions into separate training files
 for i in {1..10}
 do
 	exc=$(( $i % 10 + 1 ))
@@ -71,11 +81,11 @@ do
 
 	output=$(printf "train-%d.txt" $i)
 
-	python3 $SRC"/"python/merge_letor_files.py $output --letors $args
+	python3 $SRC"/python/merge_letor_files.py" $output --letors $args
 done
 
 
-
+# apply LambdaMART: train, build model, and predict ranking scores
 for i in {1..10}
 do
 	mkdir $i
@@ -102,20 +112,23 @@ do
 done
 
 
+# generate re-ranked recommendations
 for i in {1..10}
 do
 	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 	predict=$(printf "predictions-%d.txt" $i)
 
-	python3 $SRC"/"python/submission_rank.py $ranked $result $predict
+	python3 $SRC"/python/submission_rank.py" $ranked $result $predict
 done
 
+
+# evaluate
 for i in {1..10}
 do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 
-	python3 $SRC"/"python/evaluate.py $TEST"/"$playlist --recommendations $result $ranked
+	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist --recommendations $result $ranked
 done
