@@ -68,6 +68,9 @@ public class BestSearcher implements Closeable {
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
 
             try {
+                tracksOnly(playlist.tracks, playlist.pid);
+
+                /*
                 HashSet<String> results = new LinkedHashSet<>();
 
                 if (playlist.tracks.length == 0) {
@@ -83,6 +86,7 @@ public class BestSearcher implements Closeable {
                 }
 
                 results.clear();
+                */
             }
             catch (IOException | ParseException e) {
                 throw new RuntimeException(e);

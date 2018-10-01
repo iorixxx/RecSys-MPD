@@ -3,7 +3,10 @@ import random
 
 CATEGORIES = [dict(id=1, shuffle=True, fraction=0.5),
               dict(id=2, shuffle=True, fraction=0.33),
-              dict(id=3, shuffle=True, fraction=0.25)]
+              dict(id=3, shuffle=True, fraction=0.25),
+              dict(id=4, shuffle=False, fraction=0.5),
+              dict(id=5, shuffle=False, fraction=0.33),
+              dict(id=6, shuffle=False, fraction=0.25)]
 
 
 def random_category():
