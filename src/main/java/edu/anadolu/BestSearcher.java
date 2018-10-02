@@ -23,10 +23,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static java.util.Map.Entry.comparingByValue;
-import static java.util.stream.Collectors.toMap;
-
-
 /**
  * Create submission
  */
@@ -44,7 +40,9 @@ public class BestSearcher implements Closeable {
 
     private final Integer maxTrack;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack) throws Exception {
+    private final Boolean autoSort;
+
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, Boolean autoSort) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -56,6 +54,7 @@ public class BestSearcher implements Closeable {
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
         this.maxPlaylist = maxPlaylist;
         this.maxTrack = maxTrack;
+        this.autoSort = autoSort;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -221,7 +220,7 @@ public class BestSearcher implements Closeable {
             seeds.add(trackURI);
         }
 
-        HashMap<String, RecommendedTrack> recommendations = new HashMap<>();
+        HashMap<String, RecommendedTrack> recommendations = new LinkedHashMap<>();
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
@@ -260,11 +259,13 @@ public class BestSearcher implements Closeable {
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
 
-        recommendedTracks.sort(Comparator
-                .comparingInt(RecommendedTrack::getSearchResultFrequency)
-                .thenComparingDouble(RecommendedTrack::getMaxScore)
-                .reversed()
-        );
+        if (autoSort) {
+            recommendedTracks.sort(Comparator
+                    .comparingInt(RecommendedTrack::getSearchResultFrequency)
+                    .thenComparingDouble(RecommendedTrack::getMaxScore)
+                    .reversed()
+            );
+        }
 
         int count = 0;
 
