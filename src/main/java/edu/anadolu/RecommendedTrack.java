@@ -1,6 +1,6 @@
 package edu.anadolu;
 
-class RecommendedTrack  {
+public class RecommendedTrack  {
 
     String trackURI;
 
@@ -12,11 +12,15 @@ class RecommendedTrack  {
         this.trackURI = trackURI;
     }
 
-    int getSearchResultFrequency() {
+    public int getSearchResultFrequency() {
         return searchResultFrequency;
     }
 
-    double getMaxScore() {
+    public double getMaxScore() {
         return maxScore;
+    }
+
+    public double getGeometricMean() {
+        return Math.sqrt(searchResultFrequency * maxScore);
     }
 }

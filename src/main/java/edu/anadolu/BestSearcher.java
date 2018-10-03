@@ -1,6 +1,7 @@
 package edu.anadolu;
 
 import com.google.gson.Gson;
+import edu.anadolu.sorter.CustomSorter;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -40,9 +41,9 @@ public class BestSearcher implements Closeable {
 
     private final Integer maxTrack;
 
-    private final Boolean autoSort;
+    private final CustomSorter sorter;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, Boolean autoSort) throws Exception {
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, CustomSorterConfig sorterConfig) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -54,7 +55,7 @@ public class BestSearcher implements Closeable {
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
         this.maxPlaylist = maxPlaylist;
         this.maxTrack = maxTrack;
-        this.autoSort = autoSort;
+        this.sorter = sorterConfig.getCustomSorter();
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -258,14 +259,7 @@ public class BestSearcher implements Closeable {
         }
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
-
-        if (autoSort) {
-            recommendedTracks.sort(Comparator
-                    .comparingInt(RecommendedTrack::getSearchResultFrequency)
-                    .thenComparingDouble(RecommendedTrack::getMaxScore)
-                    .reversed()
-            );
-        }
+        sorter.sort(recommendedTracks);
 
         int count = 0;
 
