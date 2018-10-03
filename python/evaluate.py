@@ -10,6 +10,7 @@ from tabulate import tabulate
 CLI = argparse.ArgumentParser()
 
 CLI.add_argument("fold", help="Absolute path of the fold json file")
+CLI.add_argument("k", help="Maximum number of recommended tracks", type=int)
 CLI.add_argument("--recommendations", help="Absolute paths of recommendation csv files", nargs="+", required=True)
 
 
@@ -50,8 +51,8 @@ def read_challenge_json(path):
 
 
 # evaluating precision and recall
-def precision_recall(targets, predictions, max_n_predictions=500):
-    predictions = predictions[:max_n_predictions]
+def precision_recall(targets, predictions, k):
+    predictions = predictions[:k]
 
     target_set = set(targets)
     target_count = len(target_set)
@@ -87,8 +88,8 @@ def normalized_dcg(relevant_elements, retrieved_elements, k):
 
 
 # evaluating recommended songs clicks
-def playlist_extender_clicks(targets, predictions, max_n_predictions=500):
-    predictions = predictions[:max_n_predictions]
+def playlist_extender_clicks(targets, predictions, k):
+    predictions = predictions[:k]
 
     i = set(predictions).intersection(set(targets))
     for index, t in enumerate(predictions):
@@ -96,10 +97,10 @@ def playlist_extender_clicks(targets, predictions, max_n_predictions=500):
             if t == track:
                 return float(int(index / 10))
 
-    return float(max_n_predictions / 10.0 + 1)
+    return float(k / 10.0 + 1)
 
 
-def measure(path):
+def measure(path, k):
     results = {}
     recommendations = read_recommendation_csv(path)
 
@@ -112,9 +113,9 @@ def measure(path):
         except KeyError:
             predictions = []
 
-        pr = precision_recall(holdouts, predictions)
-        ndcg = normalized_dcg(holdouts, predictions, 500)
-        extender = playlist_extender_clicks(holdouts, predictions)
+        pr = precision_recall(holdouts, predictions, k)
+        ndcg = normalized_dcg(holdouts, predictions, k)
+        extender = playlist_extender_clicks(holdouts, predictions, k)
 
         if category not in results:
             results[category] = dict(precision=[], recall=[], ndcg=[], extender=[])
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     summary_list = []
 
     for f in args.recommendations:
-        s = measure(f)
+        s = measure(path=f, k=args.k)
         summary_list.append(s)
 
     show_results(summary_list)

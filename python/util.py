@@ -8,16 +8,16 @@ CATEGORIES = [dict(id=1, shuffle=True, fraction=0.5),
               dict(id=5, shuffle=False, fraction=0.33),
               dict(id=6, shuffle=False, fraction=0.25)]
 
-RECSYS_CATEGORIES = [dict(id=1, seeds=0, masking=False, randomization=False),
-                     dict(id=2, seeds=1, masking=False, randomization=False),
-                     dict(id=3, seeds=5, masking=False, randomization=False),
-                     dict(id=4, seeds=5, masking=True, randomization=False),
-                     dict(id=5, seeds=10, masking=False, randomization=False),
-                     dict(id=6, seeds=10, masking=True, randomization=False),
-                     dict(id=7, seeds=25, masking=False, randomization=False),
-                     dict(id=8, seeds=25, masking=False, randomization=True),
-                     dict(id=9, seeds=100, masking=False, randomization=False),
-                     dict(id=10, seeds=100, masking=False, randomization=True)]
+RECSYS_CATEGORIES = [dict(id=1, min_boundary=10, max_boundary=50, seeds=0, masking=False, randomization=False),
+                     dict(id=2, min_boundary=10, max_boundary=78, seeds=1, masking=False, randomization=False),
+                     dict(id=3, min_boundary=10, max_boundary=100, seeds=5, masking=False, randomization=False),
+                     dict(id=4, min_boundary=40, max_boundary=100, seeds=5, masking=True, randomization=False),
+                     dict(id=5, min_boundary=40, max_boundary=100, seeds=10, masking=False, randomization=False),
+                     dict(id=6, min_boundary=40, max_boundary=100, seeds=10, masking=True, randomization=False),
+                     dict(id=7, min_boundary=101, max_boundary=250, seeds=25, masking=False, randomization=False),
+                     dict(id=8, min_boundary=101, max_boundary=250, seeds=25, masking=False, randomization=True),
+                     dict(id=9, min_boundary=150, max_boundary=250, seeds=100, masking=False, randomization=False),
+                     dict(id=10, min_boundary=150, max_boundary=250, seeds=100, masking=False, randomization=True)]
 
 
 def random_category():
@@ -27,7 +27,7 @@ def random_category():
 
 
 def random_recsys_category(num_tracks):
-    """ Read random cagtegory from RECSYS_CATEGORIES list
+    """ Read random category from RECSYS_CATEGORIES list
         Parameters:
             - num_tracks - number of tracks of current playlist
     """
