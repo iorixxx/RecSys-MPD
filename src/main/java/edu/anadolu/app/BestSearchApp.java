@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 public class BestSearchApp {
 
     public static void main(String[] args) {
-        if (args.length == 7) {
+        if (args.length == 8) {
             Path indexPath = Paths.get(args[0]);
             Path challengePath = Paths.get(args[1]);
             Path resultPath = Paths.get(args[2]);
@@ -21,8 +21,9 @@ public class BestSearchApp {
             Integer maxPlaylist = Integer.valueOf(args[4]);
             Integer maxTrack = Integer.valueOf(args[5]);
             CustomSorterConfig sorterConfig = CustomSorterConfig.valueOf(args[6]);
+            Double alpha = Double.valueOf(args[7]);
 
-            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist, maxTrack, sorterConfig)) {
+            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist, maxTrack, alpha, sorterConfig)) {
                 searcher.search();
             } catch (Exception e) {
                 e.printStackTrace();

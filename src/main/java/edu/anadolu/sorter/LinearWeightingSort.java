@@ -2,6 +2,7 @@ package edu.anadolu.sorter;
 
 import edu.anadolu.RecommendedTrack;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -11,6 +12,9 @@ public class LinearWeightingSort implements CustomSorter {
 
     @Override
     public void sort(List<RecommendedTrack> tracks) {
-
+        tracks.sort(Comparator
+                .comparingDouble(RecommendedTrack::getLinearWeighting)
+                .reversed()
+        );
     }
 }
