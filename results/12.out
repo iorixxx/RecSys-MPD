@@ -1,0 +1,994 @@
+*** SORTER = NoSort
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.116501  0.455411  0.275811     3.65687
+2                  3279     0.126267  0.431171  0.27885      3.96676
+3                  3387     0.128756  0.419562  0.280366     3.45999
+mean              10000     0.123854  0.435321  0.27835      3.6918
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.115713  0.455407  0.274399     3.78121
+2                  3399     0.124226  0.421714  0.276113     3.78052
+3                  3333     0.122356  0.404242  0.268532     3.77528
+mean              10000     0.12082   0.426902  0.273026     3.779
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.118677  0.454574  0.278162     3.89732
+2                  3320     0.124185  0.425655  0.276622     3.47319
+3                  3320     0.12349   0.406003  0.269485     3.98855
+mean              10000     0.122104  0.428847  0.27477      3.7868
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.112141  0.45029   0.272444     3.81468
+2                  3296     0.123349  0.426622  0.276647     3.55127
+3                  3326     0.124498  0.402978  0.269667     3.58238
+mean              10000     0.119945  0.426753  0.272906     3.6506
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.117316  0.449962  0.27568      3.88098
+2                  3374     0.123295  0.426917  0.276913     3.75963
+3                  3324     0.122013  0.406027  0.270427     3.84326
+mean              10000     0.120894  0.427583  0.27435      3.8275
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.115947  0.455935  0.274508     4.18086
+2                  3258     0.129797  0.426742  0.281531     3.60988
+3                  3325     0.125763  0.410299  0.273443     3.80692
+mean              10000     0.123723  0.43125   0.276442     3.8705
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.114435  0.449749  0.271638     3.77841
+2                  3313     0.125089  0.426648  0.277926     3.64654
+3                  3343     0.126399  0.408513  0.273144     3.66886
+mean              10000     0.121964  0.428311  0.274224     3.6981
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.116421  0.4517    0.273778     3.72843
+2                  3310     0.124217  0.425034  0.277349     3.52115
+3                  3317     0.122333  0.405402  0.269118     3.92162
+mean              10000     0.120962  0.427517  0.273414     3.7239
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.112447  0.447363  0.270818     3.94156
+2                  3272     0.123083  0.420894  0.27599      3.94866
+3                  3357     0.127966  0.413139  0.276337     3.88055
+mean              10000     0.121137  0.427213  0.274363     3.9234
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.118338  0.455364  0.277522     3.75312
+2                  3365     0.128608  0.428746  0.281594     3.69658
+3                  3354     0.126401  0.409224  0.273588     3.97227
+mean              10000     0.124498  0.430932  0.277572     3.8076
+
+
+*** SORTER = TwoLevelSort
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.187598  0.541039  0.383089     1.65207
+2                  3279     0.198817  0.522171  0.391261     1.84721
+3                  3387     0.206925  0.515927  0.397653     1.53764
+mean              10000     0.197823  0.526347  0.390701     1.6773
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.184844  0.537548  0.382062     1.92901
+2                  3399     0.199257  0.51379   0.388559     1.77287
+3                  3333     0.195735  0.49851   0.381755     1.67807
+mean              10000     0.193373  0.516461  0.384168     1.7923
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.187827  0.540145  0.38478      2.03601
+2                  3320     0.196148  0.51612   0.389706     1.54669
+3                  3320     0.194047  0.500821  0.381855     1.89849
+mean              10000     0.192655  0.519113  0.385444     1.8279
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.18414   0.534105  0.379146     1.98786
+2                  3296     0.198974  0.518528  0.391271     1.66323
+3                  3326     0.198756  0.498152  0.384546     1.75676
+mean              10000     0.193891  0.517013  0.384939     1.804
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.184181  0.534611  0.379207     1.88552
+2                  3374     0.197044  0.517105  0.38983      1.63426
+3                  3324     0.201324  0.501303  0.387053     1.95006
+mean              10000     0.194219  0.517633  0.385399     1.8222
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.181803  0.539754  0.377832     2.05034
+2                  3258     0.200983  0.517172  0.393623     1.6194
+3                  3325     0.203552  0.5054    0.391433     1.59429
+mean              10000     0.195284  0.520974  0.387499     1.7583
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.182712  0.535526  0.377774     2.05921
+2                  3313     0.19674   0.51665   0.388989     1.77302
+3                  3343     0.19901   0.500241  0.387368     1.74723
+mean              10000     0.192808  0.517476  0.384697     1.8601
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.184597  0.536062  0.380588     1.8405
+2                  3310     0.198078  0.515583  0.390617     1.81813
+3                  3317     0.197579  0.498328  0.384043     1.76967
+mean              10000     0.193365  0.516767  0.385054     1.8096
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.180177  0.529447  0.374185     1.9644
+2                  3272     0.197313  0.513633  0.388564     1.81632
+3                  3357     0.201734  0.506667  0.391419     1.89723
+mean              10000     0.19302   0.516625  0.384675     1.8934
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.182726  0.537066  0.379058     1.83145
+2                  3365     0.201066  0.518095  0.394792     1.6
+3                  3354     0.200937  0.500935  0.388006     1.89505
+mean              10000     0.195006  0.518564  0.387354     1.7749
+
+
+*** SORTER = GeometricMeanSort
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.193421  0.546033  0.389327     1.57948
+2                  3279     0.20462   0.527329  0.397268     1.81122
+3                  3387     0.21146   0.520233  0.402955     1.51107
+mean              10000     0.203203  0.531161  0.396546     1.6323
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.19137   0.543665  0.388491     1.87913
+2                  3399     0.204793  0.518435  0.394292     1.7208
+3                  3333     0.20097   0.502582  0.386452     1.65017
+mean              10000     0.199132  0.521396  0.389783     1.749
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.194105  0.544483  0.390882     1.96786
+2                  3320     0.200645  0.520384  0.394702     1.50482
+3                  3320     0.199239  0.505524  0.387686     1.85904
+mean              10000     0.197981  0.523548  0.391089     1.778
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.18857   0.538776  0.384468     1.92007
+2                  3296     0.203882  0.522209  0.396436     1.62257
+3                  3326     0.203311  0.502078  0.38936      1.71076
+mean              10000     0.19852   0.52111   0.39004      1.7524
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.190163  0.539594  0.385643     1.81526
+2                  3374     0.202381  0.521756  0.395268     1.57291
+3                  3324     0.205718  0.505381  0.391666     1.90132
+mean              10000     0.199456  0.522203  0.390892     1.7621
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.187964  0.544056  0.383309     1.94703
+2                  3258     0.207504  0.520685  0.398756     1.57121
+3                  3325     0.208173  0.50976   0.3961       1.55188
+mean              10000     0.201049  0.525038  0.392595     1.6932
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.187475  0.539932  0.383637     1.95754
+2                  3313     0.201798  0.520826  0.394944     1.72744
+3                  3343     0.204548  0.504701  0.392683     1.71493
+mean              10000     0.197928  0.521825  0.390407     1.8002
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.18952   0.540804  0.38642      1.77676
+2                  3310     0.203942  0.520128  0.396387     1.75408
+3                  3317     0.203088  0.501992  0.388991     1.73711
+mean              10000     0.198794  0.521086  0.390572     1.7561
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.185368  0.534899  0.380646     1.8671
+2                  3272     0.202538  0.517464  0.393663     1.7607
+3                  3357     0.206175  0.510925  0.396539     1.84212
+mean              10000     0.197971  0.521146  0.39024      1.8239
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.188637  0.543245  0.385771     1.72813
+2                  3365     0.207539  0.522574  0.400324     1.53819
+3                  3354     0.205631  0.504704  0.392959     1.85957
+mean              10000     0.200697  0.523362  0.393079     1.7083
+
+
+*** SORTER = LinearWeightingSort alpha = 0.1
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.164443  0.46843   0.337125     2.82543
+2                  3279     0.162744  0.444224  0.334644     3.16438
+3                  3387     0.163504  0.433386  0.334585     2.71863
+mean              10000     0.163568  0.448623  0.335451     2.9004
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.161378  0.467665  0.335293     2.93972
+2                  3399     0.16016   0.435515  0.331438     2.96705
+3                  3333     0.15481   0.416558  0.318899     2.985
+mean              10000     0.158775  0.439703  0.328519     2.9641
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.167159  0.466482  0.339559     3.10387
+2                  3320     0.160867  0.438732  0.332762     2.73012
+3                  3320     0.155442  0.418644  0.320702     3.22681
+mean              10000     0.16118   0.441387  0.331042     3.0206
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.157921  0.462603  0.331812     3.03848
+2                  3296     0.160921  0.439251  0.333243     2.79945
+3                  3326     0.156343  0.414974  0.321564     2.8163
+mean              10000     0.158385  0.439065  0.328875     2.8858
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.162254  0.463249  0.336074     3.03452
+2                  3374     0.161033  0.439149  0.332765     2.95258
+3                  3324     0.157241  0.419182  0.323792     3.10469
+mean              10000     0.160176  0.44047   0.330875     3.0302
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.161426  0.467481  0.333166     3.28973
+2                  3258     0.166646  0.438826  0.3366       2.81921
+3                  3325     0.159839  0.423074  0.325828     2.99158
+mean              10000     0.162599  0.44338   0.331845     3.0373
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.158868  0.462336  0.332315     2.97368
+2                  3313     0.162198  0.438915  0.333678     2.90854
+3                  3343     0.15842   0.421905  0.326101     2.92641
+mean              10000     0.159821  0.441061  0.330689     2.9363
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.161274  0.464284  0.334681     2.92647
+2                  3310     0.163403  0.437492  0.33444      2.77674
+3                  3317     0.156966  0.417624  0.321573     3.08924
+mean              10000     0.16055   0.439939  0.330253     2.9309
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.156067  0.460298  0.32941      3.05992
+2                  3272     0.160975  0.433762  0.330385     3.17696
+3                  3357     0.160901  0.42599   0.327623     3.08817
+mean              10000     0.159296  0.440098  0.329129     3.1077
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.163617  0.46884   0.337423     2.90521
+2                  3365     0.167044  0.441351  0.337228     2.88975
+3                  3354     0.159358  0.422447  0.326263     3.19917
+mean              10000     0.163342  0.44403   0.333614     2.9986
+
+
+*** SORTER = LinearWeightingSort alpha = 0.2
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.17219   0.475851  0.345164     2.59058
+2                  3279     0.173334  0.452454  0.344533     2.89265
+3                  3387     0.174426  0.442345  0.345662     2.47446
+mean              10000     0.173322  0.456831  0.345126     2.6503
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.169093  0.475902  0.343971     2.69829
+2                  3399     0.170078  0.443129  0.341116     2.72257
+3                  3333     0.165226  0.424743  0.329145     2.69907
+mean              10000     0.168139  0.447711  0.338059     2.7068
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.175581  0.474559  0.348188     2.88482
+2                  3320     0.170055  0.446654  0.342533     2.52831
+3                  3320     0.166009  0.426613  0.330935     2.93524
+mean              10000     0.170568  0.449377  0.340582     2.7832
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.167268  0.470911  0.340876     2.7913
+2                  3296     0.171303  0.447898  0.343415     2.5804
+3                  3326     0.166706  0.42386   0.33217      2.56975
+mean              10000     0.168411  0.447677  0.338818     2.6481
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.169479  0.47194   0.344543     2.78437
+2                  3374     0.171724  0.446901  0.342692     2.69235
+3                  3324     0.167803  0.427074  0.334366     2.86342
+mean              10000     0.169679  0.448579  0.340536     2.7796
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.169562  0.474955  0.341318     3.05824
+2                  3258     0.176772  0.447024  0.345946     2.5399
+3                  3325     0.170956  0.431301  0.336718     2.69504
+mean              10000     0.172375  0.45134   0.341296     2.7686
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.166626  0.470527  0.340768     2.76196
+2                  3313     0.172111  0.446074  0.34307      2.70661
+3                  3343     0.169529  0.429311  0.336299     2.66886
+mean              10000     0.169414  0.448647  0.340037     2.7125
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.169943  0.471967  0.343241     2.67092
+2                  3310     0.173228  0.445628  0.344115     2.58912
+3                  3317     0.167653  0.426128  0.332049     2.78535
+mean              10000     0.17027   0.448044  0.339818     2.6818
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.163976  0.468877  0.337751     2.80273
+2                  3272     0.170959  0.441995  0.340052     2.90251
+3                  3357     0.172271  0.434343  0.338484     2.78374
+mean              10000     0.169045  0.448488  0.33875      2.829
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.171762  0.475717  0.345049     2.70741
+2                  3365     0.176763  0.449444  0.346993     2.64428
+3                  3354     0.170339  0.430316  0.336642     2.92815
+mean              10000     0.172968  0.451649  0.342883     2.7602
+
+
+*** SORTER = LinearWeightingSort alpha = 0.3
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.180598  0.484339  0.354135     2.36323
+2                  3279     0.183531  0.461246  0.354661     2.58737
+3                  3387     0.185519  0.450849  0.356223     2.20933
+mean              10000     0.183227  0.465424  0.355015     2.3846
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.17782   0.483498  0.352909     2.49327
+2                  3399     0.18083   0.45114   0.350946     2.49691
+3                  3333     0.175924  0.433298  0.339462     2.43324
+mean              10000     0.178211  0.455768  0.34776      2.4745
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.182692  0.482646  0.356327     2.68185
+2                  3320     0.181198  0.455044  0.352716     2.29849
+3                  3320     0.176659  0.435723  0.341477     2.68855
+mean              10000     0.180193  0.457903  0.350198     2.5568
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.174972  0.478848  0.349431     2.55329
+2                  3296     0.182222  0.45605   0.353538     2.38744
+3                  3326     0.178313  0.432486  0.34251      2.3199
+mean              10000     0.178473  0.455914  0.348483     2.421
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.177347  0.479365  0.352175     2.5536
+2                  3374     0.181645  0.455791  0.352864     2.44398
+3                  3324     0.178955  0.435151  0.344626     2.63147
+mean              10000     0.179332  0.456715  0.349898     2.5425
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.176782  0.482607  0.349128     2.80831
+2                  3258     0.187258  0.455355  0.355767     2.29988
+3                  3325     0.182667  0.439852  0.347486     2.41323
+mean              10000     0.182152  0.459513  0.350745     2.5113
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.175222  0.478391  0.349226     2.56459
+2                  3313     0.181816  0.45408   0.352396     2.49593
+3                  3343     0.180337  0.436406  0.34645      2.43823
+mean              10000     0.179117  0.456301  0.349348     2.4996
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.177555  0.480088  0.351869     2.445
+2                  3310     0.183443  0.453477  0.353936     2.3855
+3                  3317     0.178968  0.434433  0.342567     2.49472
+mean              10000     0.179973  0.456136  0.349468     2.4418
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.171778  0.476401  0.346141     2.52418
+2                  3272     0.18145   0.450133  0.349604     2.65495
+3                  3357     0.183422  0.443185  0.34971      2.53321
+mean              10000     0.178851  0.456656  0.348472     2.57
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.179026  0.482876  0.352905     2.50808
+2                  3365     0.187349  0.457525  0.35722      2.36493
+3                  3354     0.18089   0.438398  0.347087     2.69887
+mean              10000     0.182452  0.459427  0.352406     2.5239
+
+
+*** SORTER = LinearWeightingSort alpha = 0.4
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.187706  0.491948  0.3618       2.15717
+2                  3279     0.19264   0.470131  0.364065     2.39372
+3                  3387     0.196263  0.459687  0.366493     2.00295
+mean              10000     0.192222  0.473867  0.364132     2.1825
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.185747  0.491719  0.36158      2.31548
+2                  3399     0.18984   0.459736  0.360245     2.32068
+3                  3333     0.186016  0.441986  0.349632     2.21002
+mean              10000     0.187228  0.464272  0.357144     2.2821
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.189417  0.490676  0.363919     2.46994
+2                  3320     0.190491  0.463774  0.361989     2.09819
+3                  3320     0.185696  0.444726  0.351425     2.44849
+mean              10000     0.188538  0.466489  0.35913      2.3394
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.182172  0.486897  0.357491     2.34962
+2                  3296     0.191812  0.464837  0.362696     2.19387
+3                  3326     0.189314  0.441012  0.352669     2.11846
+mean              10000     0.187725  0.464365  0.357603     2.2214
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.185051  0.487416  0.360167     2.34615
+2                  3374     0.190634  0.464258  0.362197     2.1968
+3                  3324     0.190257  0.444118  0.354694     2.43923
+mean              10000     0.188665  0.46521   0.359033     2.3267
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.182682  0.489878  0.356659     2.55195
+2                  3258     0.196296  0.464038  0.365569     2.06231
+3                  3325     0.192856  0.447955  0.357438     2.18165
+mean              10000     0.190501  0.46752   0.359821     2.2693
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.181506  0.486805  0.357147     2.39504
+2                  3313     0.191301  0.462806  0.361532     2.26985
+3                  3343     0.189891  0.445197  0.356314     2.23392
+mean              10000     0.187554  0.464945  0.358321     2.2997
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.18478   0.488341  0.359732     2.28076
+2                  3310     0.191745  0.461321  0.362949     2.19124
+3                  3317     0.189289  0.443112  0.352557     2.23998
+mean              10000     0.188581  0.464395  0.358417     2.2376
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.179469  0.484166  0.354517     2.29131
+2                  3272     0.190895  0.45968   0.359459     2.4404
+3                  3357     0.194024  0.451513  0.359888     2.3381
+mean              10000     0.188093  0.465193  0.357937     2.3558
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.184456  0.490804  0.360209     2.31667
+2                  3365     0.19611   0.465972  0.366618     2.137
+3                  3354     0.19095   0.447526  0.356964     2.49374
+mean              10000     0.190556  0.467932  0.361277     2.3156
+
+
+*** SORTER = LinearWeightingSort alpha = 0.5
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.192422  0.500355  0.368975     1.96701
+2                  3279     0.199996  0.479612  0.372451     2.20403
+3                  3387     0.204261  0.469411  0.375654     1.83378
+mean              10000     0.198915  0.483073  0.372377     1.9996
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.191435  0.50084   0.368873     2.1686
+2                  3399     0.19838   0.468858  0.368584     2.13945
+3                  3333     0.193844  0.451189  0.358583     2.0378
+mean              10000     0.194599  0.473421  0.365345     2.1151
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.194186  0.500039  0.370913     2.29107
+2                  3320     0.196774  0.472762  0.369755     1.90753
+3                  3320     0.193237  0.453669  0.359766     2.26988
+mean              10000     0.19473   0.475588  0.366828     2.1567
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.186976  0.495027  0.3643       2.18739
+2                  3296     0.19859   0.473908  0.370712     2.03914
+3                  3326     0.197614  0.450717  0.36114      1.97084
+mean              10000     0.194342  0.473329  0.365362     2.0665
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.190404  0.495251  0.366335     2.17293
+2                  3374     0.196707  0.472987  0.369967     2.00296
+3                  3324     0.198643  0.453438  0.363212     2.26384
+mean              10000     0.195269  0.473841  0.366523     2.1458
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.18693   0.498556  0.363137     2.33509
+2                  3258     0.203315  0.472509  0.373552     1.87385
+3                  3325     0.201411  0.457136  0.366687     2.00541
+mean              10000     0.197083  0.476298  0.367711     2.0752
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.187434  0.495029  0.363859     2.25748
+2                  3313     0.197735  0.472142  0.369409     2.06158
+3                  3343     0.197793  0.454171  0.365117     2.08525
+mean              10000     0.19431   0.473788  0.366118     2.135
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.189261  0.496919  0.366566     2.10406
+2                  3310     0.198859  0.470189  0.37081      2.0426
+3                  3317     0.19712   0.451603  0.36092      2.08833
+mean              10000     0.195045  0.47304   0.366098     2.0785
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.18467   0.492774  0.361203     2.14239
+2                  3272     0.197902  0.468291  0.367748     2.23319
+3                  3357     0.20184   0.46054   0.368819     2.15609
+mean              10000     0.194763  0.473942  0.365901     2.1767
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.188392  0.499446  0.366871     2.13167
+2                  3365     0.203565  0.474696  0.374924     1.93403
+3                  3354     0.198625  0.456268  0.365549     2.3068
+mean              10000     0.19693   0.476636  0.369137     2.1239
+
+
+*** SORTER = LinearWeightingSort alpha = 0.6
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.194925  0.509988  0.374409     1.79124
+2                  3279     0.205218  0.489986  0.379406     2.0555
+3                  3387     0.209748  0.478967  0.382552     1.71597
+mean              10000     0.203321  0.492922  0.378805     1.8524
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.19382   0.508547  0.373796     2.04774
+2                  3399     0.203048  0.478459  0.375355     1.98117
+3                  3333     0.199177  0.461133  0.365642     1.90249
+mean              10000     0.198742  0.482517  0.371608     1.9767
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.195555  0.509119  0.37631      2.1503
+2                  3320     0.199327  0.482281  0.376461     1.75723
+3                  3320     0.197614  0.463612  0.366949     2.11928
+mean              10000     0.197491  0.4851    0.373252     2.0095
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.189204  0.504507  0.369987     2.07253
+2                  3296     0.202535  0.483561  0.377553     1.90413
+3                  3326     0.202603  0.460518  0.368244     1.8656
+mean              10000     0.198055  0.482973  0.371901     1.9482
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.192822  0.504798  0.371494     2.04815
+2                  3374     0.201477  0.483072  0.376729     1.84795
+3                  3324     0.203886  0.463247  0.370505     2.12876
+mean              10000     0.19942   0.483656  0.372931     2.0074
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.188579  0.508156  0.36853      2.17998
+2                  3258     0.207758  0.482395  0.380292     1.74954
+3                  3325     0.206327  0.466978  0.374405     1.85895
+mean              10000     0.200729  0.486072  0.374315     1.933
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.189612  0.504503  0.369484     2.14683
+2                  3313     0.201968  0.481765  0.376275     1.91518
+3                  3343     0.203058  0.46409   0.372232     1.94915
+mean              10000     0.198201  0.48346   0.372653     2.004
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.190103  0.505493  0.371927     1.98755
+2                  3310     0.203475  0.480354  0.377641     1.93444
+3                  3317     0.201938  0.461871  0.368597     1.97106
+mean              10000     0.198455  0.482703  0.372714     1.9645
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.186478  0.501866  0.366698     2.01869
+2                  3272     0.201959  0.477656  0.374744     2.08496
+3                  3357     0.205602  0.47003   0.375934     2.02413
+mean              10000     0.197963  0.483257  0.372431     2.0422
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.190076  0.508388  0.371796     2.01067
+2                  3365     0.208253  0.484193  0.3819       1.79851
+3                  3354     0.203991  0.46567   0.37293      2.1285
+mean              10000     0.20086   0.485919  0.375576     1.9788
+
+
+*** SORTER = LinearWeightingSort alpha = 0.7
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.194573  0.52036   0.37881      1.68776
+2                  3279     0.205832  0.500375  0.385112     1.93779
+3                  3387     0.211447  0.490228  0.388961     1.64511
+mean              10000     0.20398   0.503601  0.384315     1.7553
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.192338  0.518422  0.378345     1.94339
+2                  3399     0.205049  0.489319  0.381106     1.85496
+3                  3333     0.200969  0.472628  0.372354     1.80408
+mean              10000     0.199535  0.493267  0.377287     1.8669
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.194682  0.519187  0.380588     2.0625
+2                  3320     0.200719  0.492817  0.382216     1.63645
+3                  3320     0.199393  0.475069  0.373521     1.9991
+mean              10000     0.19825   0.495785  0.378782     1.9
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.189376  0.514833  0.374714     1.99586
+2                  3296     0.203299  0.495053  0.383667     1.77943
+3                  3326     0.203634  0.47231   0.374956     1.78413
+mean              10000     0.198707  0.49417   0.377746     1.8541
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.191559  0.514742  0.375933     1.92641
+2                  3374     0.203728  0.494333  0.382852     1.70213
+3                  3324     0.206147  0.474302  0.377147     2.03159
+mean              10000     0.200514  0.494414  0.378671     1.8857
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.187754  0.51758   0.372887     2.05151
+2                  3258     0.208369  0.492928  0.386073     1.67066
+3                  3325     0.208458  0.478876  0.38139      1.73744
+mean              10000     0.201355  0.49668   0.38001      1.823
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.188777  0.514621  0.373757     2.05383
+2                  3313     0.202467  0.492701  0.382047     1.83006
+3                  3343     0.20449   0.47389   0.378156     1.84834
+mean              10000     0.198565  0.493742  0.377974     1.911
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.190257  0.514864  0.376207     1.90394
+2                  3310     0.204211  0.490941  0.383093     1.86254
+3                  3317     0.203636  0.472893  0.375127     1.88453
+mean              10000     0.199314  0.493024  0.378128     1.8838
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.186226  0.511431  0.371225     1.92732
+2                  3272     0.203428  0.488451  0.380732     1.9563
+3                  3357     0.207001  0.480299  0.382106     1.89604
+mean              10000     0.198829  0.493461  0.377989     1.9263
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.189949  0.518181  0.3759       1.89333
+2                  3365     0.208584  0.494907  0.387738     1.70312
+3                  3354     0.205863  0.47632   0.379231     2.01759
+mean              10000     0.201557  0.496309  0.381001     1.871
+
+
+*** SORTER = LinearWeightingSort alpha = 0.8
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.191968  0.531953  0.382546     1.62238
+2                  3279     0.204456  0.511904  0.389944     1.87313
+3                  3387     0.211305  0.502911  0.394809     1.59433
+mean              10000     0.202613  0.515542  0.389125     1.6951
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.19005   0.529207  0.382121     1.88709
+2                  3399     0.204007  0.501292  0.386155     1.76523
+3                  3333     0.200425  0.485135  0.378181     1.74707
+mean              10000     0.198252  0.505029  0.382179     1.799
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.192733  0.529561  0.384118     2.01994
+2                  3320     0.19976   0.505021  0.387453     1.57199
+3                  3320     0.198733  0.487543  0.379048     1.92018
+mean              10000     0.197058  0.507463  0.383542     1.8381
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.188194  0.525328  0.378583     1.94583
+2                  3296     0.202997  0.506759  0.388697     1.69175
+3                  3326     0.202814  0.484571  0.380736     1.73662
+mean              10000     0.197936  0.505652  0.382633     1.7925
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.188894  0.52614   0.379665     1.87008
+2                  3374     0.202297  0.506341  0.388047     1.62122
+3                  3324     0.205581  0.487312  0.383359     1.95909
+mean              10000     0.198963  0.506553  0.383721     1.8157
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.186416  0.528666  0.377076     1.99327
+2                  3258     0.206996  0.505269  0.391271     1.60773
+3                  3325     0.208056  0.491805  0.387653     1.65203
+mean              10000     0.200316  0.508787  0.385217     1.7542
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.186852  0.525552  0.377494     2.00837
+2                  3313     0.201422  0.504967  0.387052     1.79716
+3                  3343     0.203968  0.486354  0.383949     1.76309
+mean              10000     0.197401  0.505628  0.382818     1.8564
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.188925  0.52591   0.379921     1.83398
+2                  3310     0.20343   0.503295  0.38817      1.80483
+3                  3317     0.202766  0.484559  0.380633     1.80404
+mean              10000     0.198317  0.504708  0.382888     1.8144
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.184087  0.521479  0.374748     1.89736
+2                  3272     0.202063  0.501009  0.386202     1.85055
+3                  3357     0.205723  0.492587  0.387994     1.83229
+mean              10000     0.197232  0.505082  0.382942     1.8602
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.187538  0.529235  0.379639     1.82505
+2                  3365     0.206721  0.507393  0.393354     1.60386
+3                  3354     0.205691  0.489039  0.385153     1.92129
+mean              10000     0.200082  0.508403  0.386104     1.7829
+
+
+*** SORTER = LinearWeightingSort alpha = 0.9
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-001.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3334     0.189545  0.542915  0.385386     1.60228
+2                  3279     0.201806  0.522895  0.393492     1.83532
+3                  3387     0.209421  0.515411  0.399323     1.54532
+mean              10000     0.200297  0.527035  0.392764     1.6594
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-002.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3268     0.186998  0.539541  0.384658     1.88005
+2                  3399     0.202091  0.513275  0.390122     1.72845
+3                  3333     0.198039  0.497691  0.382959     1.68647
+mean              10000     0.195808  0.516665  0.385949     1.764
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-003.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3360     0.19041   0.540867  0.386967     1.99792
+2                  3320     0.197822  0.516587  0.391371     1.54578
+3                  3320     0.196662  0.500048  0.383602     1.88404
+mean              10000     0.194946  0.519254  0.387312     1.81
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-004.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3378     0.186098  0.535175  0.38109      1.94494
+2                  3296     0.20095   0.518375  0.392754     1.65049
+3                  3326     0.200871  0.496632  0.385468     1.74564
+mean              10000     0.195907  0.516818  0.386391     1.7816
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-005.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3302     0.186154  0.536118  0.382204     1.86402
+2                  3374     0.199523  0.517709  0.391924     1.60403
+3                  3324     0.203822  0.500198  0.388329     1.94465
+mean              10000     0.196537  0.517967  0.387519     1.8031
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-006.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3417     0.183969  0.540063  0.380053     2.00088
+2                  3258     0.203735  0.516273  0.395084     1.60866
+3                  3325     0.206191  0.505986  0.393156     1.58436
+mean              10000     0.197798  0.520982  0.389307     1.7346
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-007.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3344     0.184744  0.536584  0.380072     2.00508
+2                  3313     0.199013  0.516781  0.390949     1.76456
+3                  3343     0.201942  0.499464  0.388866     1.73138
+mean              10000     0.195221  0.517614  0.386616     1.8339
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-008.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3373     0.186466  0.53729   0.382756     1.79158
+2                  3310     0.200644  0.514574  0.391863     1.80514
+3                  3317     0.200247  0.496376  0.385002     1.77389
+mean              10000     0.19573   0.516199  0.386515     1.7902
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-009.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3371     0.182196  0.531307  0.376911     1.91991
+2                  3272     0.200153  0.513724  0.39038      1.79737
+3                  3357     0.203926  0.505703  0.392738     1.84004
+mean              10000     0.195366  0.516958  0.386631     1.853
+
+Challenge file is read: /apc/dataset/test/10fold_100K_b/fold-010.json
+category      instances    precision    recall      ndcg    extender
+----------  -----------  -----------  --------  --------  ----------
+1                  3281     0.184957  0.539803  0.382179     1.78817
+2                  3365     0.20397   0.518182  0.396989     1.57593
+3                  3354     0.203096  0.50002   0.389337     1.86673
+mean              10000     0.197439  0.519185  0.389564     1.7431
