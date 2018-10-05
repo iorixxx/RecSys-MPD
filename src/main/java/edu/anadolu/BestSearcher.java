@@ -41,11 +41,9 @@ public class BestSearcher implements Closeable {
 
     private final Integer maxTrack;
 
-    private final Double alpha;
-
     private final CustomSorter sorter;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, Double alpha, CustomSorterConfig sorterConfig) throws Exception {
+    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, CustomSorterConfig sorterConfig) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -57,7 +55,6 @@ public class BestSearcher implements Closeable {
         this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
         this.maxPlaylist = maxPlaylist;
         this.maxTrack = maxTrack;
-        this.alpha = alpha;
         this.sorter = sorterConfig.getCustomSorter();
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
@@ -230,12 +227,6 @@ public class BestSearcher implements Closeable {
 
         ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
-
-        // todo review normalisation and linear weighting
-
-        int minSearchResultFrequency = Integer.MAX_VALUE, maxSearchResultFrequency = Integer.MIN_VALUE;
-        double minScore = Double.MAX_VALUE, maxScore = Double.MIN_VALUE;
-
         for (ScoreDoc hit : hits) {
             int docID = hit.doc;
 
@@ -263,23 +254,11 @@ public class BestSearcher implements Closeable {
                         if (rt.maxScore < hit.score)
                             rt.maxScore = hit.score;
                     }
-
-                    RecommendedTrack rt = recommendations.get(trackURI);
-
-                    if (rt.searchResultFrequency < minSearchResultFrequency) minSearchResultFrequency = rt.searchResultFrequency;
-                    if (rt.searchResultFrequency  > maxSearchResultFrequency) maxSearchResultFrequency = rt.searchResultFrequency;
-
-                    if (rt.maxScore < minScore) minScore = rt.maxScore;
-                    if (rt.maxScore > maxScore) maxScore = rt.maxScore;
                 }
             }
         }
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
-
-        for (RecommendedTrack rt : recommendedTracks) {
-            rt.computeLinearWeighting(alpha, minSearchResultFrequency, maxSearchResultFrequency, minScore, maxScore);
-        }
 
         sorter.sort(recommendedTracks);
 

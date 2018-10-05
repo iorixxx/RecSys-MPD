@@ -9,8 +9,7 @@ public enum CustomSorterConfig {
 
     NoSort,
     TwoLevelSort,
-    GeometricMeanSort,
-    LinearWeightingSort;
+    GeometricMeanSort;
 
     public CustomSorter getCustomSorter() {
         switch (this) {
@@ -22,9 +21,6 @@ public enum CustomSorterConfig {
 
             case GeometricMeanSort:
                 return new GeometricMeanSort();
-
-            case LinearWeightingSort:
-                return new LinearWeightingSort();
 
             default:
                 throw new AssertionError(this);

@@ -9,10 +9,13 @@ CLI.add_argument("--letors", help="Absolute paths of letor txt files to be merge
 
 def merge(output_path, files):
     with open(output_path, "w") as out:
+        i = 0
         for file in files:
-            with open(file, "r") as i:
-                for line in i:
-                    out.write(line)
+            i += 1
+            with open(file, "r") as f:
+                for line in f:
+                    if i == 1 or not line.startswith("#"):
+                        out.write(line)
 
     print("Files are merged into: %s" % output_path)
 

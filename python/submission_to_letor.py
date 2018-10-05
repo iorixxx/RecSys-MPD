@@ -2,6 +2,7 @@ import csv
 import re
 import util
 import collections
+import math
 import argparse
 
 CLI = argparse.ArgumentParser()
@@ -47,7 +48,8 @@ FEATURES = {1: "Number of tracks in playlist",
             29: "Audio liveness",
             30: "Audio valence",
             31: "Audio tempo",
-            32: "Audio time signature"}
+            32: "Audio time signature",
+            33: "Geometric mean of search result frequency and max Lucene score"}
 
 
 challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, recommendations = {}, {}, {}, {}, {}, {}
@@ -265,6 +267,7 @@ def extract_features(pid, track_uri, index):
 
     search_frequency = recommendations[pid][track_uri][0]
     lucene_score = recommendations[pid][track_uri][1]
+    geometric_mean = math.sqrt(search_frequency * lucene_score)
 
     jaccard_track = jaccard_distance(name, track_name)
     jaccard_artist = jaccard_distance(name, artist_name)
@@ -317,7 +320,8 @@ def extract_features(pid, track_uri, index):
               29: liveness,
               30: valence,
               31: tempo,
-              32: time_signature}
+              32: time_signature,
+              33: geometric_mean}
 
     return hit, track_uri, values
 
