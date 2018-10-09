@@ -49,7 +49,8 @@ FEATURES = {1: "Number of tracks in playlist",
             30: "Audio valence",
             31: "Audio tempo",
             32: "Audio time signature",
-            33: "Geometric mean of search result frequency and max Lucene score"}
+            33: "Geometric mean of search result frequency and max Lucene score",
+            34: "Position"}
 
 
 challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, recommendations = {}, {}, {}, {}, {}, {}
@@ -182,12 +183,13 @@ def read_recommendation_csv(path):
             pid = int(row[0])
             track_uri = row[1]
             search_frequency = int(row[2])
-            lucene_score = float(row[3])
+            max_lucene_score = float(row[3])
+            position = int(row[4])
 
             if pid not in recommendations:
                 recommendations[pid] = collections.OrderedDict()
 
-            recommendations[pid][track_uri] = (search_frequency, lucene_score)
+            recommendations[pid][track_uri] = (search_frequency, max_lucene_score, position)
 
     print("Recommendation file is read: %s" % path)
 
@@ -268,6 +270,7 @@ def extract_features(pid, track_uri, index):
     search_frequency = recommendations[pid][track_uri][0]
     lucene_score = recommendations[pid][track_uri][1]
     geometric_mean = math.sqrt(search_frequency * lucene_score)
+    position = recommendations[pid][track_uri][2]
 
     jaccard_track = jaccard_distance(name, track_name)
     jaccard_artist = jaccard_distance(name, artist_name)
@@ -321,7 +324,8 @@ def extract_features(pid, track_uri, index):
               30: valence,
               31: tempo,
               32: time_signature,
-              33: geometric_mean}
+              33: geometric_mean,
+              34: position}
 
     return hit, track_uri, values
 

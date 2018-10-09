@@ -269,7 +269,7 @@ public class BestSearcher implements Closeable {
                     }
                 }
 
-                pos--;
+                pos --;
             }
         }
 
@@ -282,7 +282,7 @@ public class BestSearcher implements Closeable {
         for (RecommendedTrack rt : recommendedTracks) {
             count++;
 
-            export(playlistID, rt.trackURI, rt.searchResultFrequency, rt.maxScore);
+            export(playlistID, rt);
 
             if (count == maxTrack)
                 break;
@@ -359,14 +359,16 @@ public class BestSearcher implements Closeable {
         clauses.clear();
     }
 
-    private synchronized void export(int playlistID, String trackURI, int searchResultFrequency, double maxScore) {
+    private synchronized void export(int playlistID, RecommendedTrack track) {
         out.get().print(playlistID);
         out.get().print(",");
-        out.get().print(trackURI);
+        out.get().print(track.trackURI);
         out.get().print(",");
-        out.get().print(searchResultFrequency);
+        out.get().print(track.searchResultFrequency);
         out.get().print(",");
-        out.get().print(maxScore);
+        out.get().print(track.maxScore);
+        out.get().print(",");
+        out.get().print(track.pos);
         out.get().println();
     }
 }

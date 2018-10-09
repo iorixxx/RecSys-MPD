@@ -12,6 +12,23 @@ public class RecommendedTrack {
 
     int pos;
 
+    RecommendedTrack(String trackURI) {
+        this.trackURI = trackURI;
+        this.searchResultFrequency = 0;
+    }
+
+    public int getSearchResultFrequency() {
+        return searchResultFrequency;
+    }
+
+    public double getMaxScore() {
+        return maxScore;
+    }
+
+    public double getGeometricMean() {
+        return Math.sqrt(searchResultFrequency * maxScore);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,22 +49,5 @@ public class RecommendedTrack {
     @Override
     public int hashCode() {
         return Objects.hash(trackURI);
-    }
-
-    RecommendedTrack(String trackURI) {
-        this.trackURI = trackURI;
-        this.searchResultFrequency = 0;
-    }
-
-    public int getSearchResultFrequency() {
-        return searchResultFrequency;
-    }
-
-    public double getMaxScore() {
-        return maxScore;
-    }
-
-    public double getGeometricMean() {
-        return Math.sqrt(searchResultFrequency * maxScore);
     }
 }
