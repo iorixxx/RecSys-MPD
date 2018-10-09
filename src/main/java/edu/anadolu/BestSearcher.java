@@ -13,10 +13,16 @@ import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.spans.*;
+import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,8 +93,7 @@ public class BestSearcher implements Closeable {
 
                 results.clear();
                 */
-            }
-            catch (IOException | ParseException e) {
+            } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -135,12 +140,11 @@ public class BestSearcher implements Closeable {
             for (String trackURI : trackURIs) {
                 if (!results.contains(trackURI)) {
                     if (results.size() < maxTrack) {
-                        pos ++;
+                        pos++;
                         results.add(trackURI);
 
                         //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-                    }
-                    else break;
+                    } else break;
                 }
             }
         }
@@ -149,59 +153,59 @@ public class BestSearcher implements Closeable {
     /**
      * Predict tracks for a playlist given its tracks only.
      * Works best with random tracks category 8 and category 10.
-    private void tracksOnly(Track[] tracks, int playlistID, HashSet<String> results) throws ParseException, IOException {
-
-        QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
-        queryParser.setDefaultOperator(QueryParser.Operator.OR);
-
-        HashSet<String> seeds = new HashSet<>(100);
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Track track : tracks) {
-            String trackURI = track.track_uri;
-
-            if (seeds.contains(trackURI)) continue;
-
-            builder.append(trackURI).append(' ');
-
-            seeds.add(trackURI);
-        }
-
-        Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
-
-        ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
-
-        for (ScoreDoc hit : hits) {
-            int docID = hit.doc, pos = -1;
-
-            Document doc = searcher.doc(docID);
-
-            if (Integer.parseInt(doc.get("id")) == playlistID) continue;
-
-            String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
-
-            if (trackURIs.length <= seeds.size())
-                System.out.println("**** document length " + trackURIs.length + " is less than or equal to query length " + seeds.size());
-
-            for (String trackURI : trackURIs) {
-                if (!results.contains(trackURI) && !seeds.contains(trackURI)) {
-                    if (results.size() < MAX_RESULT_SIZE) {
-                        pos ++;
-                        results.add(trackURI);
-
-                        export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-                    }
-                    else break;
-                }
-            }
-        }
-
-        seeds.clear();
-
-        System.out.println("Tracks only search for pid: " + playlistID);
-    }
-    */
+     * private void tracksOnly(Track[] tracks, int playlistID, HashSet<String> results) throws ParseException, IOException {
+     * <p>
+     * QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
+     * queryParser.setDefaultOperator(QueryParser.Operator.OR);
+     * <p>
+     * HashSet<String> seeds = new HashSet<>(100);
+     * <p>
+     * StringBuilder builder = new StringBuilder();
+     * <p>
+     * for (Track track : tracks) {
+     * String trackURI = track.track_uri;
+     * <p>
+     * if (seeds.contains(trackURI)) continue;
+     * <p>
+     * builder.append(trackURI).append(' ');
+     * <p>
+     * seeds.add(trackURI);
+     * }
+     * <p>
+     * Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
+     * <p>
+     * ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
+     * <p>
+     * for (ScoreDoc hit : hits) {
+     * int docID = hit.doc, pos = -1;
+     * <p>
+     * Document doc = searcher.doc(docID);
+     * <p>
+     * if (Integer.parseInt(doc.get("id")) == playlistID) continue;
+     * <p>
+     * String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
+     * <p>
+     * if (trackURIs.length <= seeds.size())
+     * System.out.println("**** document length " + trackURIs.length + " is less than or equal to query length " + seeds.size());
+     * <p>
+     * for (String trackURI : trackURIs) {
+     * if (!results.contains(trackURI) && !seeds.contains(trackURI)) {
+     * if (results.size() < MAX_RESULT_SIZE) {
+     * pos ++;
+     * results.add(trackURI);
+     * <p>
+     * export(playlistID, trackURI, hit.score, trackURIs.length - pos);
+     * }
+     * else break;
+     * }
+     * }
+     * }
+     * <p>
+     * seeds.clear();
+     * <p>
+     * System.out.println("Tracks only search for pid: " + playlistID);
+     * }
+     */
     private void tracksOnly(Track[] tracks, int playlistID) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
@@ -221,7 +225,7 @@ public class BestSearcher implements Closeable {
             seeds.add(trackURI);
         }
 
-        HashMap<String, RecommendedTrack> recommendations = new LinkedHashMap<>();
+        LinkedHashMap<String, RecommendedTrack> recommendations = new LinkedHashMap<>();
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
@@ -235,26 +239,37 @@ public class BestSearcher implements Closeable {
             if (Integer.parseInt(doc.get("id")) == playlistID) continue;
 
             String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
+            int pos = trackURIs.length;
 
             for (String trackURI : trackURIs) {
+
                 if (!seeds.contains(trackURI)) {
+
+                    // TODO experiment with  RecommendedTrack rt = recommendations.getOrDefaulf(trackURI, new RecommendedTrack(trackURI));  rt.searchResultFrequency += 1;
+
                     if (!recommendations.containsKey(trackURI)) {
                         RecommendedTrack rt = new RecommendedTrack(trackURI);
 
                         rt.searchResultFrequency = 1;
                         rt.maxScore = hit.score;
+                        rt.pos = pos;
 
                         recommendations.put(trackURI, rt);
-                    }
-                    else {
+                    } else {
                         RecommendedTrack rt = recommendations.get(trackURI);
 
                         rt.searchResultFrequency += 1;
 
-                        if (rt.maxScore < hit.score)
+                        if (rt.maxScore < hit.score) {
                             rt.maxScore = hit.score;
+                            rt.pos = pos;
+
+                            throw new RuntimeException("this if shouldn't called.");
+                        }
                     }
                 }
+
+                pos--;
             }
         }
 
@@ -265,7 +280,7 @@ public class BestSearcher implements Closeable {
         int count = 0;
 
         for (RecommendedTrack rt : recommendedTracks) {
-            count ++;
+            count++;
 
             export(playlistID, rt.trackURI, rt.searchResultFrequency, rt.maxScore);
 
@@ -307,8 +322,8 @@ public class BestSearcher implements Closeable {
 
         //TODO experiment with SpanOrQuery or SpanNearQuery. Which one performs better?
         final SpanFirstQuery
-            spanFirstQuery = new SpanFirstQuery(
-                    clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
+                spanFirstQuery = new SpanFirstQuery(
+                clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
 
 
         // todo ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
@@ -331,12 +346,11 @@ public class BestSearcher implements Closeable {
             for (String trackURI : trackURIs) {
                 if (!results.contains(trackURI)) {
                     if (results.size() < maxTrack) {
-                        pos ++;
+                        pos++;
                         results.add(trackURI);
 
                         //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-                    }
-                    else break;
+                    } else break;
                 }
             }
         }
