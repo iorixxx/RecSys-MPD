@@ -47,7 +47,7 @@ def read_challenge_json(path):
 
         challenges[pid] = dict(category=category, holdouts=holdouts)
 
-    print("Challenge file is read: %s" % path)
+    print("Challenge file is read: %s\n" % path)
 
 
 # evaluating precision and recall
