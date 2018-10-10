@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
+INDEX="/apc/MPD.index"
+SRC="/apc/RecSys-MPD"
+MPD="/apc/dataset/mpd/data"
+
 # remove previously created index
-rm -rf /mnt/MPD.index
+rm -rf $INDEX
 
 # go to source code directory, update project, build project
-cd /home/recsys2018/apc/RecSys-MPD
+cd $SRC
 git pull
 mvn clean package
 
 # run indexer application
-java -server -Xms20g -Xmx50g -jar target/mpd.jar /mnt/MPD.index /home/recsys2018/apc/dataset/mpd/data
+java -server -Xms20g -Xmx50g -jar target/mpd.jar $INDEX $MPD
