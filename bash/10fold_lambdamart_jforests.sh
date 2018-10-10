@@ -11,17 +11,18 @@ META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
-RANKING="/apc/ranking.properties"
+RANKING=$SRC"/jforests/ranking.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
+SORTER="NoSort"
 
 TOPK=200
-TOPT=400
+TOPT=500
 
-FEATURES=(1 2 19 20 22)
+FEATURES=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34)
 
 
 # go to source folder, pull changes from the repository, and build project
@@ -41,7 +42,7 @@ do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 
-	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT
+	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT $SORTER
 done
 
 
@@ -104,7 +105,7 @@ do
 	predict=$(printf "predictions-%d.txt" $i)
 
 	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=generate-bin --ranking --folder . --file $train --file $cv --file $tst
-	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=train --ranking --config-file $SRC"/jforests/ranking.properties" --train-file $train_bin --validation-file $cv_bin --output-model $ensemble
+	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=train --ranking --config-file $RANKING --train-file $train_bin --validation-file $cv_bin --output-model $ensemble
 	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=predict --ranking --model-file $ensemble --tree-type RegressionTree --test-file $tst_bin --output-file $predict
 
 	mv jforests* $i/
@@ -130,5 +131,5 @@ do
 	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 
-	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist --recommendations $result $ranked
+	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $TOPT --recommendations $result $ranked
 done
