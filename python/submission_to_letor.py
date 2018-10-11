@@ -52,8 +52,8 @@ FEATURES = {1: "Number of tracks in playlist",
             33: "Geometric mean of search result frequency and max Lucene score",
             34: "Position"}
 
-
-challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata, recommendations = {}, {}, {}, {}, {}, {}
+recommendations = collections.OrderedDict()
+challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata = {}, {}, {}, {}, {}
 
 
 def jaccard_distance(a, b):
