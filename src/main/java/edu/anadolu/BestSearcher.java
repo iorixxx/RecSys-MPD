@@ -150,62 +150,6 @@ public class BestSearcher implements Closeable {
         }
     }
 
-    /**
-     * Predict tracks for a playlist given its tracks only.
-     * Works best with random tracks category 8 and category 10.
-     * private void tracksOnly(Track[] tracks, int playlistID, HashSet<String> results) throws ParseException, IOException {
-     * <p>
-     * QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
-     * queryParser.setDefaultOperator(QueryParser.Operator.OR);
-     * <p>
-     * HashSet<String> seeds = new HashSet<>(100);
-     * <p>
-     * StringBuilder builder = new StringBuilder();
-     * <p>
-     * for (Track track : tracks) {
-     * String trackURI = track.track_uri;
-     * <p>
-     * if (seeds.contains(trackURI)) continue;
-     * <p>
-     * builder.append(trackURI).append(' ');
-     * <p>
-     * seeds.add(trackURI);
-     * }
-     * <p>
-     * Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
-     * <p>
-     * ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
-     * <p>
-     * for (ScoreDoc hit : hits) {
-     * int docID = hit.doc, pos = -1;
-     * <p>
-     * Document doc = searcher.doc(docID);
-     * <p>
-     * if (Integer.parseInt(doc.get("id")) == playlistID) continue;
-     * <p>
-     * String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
-     * <p>
-     * if (trackURIs.length <= seeds.size())
-     * System.out.println("**** document length " + trackURIs.length + " is less than or equal to query length " + seeds.size());
-     * <p>
-     * for (String trackURI : trackURIs) {
-     * if (!results.contains(trackURI) && !seeds.contains(trackURI)) {
-     * if (results.size() < MAX_RESULT_SIZE) {
-     * pos ++;
-     * results.add(trackURI);
-     * <p>
-     * export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-     * }
-     * else break;
-     * }
-     * }
-     * }
-     * <p>
-     * seeds.clear();
-     * <p>
-     * System.out.println("Tracks only search for pid: " + playlistID);
-     * }
-     */
     private void tracksOnly(Track[] tracks, int playlistID) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
@@ -245,28 +189,15 @@ public class BestSearcher implements Closeable {
 
                 if (!seeds.contains(trackURI)) {
 
-                    // TODO experiment with  RecommendedTrack rt = recommendations.getOrDefaulf(trackURI, new RecommendedTrack(trackURI));  rt.searchResultFrequency += 1;
+                    RecommendedTrack rt = recommendations.getOrDefault(trackURI, new RecommendedTrack(trackURI));
+                    rt.searchResultFrequency += 1;
 
-                    if (!recommendations.containsKey(trackURI)) {
-                        RecommendedTrack rt = new RecommendedTrack(trackURI);
-
-                        rt.searchResultFrequency = 1;
+                    if (rt.maxScore < hit.score) {
                         rt.maxScore = hit.score;
                         rt.pos = pos;
-
-                        recommendations.put(trackURI, rt);
-                    } else {
-                        RecommendedTrack rt = recommendations.get(trackURI);
-
-                        rt.searchResultFrequency += 1;
-
-                        if (rt.maxScore < hit.score) {
-                            rt.maxScore = hit.score;
-                            rt.pos = pos;
-
-                            throw new RuntimeException("this if shouldn't called.");
-                        }
                     }
+
+                    recommendations.putIfAbsent(trackURI, rt);
                 }
 
                 pos --;

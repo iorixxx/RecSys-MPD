@@ -15,6 +15,8 @@ public class RecommendedTrack {
     RecommendedTrack(String trackURI) {
         this.trackURI = trackURI;
         this.searchResultFrequency = 0;
+        this.maxScore = 0;
+        this.pos = 0;
     }
 
     public int getSearchResultFrequency() {
