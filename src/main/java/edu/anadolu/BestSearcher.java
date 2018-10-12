@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -68,7 +69,9 @@ public class BestSearcher implements Closeable {
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
             try {
-                tracksOnly(playlist.tracks, playlist.pid, out);
+                tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, "track_uris");
+                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::artist_uri, "artist_uris");
+                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::album_uri, "album_uris");
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -83,9 +86,9 @@ public class BestSearcher implements Closeable {
         reader.close();
     }
 
-    private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out) throws ParseException, IOException {
+    private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out, Function<Track, String> map, String field) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
+        QueryParser queryParser = new QueryParser(field, new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
         HashSet<String> seeds = new HashSet<>(100);
@@ -97,7 +100,7 @@ public class BestSearcher implements Closeable {
 
             if (seeds.contains(trackURI)) continue;
 
-            builder.append(trackURI).append(' ');
+            builder.append(map.apply(track)).append(' ');
 
             seeds.add(trackURI);
         }
@@ -136,6 +139,8 @@ public class BestSearcher implements Closeable {
                     if (rt.maxScore < hit.score) {
                         rt.maxScore = hit.score;
                         rt.pos = pos;
+                        rt.playlistId = Integer.parseInt(doc.get("id"));
+                        rt.luceneId = hit.doc;
                     }
 
                     recommendations.putIfAbsent(trackURI, rt);
@@ -156,6 +161,10 @@ public class BestSearcher implements Closeable {
 
         System.out.println("Tracks only search for pid: " + playlistID);
         recommendedTracks.clear();
+    }
+
+    private void album(List<RecommendedTrack> recommendedTracks) {
+
     }
 
 
