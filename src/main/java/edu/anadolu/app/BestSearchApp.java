@@ -22,8 +22,8 @@ public class BestSearchApp {
             Integer maxTrack = Integer.valueOf(args[5]);
             CustomSorterConfig sorterConfig = CustomSorterConfig.valueOf(args[6]);
 
-            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, resultPath, similarityConfig, maxPlaylist, maxTrack, sorterConfig)) {
-                searcher.search();
+            try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, similarityConfig, maxPlaylist, maxTrack, sorterConfig)) {
+                searcher.search(resultPath);
             } catch (Exception e) {
                 e.printStackTrace();
             }

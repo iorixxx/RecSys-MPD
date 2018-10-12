@@ -125,7 +125,6 @@ public class Indexer {
                     document.add(new TextField("track_uris", builder.toString().trim(), Field.Store.YES));
                     document.add(new TextField("album_uris", album.toString().trim(), Field.Store.NO));
                     document.add(new TextField("artist_uris", artist.toString().trim(), Field.Store.NO));
-                    document.add(new TextField(ShingleFilter.DEFAULT_TOKEN_TYPE, builder.toString().trim(), Field.Store.NO));
                     seeds.clear();
                     writer.addDocument(document);
                 }
