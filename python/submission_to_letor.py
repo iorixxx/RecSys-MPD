@@ -31,26 +31,26 @@ FEATURES = {1: "Number of tracks in playlist",
             12: "Artist frequency",
             13: "Number of albums of artist",
             14: "Number of tracks of artist",
-            15: "Submission order",
-            16: "Search result frequency",
-            17: "Max Lucene score",
-            18: "Jaccard distance of playlist title and track name",
-            19: "Jaccard distance of playlist title and album name",
-            20: "Jaccard distance of playlist title and artist name",
-            21: "Audio danceability",
-            22: "Audio energy",
-            23: "Audio key",
-            24: "Audio loudness",
-            25: "Audio mode",
-            26: "Audio speechiness",
-            27: "Audio acousticness",
-            28: "Audio instrumentalness",
-            29: "Audio liveness",
-            30: "Audio valence",
-            31: "Audio tempo",
-            32: "Audio time signature",
-            33: "Geometric mean of search result frequency and max Lucene score",
-            34: "Position"}
+            15: "Jaccard distance of playlist title and track name",
+            16: "Jaccard distance of playlist title and album name",
+            17: "Jaccard distance of playlist title and artist name",
+            18: "Audio danceability",
+            19: "Audio energy",
+            20: "Audio key",
+            21: "Audio loudness",
+            22: "Audio mode",
+            23: "Audio speechiness",
+            24: "Audio acousticness",
+            25: "Audio instrumentalness",
+            26: "Audio liveness",
+            27: "Audio valence",
+            28: "Audio tempo",
+            29: "Audio time signature",
+            30: "Submission order",
+            31: "Position",
+            32: "Max Lucene score",
+            33: "Search result frequency",
+            34: "Geometric mean of search result frequency and max Lucene score"}
 
 recommendations = collections.OrderedDict()
 challenge_metadata, track_metadata, album_metadata, artist_metadata, audio_metadata = {}, {}, {}, {}, {}
@@ -239,7 +239,7 @@ def collect_features(pid, track_uris):
     return features
 
 
-def extract_features(pid, track_uri, index):
+def extract_features(pid, track_uri, order):
     name = challenge_metadata[pid][0]
     num_tracks = challenge_metadata[pid][1]
     num_samples = challenge_metadata[pid][2]
@@ -267,14 +267,14 @@ def extract_features(pid, track_uri, index):
     total_tracks_of_artist = artist_metadata[artist_uri][3]
     artist_name = artist_metadata[artist_uri][4]
 
-    search_frequency = recommendations[pid][track_uri][0]
-    lucene_score = recommendations[pid][track_uri][1]
-    geometric_mean = math.sqrt(search_frequency * lucene_score)
-    position = recommendations[pid][track_uri][2]
-
     jaccard_track = jaccard_distance(name, track_name)
     jaccard_artist = jaccard_distance(name, artist_name)
     jaccard_album = jaccard_distance(name, album_name)
+
+    search_frequency = recommendations[pid][track_uri][0]
+    lucene_score = recommendations[pid][track_uri][1]
+    position = recommendations[pid][track_uri][2]
+    geometric_mean = math.sqrt(search_frequency * lucene_score)
 
     danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
@@ -306,26 +306,26 @@ def extract_features(pid, track_uri, index):
               12: artist_frequency,
               13: total_albums_of_artist,
               14: total_tracks_of_artist,
-              15: index,
-              16: search_frequency,
-              17: lucene_score,
-              18: jaccard_track,
-              19: jaccard_album,
-              20: jaccard_artist,
-              21: danceability,
-              22: energy,
-              23: key,
-              24: loudness,
-              25: mode,
-              26: speechiness,
-              27: acousticness,
-              28: instrumentalness,
-              29: liveness,
-              30: valence,
-              31: tempo,
-              32: time_signature,
-              33: geometric_mean,
-              34: position}
+              15: jaccard_track,
+              16: jaccard_album,
+              17: jaccard_artist,
+              18: danceability,
+              19: energy,
+              20: key,
+              21: loudness,
+              22: mode,
+              23: speechiness,
+              24: acousticness,
+              25: instrumentalness,
+              26: liveness,
+              27: valence,
+              28: tempo,
+              29: time_signature,
+              30: order,
+              31: position,
+              32: lucene_score,
+              33: search_frequency,
+              34: geometric_mean}
 
     return hit, track_uri, values
 
