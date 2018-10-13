@@ -9,4 +9,15 @@ public class Track {
     String album_uri;
     int duration_ms;
 
+    String track_uri() {
+        return track_uri;
+    }
+
+    String artist_uri() {
+        return artist_uri;
+    }
+
+    String album_uri() {
+        return album_uri;
+    }
 }

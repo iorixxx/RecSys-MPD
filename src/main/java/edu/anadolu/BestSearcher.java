@@ -6,17 +6,12 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.spans.SpanFirstQuery;
-import org.apache.lucene.search.spans.SpanNearQuery;
-import org.apache.lucene.search.spans.SpanQuery;
-import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
@@ -28,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -39,9 +35,8 @@ public class BestSearcher implements Closeable {
 
     private final MPD challenge;
     private final IndexReader reader;
-    private final IndexSearcher searcher;
 
-    private final AtomicReference<PrintWriter> out;
+    private final SimilarityConfig similarityConfig;
 
     private final Integer maxPlaylist;
 
@@ -49,7 +44,7 @@ public class BestSearcher implements Closeable {
 
     private final CustomSorter sorter;
 
-    public BestSearcher(Path indexPath, Path challengePath, Path resultPath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, CustomSorterConfig sorterConfig) throws Exception {
+    public BestSearcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, CustomSorterConfig sorterConfig) throws Exception {
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -57,8 +52,6 @@ public class BestSearcher implements Closeable {
         final Gson GSON = new Gson();
 
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
-        this.searcher = new IndexSearcher(reader);
-        this.out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
         this.maxPlaylist = maxPlaylist;
         this.maxTrack = maxTrack;
         this.sorter = sorterConfig.getCustomSorter();
@@ -67,32 +60,18 @@ public class BestSearcher implements Closeable {
             this.challenge = GSON.fromJson(reader, MPD.class);
         }
 
-        this.searcher.setSimilarity(similarityConfig.getSimilarity());
+        this.similarityConfig = similarityConfig;
     }
 
-    public void search() {
+    public void search(Path resultPath) throws IOException {
+
+        final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
+
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
-
             try {
-                tracksOnly(playlist.tracks, playlist.pid);
-
-                /*
-                HashSet<String> results = new LinkedHashSet<>();
-
-                if (playlist.tracks.length == 0) {
-                    titleOnly(playlist.name, playlist.pid, results);
-                }
-                else {
-                    if (playlist.isSequential()) {
-                        firstNTracks(playlist.tracks, playlist.pid, results);
-                    }
-                    else {
-                        tracksOnly(playlist.tracks, playlist.pid);
-                    }
-                }
-
-                results.clear();
-                */
+                tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, "track_uris");
+                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::artist_uri, "artist_uris");
+                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::album_uri, "album_uris");
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -107,52 +86,9 @@ public class BestSearcher implements Closeable {
         reader.close();
     }
 
-    /**
-     * Predict tracks for a playlist given its title only.
-     */
-    private void titleOnly(String title, int playlistID, HashSet<String> results) throws ParseException, IOException {
+    private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out, Function<Track, String> map, String field) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser("name", Indexer.icu());
-        queryParser.setDefaultOperator(QueryParser.Operator.AND);
-
-        Query query = queryParser.parse(QueryParserBase.escape(title));
-
-        ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
-
-        /*
-         * Try with OR operator, relaxed mode.
-         */
-        if (hits.length == 0) {
-            queryParser.setDefaultOperator(QueryParser.Operator.OR);
-
-            hits = searcher.search(query, maxPlaylist).scoreDocs;
-        }
-
-        for (ScoreDoc hit : hits) {
-            int docID = hit.doc, pos = -1;
-
-            Document doc = searcher.doc(docID);
-
-            if (Integer.parseInt(doc.get("id")) == playlistID) continue;
-
-            String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
-
-            for (String trackURI : trackURIs) {
-                if (!results.contains(trackURI)) {
-                    if (results.size() < maxTrack) {
-                        pos++;
-                        results.add(trackURI);
-
-                        //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-                    } else break;
-                }
-            }
-        }
-    }
-
-    private void tracksOnly(Track[] tracks, int playlistID) throws ParseException, IOException {
-
-        QueryParser queryParser = new QueryParser("track_uris", new WhitespaceAnalyzer());
+        QueryParser queryParser = new QueryParser(field, new WhitespaceAnalyzer());
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
 
         HashSet<String> seeds = new HashSet<>(100);
@@ -164,7 +100,7 @@ public class BestSearcher implements Closeable {
 
             if (seeds.contains(trackURI)) continue;
 
-            builder.append(trackURI).append(' ');
+            builder.append(map.apply(track)).append(' ');
 
             seeds.add(trackURI);
         }
@@ -173,7 +109,15 @@ public class BestSearcher implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
+        IndexSearcher searcher = new IndexSearcher(reader);
+
+        searcher.setSimilarity(similarityConfig.getSimilarity());
+
         ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
+
+        if (hits.length == 0) {
+            //TODO handle such cases
+        }
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc;
@@ -195,12 +139,14 @@ public class BestSearcher implements Closeable {
                     if (rt.maxScore < hit.score) {
                         rt.maxScore = hit.score;
                         rt.pos = pos;
+                        rt.playlistId = Integer.parseInt(doc.get("id"));
+                        rt.luceneId = hit.doc;
                     }
 
                     recommendations.putIfAbsent(trackURI, rt);
                 }
 
-                pos --;
+                pos--;
             }
         }
 
@@ -208,98 +154,32 @@ public class BestSearcher implements Closeable {
 
         sorter.sort(recommendedTracks);
 
-        int count = 0;
-
-        for (RecommendedTrack rt : recommendedTracks) {
-            count++;
-
-            export(playlistID, rt);
-
-            if (count == maxTrack)
-                break;
-        }
+        if (recommendedTracks.size() > maxTrack)
+            export(playlistID, recommendedTracks.subList(0, maxTrack), out.get());
+        else
+            export(playlistID, recommendedTracks, out.get());
 
         System.out.println("Tracks only search for pid: " + playlistID);
+        recommendedTracks.clear();
     }
 
-    /**
-     * Predict tracks for a playlist given its first N tracks, where N can equal 1, 5, 10, 25, or 100.
-     */
-    private void firstNTracks(Track[] tracks, int playlistID, HashSet<String> results) throws ParseException, IOException {
+    private void album(List<RecommendedTrack> recommendedTracks) {
 
-        LinkedHashSet<String> seeds = new LinkedHashSet<>(100);
-
-        ArrayList<SpanQuery> clauses = new ArrayList<>(tracks.length);
-
-
-        for (Track track : tracks) {
-
-            // skip duplicate tracks in the playlist. Only consider the first occurrence of the track.
-            if (seeds.contains(track.track_uri)) continue;
-
-            seeds.add(track.track_uri);
-            clauses.add(new SpanTermQuery(new Term("track_uris", track.track_uri)));
-        }
-
-        //TODO try to figure out n from tracks.length
-
-        final int n;
-        if (tracks.length < 6)
-            n = tracks.length + 2; // for n=1 and n=5 use 2 and 7
-        else if (tracks.length < 26)
-            n = (int) (tracks.length * 1.5); // for n=10 and n=25 use 15 and 37
-        else
-            n = (int) (tracks.length * 1.25); // for n=100 use 125
-
-        //TODO experiment with SpanOrQuery or SpanNearQuery. Which one performs better?
-        final SpanFirstQuery
-                spanFirstQuery = new SpanFirstQuery(
-                clauses.size() == 1 ? clauses.get(0) : new SpanNearQuery(clauses.toArray(new SpanQuery[clauses.size()]), 0, true), n);
-
-
-        // todo ScoreDoc[] hits = searcher.search(spanFirstQuery, Integer.MAX_VALUE).scoreDocs;
-        ScoreDoc[] hits = searcher.search(spanFirstQuery, maxPlaylist).scoreDocs;
-
-        if (hits.length == 0) {
-            System.out.println("SpanFirst found zero result found for playlistID : " + playlistID + " first " + tracks.length);
-            tracksOnly(tracks, playlistID);
-        }
-
-        for (ScoreDoc hit : hits) {
-            int docID = hit.doc, pos = -1;
-
-            Document doc = searcher.doc(docID);
-
-            if (Integer.parseInt(doc.get("id")) == playlistID) continue;
-
-            String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
-
-            for (String trackURI : trackURIs) {
-                if (!results.contains(trackURI)) {
-                    if (results.size() < maxTrack) {
-                        pos++;
-                        results.add(trackURI);
-
-                        //export(playlistID, trackURI, hit.score, trackURIs.length - pos);
-                    } else break;
-                }
-            }
-        }
-
-        seeds.clear();
-        clauses.clear();
     }
 
-    private synchronized void export(int playlistID, RecommendedTrack track) {
-        out.get().print(playlistID);
-        out.get().print(",");
-        out.get().print(track.trackURI);
-        out.get().print(",");
-        out.get().print(track.searchResultFrequency);
-        out.get().print(",");
-        out.get().print(track.maxScore);
-        out.get().print(",");
-        out.get().print(track.pos);
-        out.get().println();
+
+    private static synchronized void export(int playlistID, List<RecommendedTrack> tracks, PrintWriter out) {
+        tracks.forEach(track -> {
+            out.print(playlistID);
+            out.print(",");
+            out.print(track.trackURI);
+            out.print(",");
+            out.print(track.searchResultFrequency);
+            out.print(",");
+            out.print(track.maxScore);
+            out.print(",");
+            out.print(track.pos);
+            out.println();
+        });
     }
 }
