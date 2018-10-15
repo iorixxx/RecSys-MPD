@@ -11,13 +11,15 @@ META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
-RANKING=$SRC"/jforests/ranking.properties"
+RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
 SORTER="NoSort"
+SEARCHFIELD="Track"
+
 LTRLIB="jforests"
 
 TOPK=200
@@ -43,7 +45,7 @@ do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 
-	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT $SORTER
+	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT $SORTER $SEARCHFIELD
 done
 
 

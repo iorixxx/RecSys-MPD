@@ -11,13 +11,17 @@ META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/recsys_01"
 INDEX="/apc/MPD.index"
-RANKING=$SRC"/jforests/ranking.properties"
+RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
 SORTER="NoSort"
+SEARCHFIELD="Track"
+
+LTRLIB="jforests"
+
 
 TOPK=200
 TOPT=500
@@ -37,9 +41,9 @@ cd $FULLEXP
 
 
 # generate sampling data
-java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/train.json" "train.csv" $SIMILARITY $TOPK $TOPT $SORTER
-java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/validation.json" "validation.csv" $SIMILARITY $TOPK $TOPT $SORTER
-java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/test.json" "test.csv" $SIMILARITY $TOPK $TOPT $SORTER
+java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/train.json" "train.csv" $SIMILARITY $TOPK $TOPT $SORTER $SEARCHFIELD
+java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/validation.json" "validation.csv" $SIMILARITY $TOPK $TOPT $SORTER $SEARCHFIELD
+java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/test.json" "test.csv" $SIMILARITY $TOPK $TOPT $SORTER $SEARCHFIELD
 
 
 # extract learning-to-rank features
@@ -58,5 +62,5 @@ java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=predict --ranking --mod
 
 
 # generate re-ranked recommendations
-python3 $SRC"/python/submission_rank.py" "ranked.csv" "test.csv" "predictions.txt"
+python3 $SRC"/python/submission_rank.py" "ranked.csv" "test.csv" "predictions.txt" $LTRLIB
 python3 $SRC"/python/evaluate.py" $TEST"/test.json" $TOPT --recommendations "test.csv" "ranked.csv"

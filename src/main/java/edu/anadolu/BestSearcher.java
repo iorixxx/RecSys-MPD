@@ -44,7 +44,11 @@ public class BestSearcher implements Closeable {
 
     private final CustomSorter sorter;
 
-    public BestSearcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack, CustomSorterConfig sorterConfig) throws Exception {
+    private final String searchField;
+
+    public BestSearcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack,
+                        CustomSorterConfig sorterConfig, SearchFieldConfig searchFieldConfig) throws Exception {
+
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
@@ -54,13 +58,13 @@ public class BestSearcher implements Closeable {
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.maxPlaylist = maxPlaylist;
         this.maxTrack = maxTrack;
+        this.similarityConfig = similarityConfig;
         this.sorter = sorterConfig.getCustomSorter();
+        this.searchField = searchFieldConfig.getSearchField();
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
         }
-
-        this.similarityConfig = similarityConfig;
     }
 
     public void search(Path resultPath) throws IOException {
@@ -69,9 +73,7 @@ public class BestSearcher implements Closeable {
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
             try {
-                tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, "track_uris");
-                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::artist_uri, "artist_uris");
-                //    tracksOnly(playlist.tracks, playlist.pid, out, Track::album_uri, "album_uris");
+                tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, searchField);
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }

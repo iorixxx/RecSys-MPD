@@ -17,6 +17,8 @@ JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
 SORTER="NoSort"
+SEARCHFIELD="Track"
+
 LTRLIB="ranklib"
 
 TOPK=200
@@ -45,7 +47,7 @@ do
 	playlist=$(printf "fold-%03d.json" $i)
 	result=$(printf "results-%d.csv" $i)
 
-	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT $SORTER
+	java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $SIMILARITY $TOPK $TOPT $SORTER $SEARCHFIELD
 done
 
 
