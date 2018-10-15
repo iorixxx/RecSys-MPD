@@ -13,6 +13,7 @@ public class RecommendedTrack {
     int pos;
 
     int playlistId;
+
     int luceneId;
 
     RecommendedTrack(String trackURI) {

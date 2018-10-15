@@ -44,7 +44,7 @@ public class BestSearcher implements Closeable {
 
     private final CustomSorter sorter;
 
-    private final String searchField;
+    private final SearchFieldConfig searchFieldConfig;
 
     public BestSearcher(Path indexPath, Path challengePath, SimilarityConfig similarityConfig, Integer maxPlaylist, Integer maxTrack,
                         CustomSorterConfig sorterConfig, SearchFieldConfig searchFieldConfig) throws Exception {
@@ -60,7 +60,7 @@ public class BestSearcher implements Closeable {
         this.maxTrack = maxTrack;
         this.similarityConfig = similarityConfig;
         this.sorter = sorterConfig.getCustomSorter();
-        this.searchField = searchFieldConfig.getSearchField();
+        this.searchFieldConfig = searchFieldConfig;
 
         try (BufferedReader reader = Files.newBufferedReader(challengePath)) {
             this.challenge = GSON.fromJson(reader, MPD.class);
@@ -73,7 +73,19 @@ public class BestSearcher implements Closeable {
 
         Arrays.stream(this.challenge.playlists).parallel().forEach(playlist -> {
             try {
-                tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, searchField);
+                switch (searchFieldConfig) {
+                    case Track:
+                        tracksOnly(playlist.tracks, playlist.pid, out, Track::track_uri, "track_uris");
+                        break;
+
+                    case Artist:
+                        tracksOnly(playlist.tracks, playlist.pid, out, Track::artist_uri, "artist_uris");
+                        break;
+
+                    case Album:
+                        tracksOnly(playlist.tracks, playlist.pid, out, Track::album_uri, "album_uris");
+                        break;
+                }
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);
             }
