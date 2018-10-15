@@ -11,17 +11,19 @@ META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
-RANKING=$SRC"/jforests/ranking.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
 SORTER="NoSort"
-LTRLIB="jforests"
+LTRLIB="ranklib"
 
 TOPK=200
-TOPT=500
+TOPT=400
+
+RANKER=3
+METRIC="NDCG@"$TOPT
 
 FEATURES=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34)
 
@@ -87,30 +89,21 @@ do
 done
 
 
-# apply LambdaMART: train, build model, and predict ranking scores
+# apply AdaRank: train, build model, and predict ranking scores
 for i in {1..10}
 do
-	mkdir $i
-
 	exc=$(( $i % 10 + 1 ))
 
 	train=$(printf "train-%d.txt" $i)
 	tst=$(printf "letor-%d.txt" $i)
 	cv=$(printf "letor-%d.txt" $exc)
 
-	train_bin=$(printf "train-%d.bin" $i)
-	tst_bin=$(printf "letor-%d.bin" $i)
-	cv_bin=$(printf "letor-%d.bin" $exc)
-
 	ensemble=$(printf "ensemble-%d.txt" $i)
 	predict=$(printf "predictions-%d.txt" $i)
 
-	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=generate-bin --ranking --folder . --file $train --file $cv --file $tst
-	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=train --ranking --config-file $RANKING --train-file $train_bin --validation-file $cv_bin --output-model $ensemble
-	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=predict --ranking --model-file $ensemble --tree-type RegressionTree --test-file $tst_bin --output-file $predict
 
-	mv jforests* $i/
-	mv *.bin $i/
+	java $JXMS $JXMX -jar $SRC"/ranklib/RankLib.jar" -train $train -test $tst -validate $cv -ranker $RANKER -metric2t $METRIC -metric2T $METRIC -save $ensemble
+	java $JXMS $JXMX -jar $SRC"/ranklib/RankLib.jar" -load $ensemble -rank $tst -score $predict
 done
 
 
