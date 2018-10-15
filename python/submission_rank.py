@@ -7,7 +7,9 @@ CLI = argparse.ArgumentParser()
 CLI.add_argument("output", help="Absolute path of the output csv file")
 CLI.add_argument("recommendation", help="Absolute path of the recommendation csv file")
 CLI.add_argument("prediction", help="Absolute path of the prediction txt file")
+CLI.add_argument("library", help="Library that generates the prediction txt file")
 
+SUPPORTED_LIBRARIES = ["jforests", "ranklib"]
 
 letor_mapping, prediction_mapping = {}, {}
 
@@ -28,12 +30,19 @@ def read_recommendations(path):
     print("Recommendation file is read: %s" % path)
 
 
-def read_predictions(path):
+def read_predictions(path, library):
+    switcher = {SUPPORTED_LIBRARIES[0]: lambda x: float(x),
+                SUPPORTED_LIBRARIES[1]: lambda x: float(x.split("\t")[2])}
+
     line_num = 0
     with open(path, "r") as file:
         for line in file:
             line_num += 1
-            prediction_mapping[line_num] = float(line)
+
+            func = switcher.get(library)
+            value = func(line)
+
+            prediction_mapping[line_num] = value
 
     print("Prediction file is read: %s" % path)
 
@@ -61,7 +70,9 @@ def rank(path):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    read_recommendations(path=args.recommendation)
-    read_predictions(path=args.prediction)
+    if args.library not in SUPPORTED_LIBRARIES:
+        raise SystemExit("LTR library must be jforests or ranklib")
 
+    read_recommendations(path=args.recommendation)
+    read_predictions(path=args.prediction, library=args.library)
     rank(path=args.output)
