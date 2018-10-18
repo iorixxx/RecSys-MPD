@@ -16,11 +16,20 @@ public class RecommendedTrack {
 
     int luceneId;
 
+    long playlist_length;
+
+    String album;
+    String artist;
+
     RecommendedTrack(String trackURI) {
         this.trackURI = trackURI;
         this.searchResultFrequency = 0;
         this.maxScore = 0;
         this.pos = 0;
+    }
+
+    public int getLuceneId() {
+        return luceneId;
     }
 
     public int getSearchResultFrequency() {

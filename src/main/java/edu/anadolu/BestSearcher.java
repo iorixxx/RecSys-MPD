@@ -156,6 +156,7 @@ public class BestSearcher implements Closeable {
                         rt.pos = pos;
                         rt.playlistId = Integer.parseInt(doc.get("id"));
                         rt.luceneId = hit.doc;
+                        rt.playlist_length = Long.parseLong(doc.get("playlist_length"));
                     }
 
                     recommendations.putIfAbsent(trackURI, rt);
@@ -171,7 +172,7 @@ public class BestSearcher implements Closeable {
 
         album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uris");
 
-        //  album(searcher, tracks, recommendedTracks, Track::artist_uri, "artist_uri");
+        album(searcher, tracks, recommendedTracks, Track::artist_uri, "artist_uris");
 
         if (recommendedTracks.size() > maxTrack)
             export(playlistID, recommendedTracks.subList(0, maxTrack), out.get());
@@ -211,21 +212,22 @@ public class BestSearcher implements Closeable {
             termStatisticsMap.put(word, termStatistics);
         }
 
-        LinkedHashMap<Integer, List<DocTermStat>> map = new LinkedHashMap<>();
+        LinkedHashMap<RecommendedTrack, List<DocTermStat>> map = new LinkedHashMap<>();
 
 
         for (RecommendedTrack track : recommendedTracks) {
-            map.put(track.luceneId, new ArrayList<>(subParts.size()));
+            if (map.containsKey(track)) throw new RuntimeException("map should not contain recommended track " + track);
+            map.put(track, new ArrayList<>(subParts.size()));
         }
 
         for (String word : subParts)
             findDoc(map, word, field, searcher);
 
-        for (Map.Entry<Integer, List<DocTermStat>> entry : map.entrySet()) {
+        for (Map.Entry<RecommendedTrack, List<DocTermStat>> entry : map.entrySet()) {
 
-            Document doc = searcher.doc(entry.getKey());
+            Document doc = searcher.doc(entry.getKey().luceneId);
 
-            int f = 3;
+            //int f = 0;
 
             int sum = 0;
             for (DocTermStat docTermStat : entry.getValue()) {
@@ -233,10 +235,13 @@ public class BestSearcher implements Closeable {
                 sum += docTermStat.tf;
             }
 
-            System.out.print(Integer.toString(++f));
-            System.out.print(":");
-            System.out.print(sum);
-            System.out.print(" ");
+            StringBuilder builder = new StringBuilder();
+            // System.out.print(Integer.toString(++f));
+            //System.out.print(":");
+            //System.out.print(sum);
+            builder.append(sum).append(",");
+            //System.out.print(" ");
+
 
             long dl_temp = -1;
             // the use of multiple weighting models in learning to rank, namely the combination of multiple weighting models.
@@ -274,10 +279,11 @@ public class BestSearcher implements Closeable {
 
                 }
 
-                System.out.print(Integer.toString(++f));
-                System.out.print(":");
-                System.out.print(String.format("%.5f", score));
-                System.out.print(" ");
+                //System.out.print(Integer.toString(++f));
+                //System.out.print(":");
+                //System.out.print(String.format("%.5f", score));
+                builder.append(String.format("%.5f", score)).append(",");
+                //System.out.print(" ");
 
             }
 
@@ -285,19 +291,17 @@ public class BestSearcher implements Closeable {
 
             if (dl_temp != dl) throw new RuntimeException("playlist length should be same! " + dl_temp + " " + dl);
 
-
-            System.out.print(Integer.toString(++f));
-            System.out.print(":");
-            System.out.print(dl);
-            System.out.print(" ");
-
+            builder.deleteCharAt(builder.length() - 1);
+            recommendedTracks.stream().filter(recommendedTrack -> recommendedTrack.luceneId == entry.getKey().luceneId).forEach(recommendedTrack -> {
+                if ("album_uris".equals(field))
+                    recommendedTrack.album = builder.toString();
+                else if ("artist_uris".equals(field))
+                    recommendedTrack.artist = builder.toString();
+            });
         }
-
-        System.out.println();
-
     }
 
-    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String
+    private void findDoc(LinkedHashMap<RecommendedTrack, List<DocTermStat>> map, String word, String
             field, IndexSearcher searcher) throws IOException {
 
         Term term = new Term(field, word);
@@ -305,24 +309,26 @@ public class BestSearcher implements Closeable {
 
         if (postingsEnum == null) {
             System.out.println("Cannot find the uri " + word + " in the field " + field);
-            for (Integer i : map.keySet())
+            for (RecommendedTrack i : map.keySet())
                 map.get(i).add(new DocTermStat(word, -1, -1));
             return;
         }
+
+        Set<Integer> set = map.keySet().stream().map(RecommendedTrack::getLuceneId).collect(Collectors.toSet());
 
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
             final int luceneId = postingsEnum.docID();
 
-            if (!map.containsKey(luceneId)) continue;
+            if (!set.contains(luceneId)) continue;
 
-            List<DocTermStat> list = map.get(luceneId);
+            final long dl = Long.parseLong(searcher.doc(luceneId).get("playlist_length"));
+            final int freq = postingsEnum.freq();
 
-            long dl = Long.parseLong(searcher.doc(luceneId).get("playlist_length"));
-
-            list.add(new DocTermStat(word, dl, postingsEnum.freq()));
+            map.keySet().stream().filter(recommendedTrack -> recommendedTrack.luceneId == luceneId).forEach(recommendedTrack -> {
+                map.get(recommendedTrack).add(new DocTermStat(word, dl, freq));
+            });
         }
-
     }
 
 
@@ -334,9 +340,15 @@ public class BestSearcher implements Closeable {
             out.print(",");
             out.print(track.searchResultFrequency);
             out.print(",");
-            out.print(track.maxScore);
+            out.print(String.format("%.5f", track.maxScore));
             out.print(",");
             out.print(track.pos);
+            out.print(",");
+            out.print(track.playlist_length);
+            out.print(",");
+            out.print(track.album);
+            out.print(",");
+            out.print(track.artist);
             out.println();
         });
     }
