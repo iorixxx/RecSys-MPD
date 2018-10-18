@@ -11,6 +11,7 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BasicStats;
+import org.apache.lucene.search.similarities.LMSimilarity;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
@@ -168,7 +169,7 @@ public class BestSearcher implements Closeable {
 
         sorter.sort(recommendedTracks);
 
-        album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uri");
+        album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uris");
 
         //  album(searcher, tracks, recommendedTracks, Track::artist_uri, "artist_uri");
 
@@ -249,7 +250,8 @@ public class BestSearcher implements Closeable {
 
                     TermStatistics termStatistics = termStatisticsMap.get(docTermStat.word);
 
-                    BasicStats stats = new BasicStats(field, 1.0f);
+                    BasicStats stats = m instanceof DLM ? new LMSimilarity.LMStats(field, 1.0f) : new BasicStats(field, 1.0f);
+                    //((LMSimilarity.LMStats) stats).setCollectionProbability((termStatistics.totalTermFreq() + 1F) / (collectionStatistics.sumTotalTermFreq() + 1F));
 
                     stats.setAvgFieldLength((float) collectionStatistics.sumTotalTermFreq() / collectionStatistics.docCount());
 
@@ -259,11 +261,16 @@ public class BestSearcher implements Closeable {
                     stats.setNumberOfDocuments(collectionStatistics.docCount());
                     stats.setNumberOfFieldTokens(collectionStatistics.sumTotalTermFreq());
 
+
+                    if (m instanceof DLM)
+                        ((LMSimilarity.LMStats) stats).setCollectionProbability(new LMSimilarity.DefaultCollectionModel().computeProbability(stats));
+
                     score += m.score(stats, (float) docTermStat.tf, (float) docTermStat.dl);
 
                     if (dl_temp == -1)
                         dl_temp = docTermStat.dl;
-                    else if (dl_temp != docTermStat.dl) throw new RuntimeException("playlist length should be same!");
+                    else if (dl_temp != docTermStat.dl)
+                        throw new RuntimeException("playlist length should be same!");
 
                 }
 
@@ -276,7 +283,7 @@ public class BestSearcher implements Closeable {
 
             long dl = Long.parseLong(doc.get("playlist_length"));
 
-            if (dl_temp != dl) throw new RuntimeException("playlist length should be same!");
+            if (dl_temp != dl) throw new RuntimeException("playlist length should be same! " + dl_temp + " " + dl);
 
 
             System.out.print(Integer.toString(++f));
@@ -290,7 +297,8 @@ public class BestSearcher implements Closeable {
 
     }
 
-    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String field, IndexSearcher searcher) throws IOException {
+    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String
+            field, IndexSearcher searcher) throws IOException {
 
         Term term = new Term(field, word);
         PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
