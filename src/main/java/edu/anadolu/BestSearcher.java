@@ -1,10 +1,7 @@
 package edu.anadolu;
 
 import com.google.gson.Gson;
-import edu.anadolu.models.DFIC;
-import edu.anadolu.models.DPH;
-import edu.anadolu.models.LGD;
-import edu.anadolu.models.Model;
+import edu.anadolu.models.*;
 import edu.anadolu.sorter.CustomSorter;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
@@ -173,6 +170,8 @@ public class BestSearcher implements Closeable {
 
         album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uri");
 
+        //  album(searcher, tracks, recommendedTracks, Track::artist_uri, "artist_uri");
+
         if (recommendedTracks.size() > maxTrack)
             export(playlistID, recommendedTracks.subList(0, maxTrack), out.get());
         else
@@ -239,7 +238,8 @@ public class BestSearcher implements Closeable {
             System.out.print(" ");
 
             long dl_temp = -1;
-            for (Model m : new Model[]{new DFIC(), new LGD(), new DPH()}) {
+            // the use of multiple weighting models in learning to rank, namely the combination of multiple weighting models.
+            for (Model m : new Model[]{new PL2(), new DLM(), new DFIC(), new LGD(), new DPH()}) {
 
                 double score = 0.0;
 
