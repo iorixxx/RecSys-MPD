@@ -1,4 +1,4 @@
-package edu.anadolu;
+package edu.anadolu.models;
 
 import org.apache.lucene.search.similarities.BasicStats;
 import org.apache.lucene.search.similarities.SimilarityBase;
@@ -18,7 +18,7 @@ import org.apache.lucene.search.similarities.SimilarityBase;
  * LNCS vol 3936, pages 13--24.</li>
  * </ol>
  */
-public class DPH extends SimilarityBase {
+public class DPH extends SimilarityBase implements Model {
 
     protected double score(BasicStats stats, double freq, double docLen) {
         double f = relativeFrequency(freq, docLen);
@@ -36,7 +36,7 @@ public class DPH extends SimilarityBase {
         );
     }
 
-    protected float score(BasicStats stats, float freq, float docLen) {
+    public float score(BasicStats stats, float freq, float docLen) {
         double f = relativeFrequency(freq, docLen);
         double norm = (1d - f) * (1d - f) / (freq + 1d);
 

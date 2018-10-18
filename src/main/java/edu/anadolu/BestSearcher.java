@@ -1,17 +1,19 @@
 package edu.anadolu;
 
 import com.google.gson.Gson;
+import edu.anadolu.models.DFIC;
+import edu.anadolu.models.DPH;
+import edu.anadolu.models.LGD;
+import edu.anadolu.models.Model;
 import edu.anadolu.sorter.CustomSorter;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.BasicStats;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.BufferedReader;
@@ -25,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Create submission
@@ -168,6 +171,8 @@ public class BestSearcher implements Closeable {
 
         sorter.sort(recommendedTracks);
 
+        album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uri");
+
         if (recommendedTracks.size() > maxTrack)
             export(playlistID, recommendedTracks.subList(0, maxTrack), out.get());
         else
@@ -177,7 +182,138 @@ public class BestSearcher implements Closeable {
         recommendedTracks.clear();
     }
 
-    private void album(List<RecommendedTrack> recommendedTracks) {
+
+    class DocTermStat {
+
+        private final long dl;
+        private final int tf;
+        private final String word;
+
+        DocTermStat(String word, long dl, int tf) {
+            this.dl = dl;
+            this.tf = tf;
+            this.word = word;
+        }
+    }
+
+    private void album(IndexSearcher searcher, Track[] tracks, List<RecommendedTrack> recommendedTracks, Function<Track, String> function, String field) throws IOException {
+
+        CollectionStatistics collectionStatistics = searcher.collectionStatistics(field);
+
+        Map<String, TermStatistics> termStatisticsMap = new HashMap<>();
+
+        List<String> subParts = Arrays.stream(tracks).map(function).collect(Collectors.toList());
+
+        for (String word : subParts) {
+            if (termStatisticsMap.containsKey(word)) continue;
+            Term term = new Term(field, word);
+            TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
+            termStatisticsMap.put(word, termStatistics);
+        }
+
+        LinkedHashMap<Integer, List<DocTermStat>> map = new LinkedHashMap<>();
+
+
+        for (RecommendedTrack track : recommendedTracks) {
+            map.put(track.luceneId, new ArrayList<>(subParts.size()));
+        }
+
+        for (String word : subParts)
+            findDoc(map, word, field, searcher);
+
+        for (Map.Entry<Integer, List<DocTermStat>> entry : map.entrySet()) {
+
+            Document doc = searcher.doc(entry.getKey());
+
+            int f = 3;
+
+            int sum = 0;
+            for (DocTermStat docTermStat : entry.getValue()) {
+                if (-1 == docTermStat.tf) continue;
+                sum += docTermStat.tf;
+            }
+
+            System.out.print(Integer.toString(++f));
+            System.out.print(":");
+            System.out.print(sum);
+            System.out.print(" ");
+
+            long dl_temp = -1;
+            for (Model m : new Model[]{new DFIC(), new LGD(), new DPH()}) {
+
+                double score = 0.0;
+
+                for (DocTermStat docTermStat : entry.getValue()) {
+
+                    if (-1 == docTermStat.tf) continue;
+
+                    TermStatistics termStatistics = termStatisticsMap.get(docTermStat.word);
+
+                    BasicStats stats = new BasicStats(field, 1.0f);
+
+                    stats.setAvgFieldLength((float) collectionStatistics.sumTotalTermFreq() / collectionStatistics.docCount());
+
+                    stats.setTotalTermFreq(termStatistics.totalTermFreq());
+                    stats.setDocFreq(termStatistics.docFreq());
+
+                    stats.setNumberOfDocuments(collectionStatistics.docCount());
+                    stats.setNumberOfFieldTokens(collectionStatistics.sumTotalTermFreq());
+
+                    score += m.score(stats, (float) docTermStat.tf, (float) docTermStat.dl);
+
+                    if (dl_temp == -1)
+                        dl_temp = docTermStat.dl;
+                    else if (dl_temp != docTermStat.dl) throw new RuntimeException("playlist length should be same!");
+
+                }
+
+                System.out.print(Integer.toString(++f));
+                System.out.print(":");
+                System.out.print(String.format("%.5f", score));
+                System.out.print(" ");
+
+            }
+
+            long dl = Long.parseLong(doc.get("playlist_length"));
+
+            if (dl_temp != dl) throw new RuntimeException("playlist length should be same!");
+
+
+            System.out.print(Integer.toString(++f));
+            System.out.print(":");
+            System.out.print(dl);
+            System.out.print(" ");
+
+        }
+
+        System.out.println();
+
+    }
+
+    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String field, IndexSearcher searcher) throws IOException {
+
+        Term term = new Term(field, word);
+        PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
+
+        if (postingsEnum == null) {
+            System.out.println("Cannot find the uri " + word + " in the field " + field);
+            for (Integer i : map.keySet())
+                map.get(i).add(new DocTermStat(word, -1, -1));
+            return;
+        }
+
+        while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+
+            final int luceneId = postingsEnum.docID();
+
+            if (!map.containsKey(luceneId)) continue;
+
+            List<DocTermStat> list = map.get(luceneId);
+
+            long dl = Long.parseLong(searcher.doc(luceneId).get("playlist_length"));
+
+            list.add(new DocTermStat(word, dl, postingsEnum.freq()));
+        }
 
     }
 
