@@ -131,7 +131,7 @@ public class BestSearcher implements Closeable {
         ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         if (hits.length == 0) {
-            //TODO handle such cases
+           return; //TODO handle such cases
         }
 
         for (ScoreDoc hit : hits) {
@@ -325,9 +325,7 @@ public class BestSearcher implements Closeable {
             final long dl = Long.parseLong(searcher.doc(luceneId).get("playlist_length"));
             final int freq = postingsEnum.freq();
 
-            map.keySet().stream().filter(recommendedTrack -> recommendedTrack.luceneId == luceneId).forEach(recommendedTrack -> {
-                map.get(recommendedTrack).add(new DocTermStat(word, dl, freq));
-            });
+            map.keySet().stream().filter(recommendedTrack -> recommendedTrack.luceneId == luceneId).forEach(recommendedTrack -> map.get(recommendedTrack).add(new DocTermStat(word, dl, freq)));
         }
     }
 
