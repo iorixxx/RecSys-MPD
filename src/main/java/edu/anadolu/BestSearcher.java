@@ -131,8 +131,12 @@ public class BestSearcher implements Closeable {
         ScoreDoc[] hits = searcher.search(query, maxPlaylist).scoreDocs;
 
         if (hits.length == 0) {
-           return; //TODO handle such cases
+            return; //TODO handle such cases
         }
+
+        HashMap<String, Integer> albumFreq = new HashMap<>();
+
+        HashMap<String, String> track2album = new HashMap<>();
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc;
@@ -142,42 +146,63 @@ public class BestSearcher implements Closeable {
             if (Integer.parseInt(doc.get("id")) == playlistID) continue;
 
             String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
+            String[] albumURIs = whiteSpaceSplitter.split(doc.get("album_uris"));
+
+            if (albumURIs.length != trackURIs.length) throw new RuntimeException("albumURIs.length!=trackURIs.length");
+
             int pos = trackURIs.length;
 
-            for (String trackURI : trackURIs) {
+            for (int i = 0; i < trackURIs.length; i++) {
 
-                if (!seeds.contains(trackURI)) {
-
-                    RecommendedTrack rt = recommendations.getOrDefault(trackURI, new RecommendedTrack(trackURI));
-                    rt.searchResultFrequency += 1;
-
-                    if (rt.maxScore < hit.score) {
-                        rt.maxScore = hit.score;
-                        rt.pos = pos;
-                        rt.playlistId = Integer.parseInt(doc.get("id"));
-                        rt.luceneId = hit.doc;
-                        rt.playlist_length = Long.parseLong(doc.get("playlist_length"));
-                    }
-
-                    recommendations.putIfAbsent(trackURI, rt);
-                }
+                String trackURI = trackURIs[i];
 
                 pos--;
+
+                if (seeds.contains(trackURI)) continue;
+
+                String albumURI = albumURIs[i];
+                int current = albumFreq.getOrDefault(albumURI, 0);
+                current++;
+                albumFreq.put(albumURI, current);
+                track2album.put(trackURI, albumURI);
+
+                RecommendedTrack rt = recommendations.getOrDefault(trackURI, new RecommendedTrack(trackURI));
+                rt.searchResultFrequency += 1;
+                rt.pIdList.add(hit.doc);
+
+                if (rt.pIdList.size() != rt.searchResultFrequency)
+                    throw new RuntimeException("playlist size and searchResultFrequency are not equal to each other");
+
+                if (rt.maxScore < hit.score) {
+                    rt.maxScore = hit.score;
+                    rt.pos = pos;
+                    rt.playlistId = Integer.parseInt(doc.get("id"));
+                    rt.luceneId = hit.doc;
+                    rt.playlist_length = Long.parseLong(doc.get("playlist_length"));
+                }
+
+                recommendations.putIfAbsent(trackURI, rt);
+
             }
+        }
+
+        for (Map.Entry<String, RecommendedTrack> entry : recommendations.entrySet()) {
+            String trackURI = entry.getKey();
+            String albumURI = track2album.get(trackURI);
+            entry.getValue().searchResultAlbumFrequency = albumFreq.get(albumURI);
         }
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
 
         sorter.sort(recommendedTracks);
 
-        album(searcher, tracks, recommendedTracks, Track::album_uri, "album_uris");
+        List<RecommendedTrack> subList = recommendedTracks.size() > maxTrack ? recommendedTracks.subList(0, maxTrack) : recommendedTracks;
 
-        album(searcher, tracks, recommendedTracks, Track::artist_uri, "artist_uris");
+        album(searcher, tracks, subList, Track::album_uri, "album_uris");
 
-        if (recommendedTracks.size() > maxTrack)
-            export(playlistID, recommendedTracks.subList(0, maxTrack), out.get());
-        else
-            export(playlistID, recommendedTracks, out.get());
+        album(searcher, tracks, subList, Track::artist_uri, "artist_uris");
+
+        export(playlistID, subList, out.get());
 
         System.out.println("Tracks only search for pid: " + playlistID);
         recommendedTracks.clear();

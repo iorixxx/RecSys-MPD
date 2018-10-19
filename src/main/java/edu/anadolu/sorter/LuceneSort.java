@@ -8,12 +8,14 @@ import java.util.List;
 /**
  * Created by aliyurekli on 10/3/2018.
  */
-public class GeometricMeanSort implements CustomSorter {
+public class LuceneSort implements CustomSorter {
 
     @Override
     public void sort(List<RecommendedTrack> tracks) {
+
         tracks.sort(Comparator
-                .comparingDouble(RecommendedTrack::getGeometricMean)
+                .comparingDouble(RecommendedTrack::getMaxScore)
+                .thenComparingInt(RecommendedTrack::getSearchResultFrequency)
                 .reversed()
         );
     }

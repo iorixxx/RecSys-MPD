@@ -17,7 +17,7 @@ JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
 SIMILARITY="BM25"
-SORTER="NoSort"
+SORTER="LuceneSort"
 SEARCHFIELD="Track"
 
 LTRLIB="jforests"

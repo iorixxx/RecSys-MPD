@@ -1,5 +1,7 @@
 package edu.anadolu;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class RecommendedTrack {
@@ -7,6 +9,8 @@ public class RecommendedTrack {
     String trackURI;
 
     int searchResultFrequency;
+
+    int searchResultAlbumFrequency;
 
     double maxScore;
 
@@ -20,12 +24,14 @@ public class RecommendedTrack {
 
     String album;
     String artist;
+    List<Integer> pIdList;
 
     RecommendedTrack(String trackURI) {
         this.trackURI = trackURI;
         this.searchResultFrequency = 0;
         this.maxScore = 0;
         this.pos = 0;
+        this.pIdList = new ArrayList<>();
     }
 
     public int getLuceneId() {
