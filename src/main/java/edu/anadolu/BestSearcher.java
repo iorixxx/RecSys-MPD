@@ -105,6 +105,11 @@ public class BestSearcher implements Closeable {
         countMap.put(key, countMap.getOrDefault(key, 0) + 1);
     }
 
+    private static void clearMaps(Map... maps) {
+        for (Map map : maps)
+            map.clear();
+    }
+
     private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out, Function<Track, String> map, String field) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser(field, new WhitespaceAnalyzer());
@@ -200,10 +205,7 @@ public class BestSearcher implements Closeable {
             entry.getValue().searchResultArtistFrequency = artistFreq.get(track2artist.get(trackURI));
         }
 
-        albumFreq.clear();
-        track2album.clear();
-        artistFreq.clear();
-        track2artist.clear();
+        clearMaps(albumFreq, track2album, track2artist, artistFreq);
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
 
@@ -215,13 +217,14 @@ public class BestSearcher implements Closeable {
 
         //album(searcher, tracks, subList, Track::artist_uri, "artist_uris");
 
-        //album(searcher, tracks, subList, Track::track_uri, "track_uris");
+        album(searcher, tracks, subList, Track::track_uri, "track_uris");
 
         export(playlistID, subList, out.get());
 
         System.out.println("Tracks only search for pid: " + playlistID);
 
         recommendedTracks.clear();
+        recommendations.clear();
 
     }
 
