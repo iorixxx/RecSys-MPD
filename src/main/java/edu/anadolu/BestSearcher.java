@@ -101,6 +101,10 @@ public class BestSearcher implements Closeable {
         reader.close();
     }
 
+    private static void incrementMap(HashMap<String, Integer> countMap, String key) {
+        countMap.put(key, countMap.getOrDefault(key, 0) + 1);
+    }
+
     private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out, Function<Track, String> map, String field) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser(field, new WhitespaceAnalyzer());
@@ -135,8 +139,10 @@ public class BestSearcher implements Closeable {
         }
 
         HashMap<String, Integer> albumFreq = new HashMap<>();
-
         HashMap<String, String> track2album = new HashMap<>();
+
+        HashMap<String, Integer> artistFreq = new HashMap<>();
+        HashMap<String, String> track2artist = new HashMap<>();
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc;
@@ -147,6 +153,7 @@ public class BestSearcher implements Closeable {
 
             String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
             String[] albumURIs = whiteSpaceSplitter.split(doc.get("album_uris"));
+            String[] artistURIs = whiteSpaceSplitter.split(doc.get("artist_uris"));
 
             if (albumURIs.length != trackURIs.length) throw new RuntimeException("albumURIs.length!=trackURIs.length");
 
@@ -160,11 +167,12 @@ public class BestSearcher implements Closeable {
 
                 if (seeds.contains(trackURI)) continue;
 
-                String albumURI = albumURIs[i];
-                int current = albumFreq.getOrDefault(albumURI, 0);
-                current++;
-                albumFreq.put(albumURI, current);
-                track2album.put(trackURI, albumURI);
+
+                incrementMap(albumFreq, albumURIs[i]);
+                track2album.put(trackURI, albumURIs[i]);
+
+                incrementMap(artistFreq, artistURIs[i]);
+                track2artist.put(trackURI, artistURIs[i]);
 
                 RecommendedTrack rt = recommendations.getOrDefault(trackURI, new RecommendedTrack(trackURI));
                 rt.searchResultFrequency += 1;
@@ -188,9 +196,14 @@ public class BestSearcher implements Closeable {
 
         for (Map.Entry<String, RecommendedTrack> entry : recommendations.entrySet()) {
             String trackURI = entry.getKey();
-            String albumURI = track2album.get(trackURI);
-            entry.getValue().searchResultAlbumFrequency = albumFreq.get(albumURI);
+            entry.getValue().searchResultAlbumFrequency = albumFreq.get(track2album.get(trackURI));
+            entry.getValue().searchResultArtistFrequency = artistFreq.get(track2artist.get(trackURI));
         }
+
+        albumFreq.clear();
+        track2album.clear();
+        artistFreq.clear();
+        track2artist.clear();
 
         List<RecommendedTrack> recommendedTracks = new ArrayList<>(recommendations.values());
 
@@ -198,14 +211,18 @@ public class BestSearcher implements Closeable {
 
         List<RecommendedTrack> subList = recommendedTracks.size() > maxTrack ? recommendedTracks.subList(0, maxTrack) : recommendedTracks;
 
-        album(searcher, tracks, subList, Track::album_uri, "album_uris");
+        //album(searcher, tracks, subList, Track::album_uri, "album_uris");
 
-        album(searcher, tracks, subList, Track::artist_uri, "artist_uris");
+        //album(searcher, tracks, subList, Track::artist_uri, "artist_uris");
+
+        //album(searcher, tracks, subList, Track::track_uri, "track_uris");
 
         export(playlistID, subList, out.get());
 
         System.out.println("Tracks only search for pid: " + playlistID);
+
         recommendedTracks.clear();
+
     }
 
 
@@ -322,6 +339,8 @@ public class BestSearcher implements Closeable {
                     recommendedTrack.album = builder.toString();
                 else if ("artist_uris".equals(field))
                     recommendedTrack.artist = builder.toString();
+                else if ("track_uris".equals(field))
+                    recommendedTrack.track = builder.toString();
             });
         }
     }
@@ -367,11 +386,23 @@ public class BestSearcher implements Closeable {
             out.print(",");
             out.print(track.pos);
             out.print(",");
-            out.print(track.playlist_length);
+            //out.print(track.playlist_length);
+            //out.print(",");
+            if (track.album != null) {
+                out.print(track.album);
+                out.print(",");
+            }
+            if (track.artist != null) {
+                out.print(track.artist);
+                out.print(",");
+            }
+            if (track.track != null) {
+                out.print(track.track);
+                out.print(",");
+            }
+            out.print(track.searchResultAlbumFrequency);
             out.print(",");
-            out.print(track.album);
-            out.print(",");
-            out.print(track.artist);
+            out.print(track.searchResultArtistFrequency);
             out.println();
         });
     }

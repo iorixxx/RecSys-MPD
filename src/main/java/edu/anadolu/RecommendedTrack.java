@@ -12,6 +12,8 @@ public class RecommendedTrack {
 
     int searchResultAlbumFrequency;
 
+    int searchResultArtistFrequency;
+
     double maxScore;
 
     int pos;
@@ -24,6 +26,7 @@ public class RecommendedTrack {
 
     String album;
     String artist;
+    String track;
     List<Integer> pIdList;
 
     RecommendedTrack(String trackURI) {
