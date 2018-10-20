@@ -49,21 +49,10 @@ FEATURES = {1: "Number of tracks in playlist",
             30: "Submission order",
             31: "Position",
             32: "Max Lucene score",
-            33: "Search result frequency",
-            34: "Geometric mean of search result frequency and max Lucene score",
-            35: "a1 - playlist length",
-            36: "a2 - album srf",
-            37: "a3 - album pl2",
-            38: "a4 - album dlm",
-            39: "a5 - album dfic",
-            40: "a5 - album lgd",
-            41: "a7 - album dph",
-            42: "a8 - artist srf",
-            43: "a9 - artist pl2",
-            44: "a10 - artist dlm",
-            45: "a11 - artist dfic",
-            46: "a12 - artist lgd",
-            47: "a13 - artist dph"}
+            33: "Track search result frequency",
+            34: "Geometric mean of track hit frequency and max Lucene score",
+            35: "Album search result frequency",
+            36: "Artist search result frequency"}
 
 
 recommendations = collections.OrderedDict()
@@ -196,32 +185,16 @@ def read_recommendation_csv(path):
         for row in reader:
             pid = int(row[0])
             track_uri = row[1]
-            search_frequency = int(row[2])
+            track_srf = int(row[2])
             max_lucene_score = float(row[3])
             position = int(row[4])
-
-            pl_length = int(row[5])
-
-            album_search_result_frequency = int(row[6])
-            album_pl2 = float(row[7])
-            album_dlm = float(row[8])
-            album_dfic = float(row[9])
-            album_lgd = float(row[10])
-            album_dph = float(row[11])
-
-            artist_search_result_frequency = int(row[12])
-            artist_pl2 = float(row[13])
-            artist_dlm = float(row[14])
-            artist_dfic = float(row[15])
-            artist_lgd = float(row[16])
-            artist_dph = float(row[17])
+            album_srf = int(row[5])
+            artist_srf = int(row[6])
 
             if pid not in recommendations:
                 recommendations[pid] = collections.OrderedDict()
 
-            recommendations[pid][track_uri] = (search_frequency, max_lucene_score, position, pl_length,
-                                               album_search_result_frequency, album_pl2, album_dlm, album_dfic, album_lgd, album_dph,
-                                               artist_search_result_frequency, artist_pl2, artist_dlm, artist_dfic, artist_lgd, artist_dph)
+            recommendations[pid][track_uri] = (track_srf, max_lucene_score, position, album_srf, artist_srf)
 
     print("Recommendation file is read: %s" % path)
 
@@ -303,23 +276,12 @@ def extract_features(pid, track_uri, order):
     jaccard_artist = jaccard_distance(name, artist_name)
     jaccard_album = jaccard_distance(name, album_name)
 
-    search_frequency = recommendations[pid][track_uri][0]
+    track_srf = recommendations[pid][track_uri][0]
     lucene_score = recommendations[pid][track_uri][1]
     position = recommendations[pid][track_uri][2]
-    pl_length = recommendations[pid][track_uri][3]
-    album_search_frequency = recommendations[pid][track_uri][4]
-    album_pl2 = recommendations[pid][track_uri][5]
-    album_dlm = recommendations[pid][track_uri][6]
-    album_dfic = recommendations[pid][track_uri][7]
-    album_lgd = recommendations[pid][track_uri][8]
-    album_dph = recommendations[pid][track_uri][9]
-    artist_search_frequency = recommendations[pid][track_uri][10]
-    artist_pl2 = recommendations[pid][track_uri][11]
-    artist_dlm = recommendations[pid][track_uri][12]
-    artist_dfic = recommendations[pid][track_uri][13]
-    artist_lgd = recommendations[pid][track_uri][14]
-    artist_dph = recommendations[pid][track_uri][15]
-    geometric_mean = math.sqrt(search_frequency * lucene_score)
+    album_srf = recommendations[pid][track_uri][3]
+    artist_srf = recommendations[pid][track_uri][4]
+    geometric_mean = math.sqrt(track_srf * lucene_score)
 
     danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
@@ -369,21 +331,10 @@ def extract_features(pid, track_uri, order):
               30: order,
               31: position,
               32: lucene_score,
-              33: search_frequency,
+              33: track_srf,
               34: geometric_mean,
-              35: pl_length,
-              36: album_search_frequency,
-              37: album_pl2,
-              38: album_dlm,
-              39: album_dfic,
-              40: album_lgd,
-              41: album_dph,
-              42: artist_search_frequency,
-              43: artist_pl2,
-              44: artist_dlm,
-              45: artist_dfic,
-              46: artist_lgd,
-              47: artist_dph}
+              35: artist_srf,
+              36: album_srf}
 
     return hit, track_uri, values
 
