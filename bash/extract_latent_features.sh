@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
-# go to root directory and create metadata folder
-cd /home/recsys2018/apc
-mkdir metadata
+SRC="/apc/RecSys-MPD"
+MPD="/apc/dataset/mpd/data"
+OUT="/apc/metadata"
+
+# create metadata folder
+mkdir $OUT
 
 # go to source code directory and update project
-cd /home/recsys2018/apc/RecSys-MPD
+cd $SRC
 git pull
-cd python
 
 # run latent feature extraction application
-python3 collect_latent_features.py /home/recsys2018/apc/pyconfig/collect_latent_features.json
+python3 $SRC"/python/collect_latent_features.py" $MPD $OUT
