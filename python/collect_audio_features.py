@@ -2,6 +2,7 @@ import csv
 import spotipy
 import argparse
 
+from os.path import join
 from spotipy.oauth2 import SpotifyClientCredentials
 
 MAX_BATCH = 50
@@ -10,8 +11,7 @@ CLI = argparse.ArgumentParser()
 
 CLI.add_argument("clientId", help="Spotify client id")
 CLI.add_argument("clientSecret", help="Spotify client secret")
-CLI.add_argument("output", help="Absolute path of the output csv file")
-CLI.add_argument("trackMeta", help="Absolute path of the track metadata csv file")
+CLI.add_argument("metadata", help="Absolute path of the metadata directory")
 
 
 def extract_tracks(path):
@@ -35,14 +35,14 @@ def count_batches(t):
         return int(length_t / MAX_BATCH) + 1
 
 
-def collect(track_metadata_path, output_path, client_id, client_secret):
+def collect(metadata, client_id, client_secret):
     client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    tracks = extract_tracks(track_metadata_path)
+    tracks = extract_tracks(join(metadata, "track_metadata.csv"))
     batches = count_batches(tracks)
 
-    with open(output_path, "w", newline='') as f:
+    with open(join(metadata, "audio_metadata.csv"), "w", newline='') as f:
         writer = csv.writer(f)
 
         for i in range(batches):
@@ -57,10 +57,10 @@ def collect(track_metadata_path, output_path, client_id, client_secret):
                 except TypeError:
                     print("Audio features of a track cannot be obtained")
 
-    print("Audio features are collected: %s" % output_path)
+    print("Audio features are collected")
 
 
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    collect(track_metadata_path=args.trackMeta, output_path=args.output, client_id=args.clientId, client_secret=args.clientSecret)
+    collect(metadata=args.metadata, client_id=args.clientId, client_secret=args.clientSecret)
