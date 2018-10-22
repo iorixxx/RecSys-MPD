@@ -47,7 +47,7 @@ def read_challenge_json(path):
 
         challenges[pid] = dict(category=category, holdouts=holdouts)
 
-    print("Challenge file is read: %s\n" % path)
+    print("\nChallenge file is read: %s" % path)
 
 
 # evaluating precision and recall
@@ -65,8 +65,8 @@ def precision_recall(targets, predictions, k):
 
 # evaluating dcg
 def dcg(relevant_elements, retrieved_elements, k):
-    relevant_elements = list(OrderedDict.fromkeys(relevant_elements[:k]))
-    retrieved_elements = list(OrderedDict.fromkeys(retrieved_elements))
+    retrieved_elements = list(OrderedDict.fromkeys(retrieved_elements[:k]))
+    relevant_elements = list(OrderedDict.fromkeys(relevant_elements))
 
     if len(relevant_elements) == 0 or len(retrieved_elements) == 0:
         return 0.0
