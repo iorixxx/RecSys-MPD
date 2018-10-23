@@ -17,42 +17,40 @@ CLI.add_argument("audioMeta", help="Absolute path of the audio metadata csv file
 CLI.add_argument("--features", help="Features to be included in letor conversion", nargs="+", type=int, required=True)
 
 
-FEATURES = {1: "Number of tracks in playlist",
-            2: "Number of samples in playlist",
-            3: "Number of holdouts in playlist",
-            4: "Length of playlist title",
-            5: "Track occurrence",
-            6: "Track frequency",
-            7: "Track duration",
-            8: "Album occurrence",
-            9: "Album frequency",
-            10: "Number of tracks in album",
-            11: "Artist occurrence",
-            12: "Artist frequency",
-            13: "Number of albums of artist",
-            14: "Number of tracks of artist",
-            15: "Jaccard distance of playlist title and track name",
-            16: "Jaccard distance of playlist title and album name",
-            17: "Jaccard distance of playlist title and artist name",
-            18: "Audio danceability",
-            19: "Audio energy",
-            20: "Audio key",
-            21: "Audio loudness",
-            22: "Audio mode",
-            23: "Audio speechiness",
-            24: "Audio acousticness",
-            25: "Audio instrumentalness",
-            26: "Audio liveness",
-            27: "Audio valence",
-            28: "Audio tempo",
-            29: "Audio time signature",
-            30: "Submission order",
-            31: "Position",
-            32: "Max Lucene score",
-            33: "Track search result frequency",
-            34: "Geometric mean of track hit frequency and max Lucene score",
-            35: "Album search result frequency",
-            36: "Artist search result frequency"}
+FEATURES = {1: "Number of samples in playlist",
+            2: "Length of playlist title",
+            3: "Track occurrence",
+            4: "Track frequency",
+            5: "Track duration",
+            6: "Album occurrence",
+            7: "Album frequency",
+            8: "Number of tracks in album",
+            9: "Artist occurrence",
+            10: "Artist frequency",
+            11: "Number of albums of artist",
+            12: "Number of tracks of artist",
+            13: "Jaccard distance of playlist title and track name",
+            14: "Jaccard distance of playlist title and album name",
+            15: "Jaccard distance of playlist title and artist name",
+            16: "Audio danceability",
+            17: "Audio energy",
+            18: "Audio key",
+            19: "Audio loudness",
+            20: "Audio mode",
+            21: "Audio speechiness",
+            22: "Audio acousticness",
+            23: "Audio instrumentalness",
+            24: "Audio liveness",
+            25: "Audio valence",
+            26: "Audio tempo",
+            27: "Audio time signature",
+            28: "Submission order",
+            29: "Position",
+            30: "Max Lucene score",
+            31: "Track search result frequency",
+            32: "Album search result frequency",
+            33: "Artist search result frequency",
+            34: "Geometric mean of track search result frequency and max Lucene score"}
 
 
 recommendations = collections.OrderedDict()
@@ -82,14 +80,12 @@ def read_challenge_json(path):
     for challenge in challenges:
         pid = challenge["pid"]
 
+        num_samples = challenge["num_samples"]
+
         if "name" in challenge.keys():
             name = challenge["name"].strip()
         else:
             name = ""
-
-        num_tracks = challenge["num_tracks"]
-        num_samples = challenge["num_samples"]
-        num_holdouts = challenge["num_holdouts"]
 
         holdouts = []
         if "holdouts" in challenge.keys():
@@ -100,7 +96,7 @@ def read_challenge_json(path):
         for track in challenge["tracks"]:
             tracks.append(track["track_uri"])
 
-        challenge_metadata[pid] = (name, num_tracks, num_samples, num_holdouts, holdouts, tracks)
+        challenge_metadata[pid] = (num_samples, name, holdouts, tracks)
 
     print("Challenge file is read: %s" % path)
 
@@ -245,13 +241,11 @@ def collect_features(pid, track_uris):
 
 
 def extract_features(pid, track_uri, order):
-    name = challenge_metadata[pid][0]
-    num_tracks = challenge_metadata[pid][1]
-    num_samples = challenge_metadata[pid][2]
-    num_holdouts = challenge_metadata[pid][3]
+    num_samples = challenge_metadata[pid][0]
+    name = challenge_metadata[pid][1]
 
     hit = 0
-    if track_uri in challenge_metadata[pid][4] or track_uri in challenge_metadata[pid][5]:
+    if track_uri in challenge_metadata[pid][2] or track_uri in challenge_metadata[pid][3]:
         hit = 1
 
     track_occurrence = track_metadata[track_uri][0]
@@ -299,42 +293,40 @@ def extract_features(pid, track_uri, order):
         tempo = audio_metadata[track_uri][10]
         time_signature = audio_metadata[track_uri][11]
 
-    values = {1: num_tracks,
-              2: num_samples,
-              3: num_holdouts,
-              4: len(name),
-              5: track_occurrence,
-              6: track_frequency,
-              7: track_duration,
-              8: album_occurrence,
-              9: album_frequency,
-              10: num_tracks_in_album,
-              11: artist_occurrence,
-              12: artist_frequency,
-              13: total_albums_of_artist,
-              14: total_tracks_of_artist,
-              15: jaccard_track,
-              16: jaccard_album,
-              17: jaccard_artist,
-              18: danceability,
-              19: energy,
-              20: key,
-              21: loudness,
-              22: mode,
-              23: speechiness,
-              24: acousticness,
-              25: instrumentalness,
-              26: liveness,
-              27: valence,
-              28: tempo,
-              29: time_signature,
-              30: order,
-              31: position,
-              32: lucene_score,
-              33: track_srf,
-              34: geometric_mean,
-              35: artist_srf,
-              36: album_srf}
+    values = {1: num_samples,
+              2: len(name),
+              3: track_occurrence,
+              4: track_frequency,
+              5: track_duration,
+              6: album_occurrence,
+              7: album_frequency,
+              8: num_tracks_in_album,
+              9: artist_occurrence,
+              10: artist_frequency,
+              11: total_albums_of_artist,
+              12: total_tracks_of_artist,
+              13: jaccard_track,
+              14: jaccard_album,
+              15: jaccard_artist,
+              16: danceability,
+              17: energy,
+              18: key,
+              19: loudness,
+              20: mode,
+              21: speechiness,
+              22: acousticness,
+              23: instrumentalness,
+              24: liveness,
+              25: valence,
+              26: tempo,
+              27: time_signature,
+              28: order,
+              29: position,
+              30: lucene_score,
+              31: track_srf,
+              32: album_srf,
+              33: artist_srf,
+              34: geometric_mean}
 
     return hit, track_uri, values
 
