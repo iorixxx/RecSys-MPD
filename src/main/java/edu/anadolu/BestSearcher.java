@@ -86,6 +86,10 @@ public class BestSearcher implements Closeable {
                     case Album:
                         tracksOnly(playlist.tracks, playlist.pid, out, Track::album_uri, "album_uris");
                         break;
+
+                    case Whole:
+                        tracksOnly(playlist.tracks, playlist.pid, out, Track::whole, "whole_playlist");
+                        break;
                 }
             } catch (IOException | ParseException e) {
                 throw new RuntimeException(e);

@@ -129,6 +129,7 @@ public class Indexer {
                     document.add(new TextField("album_uris", album.toString().trim(), Field.Store.YES));
                     document.add(new TextField("artist_uris", artist.toString().trim(), Field.Store.YES));
                     document.add(new StoredField("playlist_length", playlist_length));
+                    document.add(new TextField("whole_playlist", builder.toString() + album.toString() + artist.toString().trim(), Field.Store.NO));
                     seeds.clear();
                     writer.addDocument(document);
                 }

@@ -4,6 +4,6 @@ public enum SearchFieldConfig {
 
     Track,
     Album,
-    Artist
-
+    Artist,
+    Whole
 }

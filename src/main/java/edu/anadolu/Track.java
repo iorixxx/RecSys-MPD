@@ -20,4 +20,8 @@ public class Track {
     String album_uri() {
         return album_uri;
     }
+
+    String whole() {
+        return track_uri + " " + artist_uri + " " + album_uri;
+    }
 }
