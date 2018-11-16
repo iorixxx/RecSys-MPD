@@ -221,7 +221,7 @@ public class BestSearcher implements Closeable {
 
         //album(searcher, tracks, subList, Track::artist_uri, "artist_uris");
 
-        album(searcher, tracks, subList, Track::track_uri, "track_uris");
+        //album(searcher, tracks, subList, Track::track_uri, "track_uris");
 
         export(playlistID, subList, out.get());
 
