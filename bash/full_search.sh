@@ -7,11 +7,11 @@ EXP="/apc/experiments"
 FULLEXP=$EXP"/"$ID
 
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/1fold_1M/fold-001.json"
+TEST="/apc/dataset/test/1fold_1M"
 INDEX="/apc/MPD.index"
 
-JXMS="-Xms40g"
-JXMX="-Xmx80g"
+JXMS="-Xms80g"
+JXMX="-Xmx120g"
 
 TOPK=200
 TOPT=500
@@ -29,19 +29,29 @@ mvn clean package
 mkdir $FULLEXP
 cd $FULLEXP
 
-# generate sampling data
-
-for similarity in "${SIMILARITIES[@]}"
+# generate sampling data, evaluate, and remove dumps
+for i in {1..10}
 do
-	for sorter in "${SORTERS[@]}"
+	ifold=$(printf "fold-%03d.json" $i)
+
+	for similarity in "${SIMILARITIES[@]}"
 	do
-		for field in "${FIELDS[@]}"
+		for sorter in "${SORTERS[@]}"
 		do
-			result=$similarity"-"$sorter"-"$field".csv"
+			for field in "${FIELDS[@]}"
+			do
+				result=$similarity"-"$sorter"-"$field".csv"
+				
+				java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$ifold $result $similarity $TOPK $TOPT $sorter $field		
+
+				echo $ifold
+				echo $result
 			
-			java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST $result $similarity $TOPK $TOPT $sorter $field		
+				python3 $SRC"/python/evaluate.py" $TEST"/"$ifold $TOPT --recommendations $result
+				
+				rm $result
+			done
 		done
 	done
 done
-
 
