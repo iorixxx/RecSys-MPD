@@ -1,5 +1,6 @@
 package edu.anadolu;
 
+import edu.anadolu.models.DLM;
 import edu.anadolu.models.DPH;
 import org.apache.lucene.search.similarities.*;
 
@@ -13,9 +14,7 @@ public enum SimilarityConfig {
     IB,
     DFI,
     PL2,
-    TFIDF,
-    LogTF,
-    RawTF;
+    DLM;
 
     public Similarity getSimilarity() {
 
@@ -33,14 +32,8 @@ public enum SimilarityConfig {
             case PL2:
                 return new DFRSimilarity(new BasicModelP(), new AfterEffectL(), new NormalizationH2());
 
-            case TFIDF:
-                return new ClassicSimilarity();
-
-            case LogTF:
-                return new LogTF();
-
-            case RawTF:
-                return new RawTF();
+            case DLM:
+                return new DLM();
 
             case DPH:
                 return new DPH();
