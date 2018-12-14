@@ -15,8 +15,8 @@ INDEX="/apc/MPD.index"
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
-SIMILARITY="BM25"
-SORTER="LuceneSort"
+SIMILARITY="PL2"
+SORTER="GeoSort"
 SEARCHFIELD="Track"
 
 TOPK=200
