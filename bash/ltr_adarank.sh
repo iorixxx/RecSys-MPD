@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 ID=adarank
@@ -8,8 +7,8 @@ EXP="/apc/experiments"
 FULLEXP=$EXP"/"$ID
 
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/10fold_100K_b"
-SAMPLE="/apc/sample/001"
+TEST="/apc/dataset/test/10fold_10K_b"
+SAMPLE="/apc/sample/002"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"

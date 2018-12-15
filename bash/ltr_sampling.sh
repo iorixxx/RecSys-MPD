@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 ID=0
@@ -9,7 +8,7 @@ FULLEXP=$EXP"/"$ID
 
 META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/10fold_100K_b"
+TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
 
 JXMS="-Xms40g"
