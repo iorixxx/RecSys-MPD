@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ID=mart
+ID=lambdamart
 
 EXP="/apc/experiments"
 FULLEXP=$EXP"/"$ID
@@ -8,16 +8,12 @@ FULLEXP=$EXP"/"$ID
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 SAMPLE="/apc/sample/002"
+RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
 
-LTRLIB="ranklib"
-
-CUTOFF=500
-
-RANKER=0
-METRIC="NDCG@"$CUTOFF
+LTRLIB="jforests"
 
 
 # go to source folder and pull changes from the repository
@@ -30,21 +26,30 @@ mkdir $FULLEXP
 cd $FULLEXP
 
 
-# apply RankNet: train, build model, and predict ranking scores
+# apply LambdaMART: train, build model, and predict ranking scores
 for i in {1..10}
 do
+	mkdir $i
+
 	exc=$(( $i % 10 + 1 ))
 
 	train=$SAMPLE"/"$(printf "train-%d.txt" $i)
 	tst=$SAMPLE"/"$(printf "letor-%d.txt" $i)
 	cv=$SAMPLE"/"$(printf "letor-%d.txt" $exc)
 
+	train_bin=$(printf "train-%d.bin" $i)
+	tst_bin=$(printf "letor-%d.bin" $i)
+	cv_bin=$(printf "letor-%d.bin" $exc)
+
 	ensemble=$(printf "ensemble-%d.txt" $i)
 	predict=$(printf "predictions-%d.txt" $i)
 
+	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=generate-bin --ranking --folder . --file $train --file $cv --file $tst
+	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=train --ranking --config-file $RANKING --train-file $train_bin --validation-file $cv_bin --output-model $ensemble
+	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=predict --ranking --model-file $ensemble --tree-type RegressionTree --test-file $tst_bin --output-file $predict
 
-	java $JXMS $JXMX -jar $SRC"/ranklib/RankLib.jar" -train $train -test $tst -validate $cv -ranker $RANKER -metric2t $METRIC -metric2T $METRIC -save $ensemble
-	java $JXMS $JXMX -jar $SRC"/ranklib/RankLib.jar" -load $ensemble -rank $tst -score $predict
+	mv jforests* $i/
+	mv *.bin $i/
 done
 
 
@@ -66,5 +71,5 @@ do
 	result=$SAMPLE"/"$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 
-	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $CUTOFF --recommendations $result $ranked
+	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $TOPT --recommendations $result $ranked
 done

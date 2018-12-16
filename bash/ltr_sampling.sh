@@ -3,7 +3,6 @@
 ID=0
 
 EXP="/apc/experiments"
-
 FULLEXP=$EXP"/"$ID
 
 META="/apc/metadata"

@@ -3,7 +3,6 @@
 ID=adarank
 
 EXP="/apc/experiments"
-
 FULLEXP=$EXP"/"$ID
 
 SRC="/apc/RecSys-MPD"
@@ -15,8 +14,6 @@ JXMX="-Xmx80g"
 
 LTRLIB="ranklib"
 
-TOPK=200
-TOPT=500
 CUTOFF=500
 
 RANKER=3
