@@ -15,17 +15,25 @@ JXMX="-Xmx80g"
 
 LTRLIB="jforests"
 
+CUTOFF=500
 
 # go to source folder and pull changes from the repository
 cd $SRC
 git pull
 
 
-# go to experiments folder, create a new folder with id
+# create a new folder with id
 mkdir $FULLEXP
+
+
+# go to samples folder and copy files
+cd $SAMPLE
+cp * $FULLEXP"/"
+
+
+# go to experiments folder
 cd $FULLEXP
 
-cp $SAMPLE"/*" $FULLEXP"/"
 
 # apply LambdaMART: train, build model, and predict ranking scores
 for i in {1..10}
@@ -72,5 +80,5 @@ do
 	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 
-	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $TOPT --recommendations $result $ranked
+	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $CUTOFF --recommendations $result $ranked
 done
