@@ -25,6 +25,7 @@ git pull
 mkdir $FULLEXP
 cd $FULLEXP
 
+cp $SAMPLE"/*" $FULLEXP"/"
 
 # apply LambdaMART: train, build model, and predict ranking scores
 for i in {1..10}
@@ -33,9 +34,9 @@ do
 
 	exc=$(( $i % 10 + 1 ))
 
-	train=$SAMPLE"/"$(printf "train-%d.txt" $i)
-	tst=$SAMPLE"/"$(printf "letor-%d.txt" $i)
-	cv=$SAMPLE"/"$(printf "letor-%d.txt" $exc)
+	train=$(printf "train-%d.txt" $i)
+	tst=$(printf "letor-%d.txt" $i)
+	cv=$(printf "letor-%d.txt" $exc)
 
 	train_bin=$(printf "train-%d.bin" $i)
 	tst_bin=$(printf "letor-%d.bin" $i)
@@ -56,7 +57,7 @@ done
 # generate re-ranked recommendations
 for i in {1..10}
 do
-	result=$SAMPLE"/"$(printf "results-%d.csv" $i)
+	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 	predict=$(printf "predictions-%d.txt" $i)
 
@@ -68,7 +69,7 @@ done
 for i in {1..10}
 do
 	playlist=$(printf "fold-%03d.json" $i)
-	result=$SAMPLE"/"$(printf "results-%d.csv" $i)
+	result=$(printf "results-%d.csv" $i)
 	ranked=$(printf "ranked-%d.csv" $i)
 
 	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $TOPT --recommendations $result $ranked
