@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-ID=0
-
-EXP="/apc/experiments"
-FULLEXP=$EXP"/"$ID
-
 META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
+SAMPLE="/apc/sample/002"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
@@ -29,9 +25,9 @@ git pull
 mvn clean package
 
 
-# go to experiments folder, create a new folder with id
-mkdir $FULLEXP
-cd $FULLEXP
+# create a new sample folder
+mkdir $SAMPLE
+cd $SAMPLE
 
 
 # generate sampling data
