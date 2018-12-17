@@ -13,14 +13,13 @@ CUTOFFS=(50 100 150 200 250 300 350 400 450 500)
 # evaluate
 for alg in "${ALGS[@]}"
 do
-	echo $alg
 	
 	FULLEXP=$EXP"/"$alg
 	cd $FULLEXP
 
 	for cutoff in "${CUTOFFS[@]}"
 	do
-		echo $cutoff
+		echo $alg"-"$cutoff
 	
 		for i in {1..10}
 		do
