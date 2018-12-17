@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/10fold_10K_b"
 INDEX="/apc/MPD.index"
