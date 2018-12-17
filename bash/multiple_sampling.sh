@@ -32,10 +32,10 @@ do
 
 	for i in {1..10}
 	do
-		ifold=$(printf "fold-%03d.json" $i)
-		result=$TWM"-"$RMS"-"$PR".csv"
+		playlist=$(printf "fold-%03d.json" $i)
+		result=$(printf "results-%d.csv" $i)
 			
-		java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$ifold $result $TWM $TOPK $k $RMS $PR		
+		java -server $JXMS $JXMX -cp $SRC"/target/mpd.jar" edu.anadolu.app.BestSearchApp $INDEX $TEST"/"$playlist $result $TWM $TOPK $k $RMS $PR		
 	done
 done
 
