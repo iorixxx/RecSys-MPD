@@ -13,7 +13,7 @@ CLI.add_argument("output", help="Absolute path of the output folder")
 CLI.add_argument("size", help="Number of playlists to include", type=int)
 
 index = {
-    0: "cv",
+    0: "validation",
     1: "train",
     2: "train",
     3: "train",
@@ -32,7 +32,7 @@ def build(mpd_path, output_path, size):
     files = listdir(mpd_path)
     random.shuffle(files)
 
-    ttv = dict(train=dict(playlists=[]), test=dict(playlists=[]), cv=dict(playlists=[]))
+    ttv = dict(train=dict(playlists=[]), test=dict(playlists=[]), validation=dict(playlists=[]))
 
     for file in files:
         if count >= size:
@@ -71,7 +71,7 @@ def build(mpd_path, output_path, size):
         with open(join(output_path, "%s.json" % k), "w") as out:
             json.dump(v, out, indent=4)
 
-    print("Train, test, cv files are created in folder: %s" % output_path)
+    print("Train, test, validation files are created in folder: %s" % output_path)
 
 
 if __name__ == '__main__':
