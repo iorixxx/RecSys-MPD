@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 ID=0
@@ -57,9 +56,9 @@ java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=generate-bin --ranking 
 
 for i in {1..4}
 do
-	ensemble=$SRC"/"$(printf "ensemble-%03d.txt" $i)
-	predict=$(printf "predictions-%03d.txt" $i)
-	ranked=$(printf "ranked-%03d.csv" $i)
+	ensemble=$SRC"/ensemble/"$(printf "ensemble%03d.txt" $i)
+	predict=$(printf "predictions%03d.txt" $i)
+	ranked=$(printf "ranked%03d.csv" $i)
 
 	java $JXMS $JXMX -jar $SRC"/jforests/jforests.jar" --cmd=predict --ranking --model-file $ensemble --tree-type RegressionTree --test-file $letor_bin --output-file $predict
 	python3 $SRC"/python/submission_rank.py" $ranked $results $predict $LTRLIB
@@ -69,9 +68,7 @@ done
 # evaluate
 for i in {1..4}
 do
-	ranked=$(printf "ranked-%03d.csv" $i)
+	ranked=$(printf "ranked%03d.csv" $i)
 
 	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $CUTOFF --recommendations $results $ranked
 done
-
-
