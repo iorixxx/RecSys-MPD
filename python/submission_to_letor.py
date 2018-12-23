@@ -50,7 +50,9 @@ FEATURES = {1: "Number of samples in playlist",
             31: "Track search result frequency",
             32: "Album search result frequency",
             33: "Artist search result frequency",
-            34: "Geometric mean of track search result frequency and max Lucene score"}
+            34: "Geometric mean of track search result frequency and max Lucene score",
+            35: "Geometric mean of album search result frequency and max Lucene score",
+            36: "Geometric mean of artist search result frequency and max Lucene score"}
 
 
 recommendations = collections.OrderedDict()
@@ -275,7 +277,10 @@ def extract_features(pid, track_uri, order):
     position = recommendations[pid][track_uri][2]
     album_srf = recommendations[pid][track_uri][3]
     artist_srf = recommendations[pid][track_uri][4]
-    geometric_mean = math.sqrt(track_srf * lucene_score)
+
+    geo_track = math.sqrt(track_srf * lucene_score)
+    geo_album = math.sqrt(album_srf * lucene_score)
+    geo_artist = math.sqrt(artist_srf * lucene_score)
 
     danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
@@ -326,7 +331,9 @@ def extract_features(pid, track_uri, order):
               31: track_srf,
               32: album_srf,
               33: artist_srf,
-              34: geometric_mean}
+              34: geo_track,
+              35: geo_album,
+              36: geo_artist}
 
     return hit, track_uri, values
 
