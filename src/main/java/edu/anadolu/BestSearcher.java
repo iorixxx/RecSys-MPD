@@ -225,14 +225,10 @@ public class BestSearcher implements Closeable {
 
         export(playlistID, subList, out.get());
 
-        System.out.println("Tracks only search for pid: " + playlistID);
-
         recommendedTracks.clear();
         recommendations.clear();
-
     }
-
-
+    
     class DocTermStat {
 
         private final long dl;

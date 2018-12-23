@@ -25,6 +25,7 @@ public class BestSearchApp {
             SearchFieldConfig searchFieldConfig = SearchFieldConfig.valueOf(args[7]);
 
             try (BestSearcher searcher = new BestSearcher(indexPath, challengePath, similarityConfig, maxPlaylist, maxTrack, sorterConfig, searchFieldConfig)) {
+                System.out.println("Sampling has started...");
                 searcher.search(resultPath);
             } catch (Exception e) {
                 e.printStackTrace();

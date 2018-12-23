@@ -25,6 +25,8 @@ index = {
     9: "test",
 }
 
+MIN_PLAYLIST_LENGTH = 10
+
 
 def build(mpd_path, output_path, size):
     count = 0
@@ -44,28 +46,30 @@ def build(mpd_path, output_path, size):
         random.shuffle(items)
 
         for item in items:
-            category = util.random_category()
-            playlist_json = dict(pid=item["pid"], name=item["name"], category=category["id"])
-
-            if category["shuffle"]:
-                random.shuffle(item["tracks"])
-
             num_tracks = len(item["tracks"])
-            num_samples = int(num_tracks * category["fraction"])
 
-            playlist_json["num_tracks"] = num_tracks
-            playlist_json["num_samples"] = num_samples
-            playlist_json["num_holdouts"] = num_tracks - num_samples
+            if num_tracks >= MIN_PLAYLIST_LENGTH:
+                category = util.random_category()
+                playlist_json = dict(pid=item["pid"], name=item["name"], category=category["id"])
 
-            playlist_json["tracks"] = sorted(item["tracks"][0:num_samples], key=lambda x: x["pos"], reverse=False)
-            playlist_json["holdouts"] = sorted(item["tracks"][num_samples:], key=lambda x: x["pos"], reverse=False)
+                if category["shuffle"]:
+                    random.shuffle(item["tracks"])
 
-            ttv[index[count % 10]]["playlists"].append(playlist_json)
+                num_samples = int(num_tracks * category["fraction"])
 
-            count += 1
+                playlist_json["num_tracks"] = num_tracks
+                playlist_json["num_samples"] = num_samples
+                playlist_json["num_holdouts"] = num_tracks - num_samples
 
-            if count >= size:
-                break
+                playlist_json["tracks"] = sorted(item["tracks"][0:num_samples], key=lambda x: x["pos"], reverse=False)
+                playlist_json["holdouts"] = sorted(item["tracks"][num_samples:], key=lambda x: x["pos"], reverse=False)
+
+                ttv[index[count % 10]]["playlists"].append(playlist_json)
+
+                count += 1
+
+                if count >= size:
+                    break
 
     for k, v in ttv.items():
         with open(join(output_path, "%s.json" % k), "w") as out:
