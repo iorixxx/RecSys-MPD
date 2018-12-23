@@ -52,7 +52,9 @@ FEATURES = {1: "Number of samples in playlist",
             33: "Artist search result frequency",
             34: "Geometric mean of track search result frequency and max Lucene score",
             35: "Geometric mean of album search result frequency and max Lucene score",
-            36: "Geometric mean of artist search result frequency and max Lucene score"}
+            36: "Geometric mean of artist search result frequency and max Lucene score",
+            37: "Album density",
+            38: "Artist density"}
 
 
 recommendations = collections.OrderedDict()
@@ -90,15 +92,16 @@ def read_challenge_json(path):
             name = ""
 
         holdouts = []
-        if "holdouts" in challenge.keys():
-            for holdout in challenge["holdouts"]:
-                holdouts.append(holdout["track_uri"])
+        for holdout in challenge["holdouts"]:
+            holdouts.append(holdout["track_uri"])
 
-        tracks = []
+        tracks, albums, artists = [], [], []
         for track in challenge["tracks"]:
             tracks.append(track["track_uri"])
+            albums.append(track["album_uri"])
+            artists.append(track["artist_uri"])
 
-        challenge_metadata[pid] = (num_samples, name, holdouts, tracks)
+        challenge_metadata[pid] = (num_samples, name, holdouts, tracks, albums, artists)
 
     print("Challenge file is read: %s" % path)
 
@@ -245,9 +248,13 @@ def collect_features(pid, track_uris):
 def extract_features(pid, track_uri, order):
     num_samples = challenge_metadata[pid][0]
     name = challenge_metadata[pid][1]
+    holdouts = challenge_metadata[pid][2]
+    seed_tracks = challenge_metadata[pid][3]
+    seed_albums = challenge_metadata[pid][4]
+    seed_artists = challenge_metadata[pid][5]
 
     hit = 0
-    if track_uri in challenge_metadata[pid][2] or track_uri in challenge_metadata[pid][3]:
+    if track_uri in holdouts or track_uri in seed_tracks:
         hit = 1
 
     track_occurrence = track_metadata[track_uri][0]
@@ -281,6 +288,9 @@ def extract_features(pid, track_uri, order):
     geo_track = math.sqrt(track_srf * lucene_score)
     geo_album = math.sqrt(album_srf * lucene_score)
     geo_artist = math.sqrt(artist_srf * lucene_score)
+
+    album_density = seed_albums.count(album_uri) / len(seed_albums)
+    artist_density = seed_artists.count(artist_uri) / len(seed_artists)
 
     danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, time_signature = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
@@ -333,7 +343,9 @@ def extract_features(pid, track_uri, order):
               33: artist_srf,
               34: geo_track,
               35: geo_album,
-              36: geo_artist}
+              36: geo_artist,
+              37: album_density,
+              38: artist_density}
 
     return hit, track_uri, values
 
