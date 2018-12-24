@@ -4,6 +4,7 @@ import numpy as np
 import statistics
 import argparse
 
+from os.path import join
 from collections import OrderedDict
 from tabulate import tabulate
 
@@ -12,7 +13,7 @@ CLI = argparse.ArgumentParser()
 CLI.add_argument("fold", help="Absolute path of the fold json file")
 CLI.add_argument("k", help="Maximum number of recommended tracks", type=int)
 CLI.add_argument("--recommendations", help="Absolute paths of recommendation csv files", nargs="+", required=True)
-CLI.add_argument("--log", help="Absolute path of output t-test txt folder", required=False)
+CLI.add_argument("--log", help="Absolute path of output t-test directory", required=False)
 
 
 METRICS = ["precision", "recall", "ndcg", "extender"]
@@ -101,9 +102,9 @@ def playlist_extender_clicks(targets, predictions, k):
     return float(k / 10.0 + 1)
 
 
-def measure(path, k):
+def measure(path1, path2, k, term):
     results, logs = {}, {}
-    recommendations = read_recommendation_csv(path)
+    recommendations = read_recommendation_csv(path1)
 
     for pid, challenge in challenges.items():
         category = challenge["category"]
@@ -148,7 +149,7 @@ def measure(path, k):
     summary.append(["mean", m_instances, m[0], m[1], m[2], m[3]])
 
     if logging:
-        export_logs(path=path.replace(".csv", "-logs.txt"), scores=logs)
+        export_logs(path=join(path2, "logs-%d.txt" % (term+1)), scores=logs)
 
     return summary
 
@@ -188,20 +189,16 @@ def export_logs(path, scores):
             temp = "%d\t%f\t%f\t%f\t%f\n" % (pid, score[0], score[1], score[2], score[3])
             file.write(temp)
 
-    print("\nT-test log file is created: %s" % path)
-
 
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    logging = args.log is not None
+    logging, summary_list = args.log is not None, []
 
     read_challenge_json(path=args.fold)
 
-    summary_list = []
-
-    for f in args.recommendations:
-        s = measure(path=f, k=args.k)
+    for i in range(len(args.recommendations)):
+        s = measure(path1=args.recommendations[i], path2=args.log, k=args.k, term=i)
         summary_list.append(s)
 
     show_results(summary_list)
