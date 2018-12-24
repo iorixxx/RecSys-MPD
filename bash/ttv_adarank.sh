@@ -26,7 +26,8 @@ cd $SRC
 git pull
 
 
-# go to experiments folder
+# create and go to experiments folder
+mkdir $EXP
 cd $EXP
 
 
