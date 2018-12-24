@@ -12,6 +12,7 @@ CLI = argparse.ArgumentParser()
 CLI.add_argument("fold", help="Absolute path of the fold json file")
 CLI.add_argument("k", help="Maximum number of recommended tracks", type=int)
 CLI.add_argument("--recommendations", help="Absolute paths of recommendation csv files", nargs="+", required=True)
+CLI.add_argument("--log", help="Absolute path of output t-test txt folder", required=False)
 
 
 METRICS = ["precision", "recall", "ndcg", "extender"]
@@ -101,7 +102,7 @@ def playlist_extender_clicks(targets, predictions, k):
 
 
 def measure(path, k):
-    results = {}
+    results, logs = {}, {}
     recommendations = read_recommendation_csv(path)
 
     for pid, challenge in challenges.items():
@@ -125,6 +126,9 @@ def measure(path, k):
         results[category]["ndcg"].append(ndcg)
         results[category]["extender"].append(extender)
 
+        if logging:
+            logs[pid] = (pr[0], pr[1], ndcg, extender)
+
     summary, m_instances = [], 0
 
     for c in sorted(results.keys()):
@@ -142,6 +146,9 @@ def measure(path, k):
 
     m = compute_overall_mean(results)
     summary.append(["mean", m_instances, m[0], m[1], m[2], m[3]])
+
+    if logging:
+        export_logs(path=path.replace(".csv", "-logs.txt"), scores=logs)
 
     return summary
 
@@ -175,8 +182,19 @@ def show_results(summary):
     print(tabulate(v, headers=["category", "instances"] + METRICS * len(summary)))
 
 
+def export_logs(path, scores):
+    with open(path, "w") as file:
+        for pid, score in scores.items():
+            temp = "%d\t%f\t%f\t%f\t%f\n" % (pid, score[0], score[1], score[2], score[3])
+            file.write(temp)
+
+    print("\nT-test log file is created: %s" % path)
+
+
 if __name__ == '__main__':
     args = CLI.parse_args()
+
+    logging = args.log is not None
 
     read_challenge_json(path=args.fold)
 
