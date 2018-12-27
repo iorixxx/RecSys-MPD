@@ -8,7 +8,6 @@ EXP="/apc/experiments/rankboost"
 
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/ttv100K"
-RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
