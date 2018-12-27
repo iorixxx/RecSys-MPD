@@ -7,6 +7,7 @@ META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/ttv100K"
 INDEX="/apc/MPD.index"
+RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms80g"
 JXMX="-Xmx100g"
@@ -31,13 +32,13 @@ git pull
 mvn clean package
 
 
-# create and go to sampling folder
+# create experiment folder
 mkdir $EXP
-cd $EXP
 
 # experiment
 for i in "${SIZES[@]}"
 do
+	cd $EXP
 	mkdir $i
 	cd $i
 	
@@ -63,5 +64,7 @@ do
 	python3 $SRC"/python/submission_rank.py" "ranked.csv" "test.csv" "predictions.txt" $LTRLIB
 
 	# evaluate
-	python3 $SRC"/python/evaluate.py" $TEST"/test.json" $CUTOFF --recommendations $original $ranked
+	python3 $SRC"/python/evaluate.py" $TEST"/test.json" $CUTOFF --recommendations "test.csv" "ranked.csv"
+	
+	rm *
 done
