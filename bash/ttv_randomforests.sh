@@ -4,11 +4,10 @@ ID=001
 SAMPLE="/apc/sample/"$ID
 FEATURE="/apc/feature/"$ID
 
-EXP="/apc/experiments/ranknet"
+EXP="/apc/experiments/randomforests"
 
 SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/ttv100K"
-RANKING=$SRC"/jforests/ranking2.properties"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
@@ -18,15 +17,14 @@ LTRLIB="ranklib"
 CUTOFF=500
 METRIC="NDCG@"$CUTOFF
 
-RANKER=1
-
+RANKER=8
 
 # go to source folder and pull changes from the repository
 cd $SRC
 git pull
 
 
-# go to experiments folder
+# create and go to experiments folder
 mkdir $EXP
 cd $EXP
 
