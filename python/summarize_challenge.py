@@ -16,15 +16,18 @@ def summarize(path):
     stats, summary = {}, []
 
     for playlist in util.read_dataset_json(path):
-        category = playlist["category"]
+        cid = playlist["category"]
+        c = util.search_category(cid)
 
-        if category not in stats:
-            stats[category] = dict(instances=0, num_tracks=[], num_samples=[], num_holdouts=[])
+        if cid not in stats:
+            stats[cid] = dict(instances=0, num_tracks=[], num_samples=[], num_holdouts=[])
 
-        stats[category]["instances"] += 1
-        stats[category]["num_tracks"].append(playlist["num_tracks"])
-        stats[category]["num_samples"].append(playlist["num_samples"])
-        stats[category]["num_holdouts"].append(playlist["num_holdouts"])
+        stats[cid]["instances"] += 1
+        stats[cid]["num_tracks"].append(playlist["num_tracks"])
+        stats[cid]["num_samples"].append(playlist["num_samples"])
+        stats[cid]["num_holdouts"].append(playlist["num_holdouts"])
+
+        print(" ".join([str(playlist["pid"]), str(cid), c["type"], str(c["fraction"])]))
 
     total, all_tracks, all_samples, all_holdouts = 0, [], [], []
 
