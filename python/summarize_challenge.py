@@ -7,17 +7,19 @@ from tabulate import tabulate
 
 CLI = argparse.ArgumentParser()
 
+CLI.add_argument("instance", help="Instance of challenge", choices={"recsys", "custom"})
+CLI.add_argument("verbose", help="Flag to print details of each playlist", type=int, choices={0, 1})
 CLI.add_argument("--folds", help="Absolute paths of fold json files to be summarized", nargs="+", required=True)
 
 
-def summarize(path):
+def summarize(path, instance, verbose):
     print("\nFile: %s\n" % path)
 
     stats, summary = {}, []
 
     for playlist in util.read_dataset_json(path):
         cid = playlist["category"]
-        c = util.search_category(cid)
+        c = util.search_category(instance, cid)
 
         if cid not in stats:
             stats[cid] = dict(instances=0, num_tracks=[], num_samples=[], num_holdouts=[])
@@ -27,7 +29,8 @@ def summarize(path):
         stats[cid]["num_samples"].append(playlist["num_samples"])
         stats[cid]["num_holdouts"].append(playlist["num_holdouts"])
 
-        print(" ".join([str(playlist["pid"]), str(cid), c["type"], str(c["fraction"])]))
+        if verbose == 1:
+            print(" ".join([str(playlist["pid"]), str(cid), c["display"]]))
 
     total, all_tracks, all_samples, all_holdouts = 0, [], [], []
 
@@ -53,4 +56,4 @@ if __name__ == '__main__':
     args = CLI.parse_args()
 
     for f in args.folds:
-        summarize(path=f)
+        summarize(path=f, instance=args.instance, verbose=args.verbose)
