@@ -30,7 +30,7 @@ mkdir $EXP
 cd $EXP
 
 
-# apply RankNet: train, build model, and predict ranking scores
+# apply AdaRank: train, build model, and predict ranking scores
 train=$FEATURE"/train.txt"
 tst=$FEATURE"/test.txt"
 cv=$FEATURE"/validation.txt"
