@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-ID=003
-
-SAMPLE="/apc/sample/"$ID
 EXP="/apc/experiments/fsimportance"
 SRC="/apc/RecSys-MPD"
 
@@ -11,7 +8,4 @@ SRC="/apc/RecSys-MPD"
 cd $SRC
 git pull
 
-
-tst=$SAMPLE"/test.csv"
-
-python3 $SRC"/python/gas_feature_similarity.py" $tst $EXP 38
+python3 $SRC"/python/gas_feature_similarity.py" $EXP 38
