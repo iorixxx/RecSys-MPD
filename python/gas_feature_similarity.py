@@ -7,31 +7,11 @@ from os.path import join
 
 CLI = argparse.ArgumentParser()
 
-CLI.add_argument("original", help="Absolute path of the original recommendations csv file")
 CLI.add_argument("ranked", help="Absolute path of the ranked recommendations folder")
 CLI.add_argument("features", help="Number of feature options", type=int)
 
 
-rankings, terms = {}, {}
-
-
-def read_original_recommendations(path):
-    temp = {}
-    with open(path, "r") as f:
-        reader = csv.reader(f)
-
-        for row in reader:
-            pid = int(row[0])
-            track_uri = row[1]
-
-            if pid not in temp:
-                temp[pid] = []
-            temp[pid].append(track_uri)
-
-    for k, v in temp.items():
-        terms[k] = list(itertools.permutations(v, 2))
-
-    print("Term permutations are created by reading %s" % path)
+rankings = {}
 
 
 def read_recommendations(path, n):
@@ -53,7 +33,9 @@ def read_recommendations(path, n):
 
 
 def kendalls_tau(q, vi, vj):
-    instance_pairs = terms[q]
+    instances = rankings[vi][q].keys()
+    instance_pairs = list(itertools.permutations(instances, 2))
+
     lst = [x for x in instance_pairs if rankings[vi][q][x[1]] < rankings[vi][q][x[0]] and rankings[vj][q][x[1]] < rankings[vj][q][x[0]]]
     return len(lst) / len(instance_pairs)
 
@@ -76,6 +58,5 @@ def measure(n):
 if __name__ == '__main__':
     args = CLI.parse_args()
 
-    read_original_recommendations(path=args.original)
     read_recommendations(path=args.ranked, n=args.features)
     measure(n=args.features)
