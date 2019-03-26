@@ -2,7 +2,7 @@
 
 ID=003
 
-SAMPLE="/apc/sample/aliyurekli/Desktop/sample/"$ID
+SAMPLE="/apc/sample/"$ID
 EXP="/apc/experiments/fsimportance"
 SRC="/apc/RecSys-MPD"
 
