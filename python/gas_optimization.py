@@ -1,5 +1,12 @@
 import csv
 import copy
+import argparse
+
+CLI = argparse.ArgumentParser()
+
+CLI.add_argument("weights", help="Absolute path of the weights csv file")
+CLI.add_argument("similarities", help="Absolute path of the similarities csv file")
+
 
 weights, similarities = {}, {}
 
@@ -42,10 +49,11 @@ def drop(f, copy_w, copy_s):
     del copy_w[f]
     del copy_s[f]
 
-    for v in copy_s.values():
-        for k in v.keys():
+    for v in copy_s:
+        for k in copy_s[v]:
             if k == f:
                 del copy_s[v][k]
+                break
 
 
 def optimize(n, c):
@@ -61,9 +69,14 @@ def optimize(n, c):
 
         selected.append(feature)
 
-    print()
+    print("c = %.2f, best %d features: %s" % (c, n, ",".join(str(e) for e in selected)))
 
 
 if __name__ == '__main__':
-    print(1)
+    args = CLI.parse_args()
 
+    load_weights(path=args.weights)
+    load_similarities(path=args.similarities)
+
+    optimize(1, 0.5)
+    optimize(5, 0.05)
