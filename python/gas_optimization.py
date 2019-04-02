@@ -78,5 +78,8 @@ if __name__ == '__main__':
     load_weights(path=args.weights)
     load_similarities(path=args.similarities)
 
-    optimize(1, 0.5)
-    optimize(5, 0.05)
+    c_values = [c / 100 for c in range(1, 101)]
+
+    for f in range(1, len(weights) + 1):
+        for c in c_values:
+            optimize(f, c)
