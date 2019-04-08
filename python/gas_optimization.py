@@ -6,7 +6,7 @@ CLI = argparse.ArgumentParser()
 
 CLI.add_argument("weights", help="Absolute path of the weights csv file")
 CLI.add_argument("similarities", help="Absolute path of the similarities csv file")
-
+CLI.add_argument("step", help="Step rate", type=float, choices={0.01, 0.05, 0.1})
 
 weights, similarities = {}, {}
 
@@ -78,8 +78,12 @@ if __name__ == '__main__':
     load_weights(path=args.weights)
     load_similarities(path=args.similarities)
 
-    c_values = [c / 100 for c in range(1, 101)]
+    step, c1 = args.step, 0
 
-    for f in range(1, len(weights) + 1):
-        for c in c_values:
-            optimize(f, c)
+    while True:
+        c1 = round(c1 + step, 2)
+        if c1 > 1:
+            break
+        else:
+            for feat in range(1, len(weights) + 1):
+                optimize(feat, c1)
