@@ -3,11 +3,12 @@
 ID=003
 SAMPLE="/apc/sample/"$ID
 FEATURE="/apc/feature/"$ID
+OP="/apc/option"
 
-EXP="/apc/experiments/fsimportance"
+EXP="/apc/experiments/heatmap"
 
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/fs30Krandom"
+TEST="/apc/dataset/test/fs30K"
 
 JXMS="-Xms40g"
 JXMX="-Xmx80g"
@@ -30,16 +31,13 @@ mkdir $EXP
 cd $EXP
 
 
-python3 $SRC"/python/gas_single_features.py" $EXP 38
-
-
-for i in {1..38}
+for i in {0..344}
 do
 	mkdir $i
 	cd $i
 	
 	# apply LambdaMART: train, build model, and predict ranking scores
-	opt=$EXP"/"$i".txt"
+	opt=$OP"/"$i".txt"
 	train=$FEATURE"/train.txt"
 	tst=$FEATURE"/test.txt"
 	cv=$FEATURE"/validation.txt"
