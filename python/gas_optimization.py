@@ -8,7 +8,8 @@ CLI.add_argument("weights", help="Absolute path of the weights csv file")
 CLI.add_argument("similarities", help="Absolute path of the similarities csv file")
 CLI.add_argument("step", help="Step rate", type=float, choices={0.01, 0.05, 0.1})
 
-weights, similarities = {}, {}
+weights, similarities, feature_map = {}, {}, {}
+feature_assignment = []
 
 
 def load_weights(path):
@@ -69,7 +70,25 @@ def optimize(n, c):
 
         selected.append(feature)
 
-    print("c = %.2f, best %d features: %s" % (c, n, ",".join(str(e) for e in selected)))
+    key = check_existence(selected)
+    if key == -1:
+        key = len(feature_map)
+        feature_map[key] = selected
+
+    feature_assignment.append((c, n, key))
+
+    print("c=%.2f n=%d features=%s" % (c, n, ",".join(str(e) for e in selected)))
+
+
+def check_existence(a):
+    key = -1
+
+    for k, v in feature_map.items():
+        if set(a) == set(v):
+            key = k
+            break
+
+    return key
 
 
 if __name__ == '__main__':
@@ -87,3 +106,11 @@ if __name__ == '__main__':
         else:
             for feat in range(1, len(weights) + 1):
                 optimize(feat, c1)
+
+    print("\nTotal number of unique feature combinations = %d" % len(feature_map))
+    for k, v in feature_map.items():
+        print("id=%d features=%s" % (k, ",".join(str(e) for e in v)))
+
+    print("\nTotal number of combinations = %d" % len(feature_assignment))
+    for fa in feature_assignment:
+        print("c=%.2f n=%d f=%d" % fa)
