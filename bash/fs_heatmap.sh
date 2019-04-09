@@ -11,7 +11,7 @@ SRC="/apc/RecSys-MPD"
 TEST="/apc/dataset/test/fs30K"
 
 JXMS="-Xms40g"
-JXMX="-Xmx80g"
+JXMX="-Xmx60g"
 
 LTRLIB="ranklib"
 
@@ -58,6 +58,8 @@ do
 
 	# evaluate
 	playlist="test.json"
+	
+	echo $i
 
 	python3 $SRC"/python/evaluate.py" $TEST"/"$playlist $CUTOFF --recommendations $original $ranked
 	
