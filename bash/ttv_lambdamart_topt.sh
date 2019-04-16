@@ -5,7 +5,7 @@ EXP="/apc/experiments/"$ID
 
 META="/apc/metadata"
 SRC="/apc/RecSys-MPD"
-TEST="/apc/dataset/test/ttv100K"
+TEST="/apc/dataset/test/ttv100Krandom"
 INDEX="/apc/MPD.index"
 RANKING=$SRC"/jforests/ranking2.properties"
 
@@ -17,13 +17,13 @@ SORTER="GeoSort"
 SEARCHFIELD="Track"
 
 TOPK=200
-SIZES=(100 200 300 400 500 600 700 800 900 1000)
+SIZES=(500 750 1000 1250)
 
-FEATURES=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38)
+FEATURES=(15 23 30 31 34 35 36 37 38)
 
 LTRLIB="jforests"
 
-CUTOFF=100
+CUTOFF=500
 
 
 # go to source folder, pull changes from the repository, and build project
