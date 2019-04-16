@@ -1,0 +1,3 @@
+curl "http://localhost:8983/solr/audio/update/csv?commit=true&fieldnames=id,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,time" -T audio_metadata.csv -X POST -H 'Content-type:text/plain; charset=utf-8'
+
+curl "http://localhost:8983/solr/audio/update?optimize=true"
