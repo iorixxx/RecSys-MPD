@@ -5,14 +5,19 @@ import edu.anadolu.sorter.CustomSorter;
 import edu.anadolu.sorter.RM1;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.store.FSDirectory;
 
-import javax.print.Doc;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -96,6 +101,8 @@ public class PrfQueryExpansion implements Closeable {
         reader.close();
     }
 
+    IndexSearcher searcher;
+
     private void tracksOnly(Track[] tracks, int playlistID, AtomicReference<PrintWriter> out, Function<Track, String> map, String field) throws ParseException, IOException {
 
         QueryParser queryParser = new QueryParser(field, new WhitespaceAnalyzer());
@@ -119,7 +126,7 @@ public class PrfQueryExpansion implements Closeable {
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
-        IndexSearcher searcher = new IndexSearcher(reader);
+        searcher = new IndexSearcher(reader);
 
         searcher.setSimilarity(similarityConfig.getSimilarity());
 
@@ -144,7 +151,7 @@ public class PrfQueryExpansion implements Closeable {
 
             String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
 
-            for (int i=0; i<trackURIs.length; i++) {
+            for (int i = 0; i < trackURIs.length; i++) {
 
                 String trackURI = trackURIs[i];
                 if (!seeds.contains(trackURI)) candidates.add(trackURI);
@@ -172,7 +179,7 @@ public class PrfQueryExpansion implements Closeable {
         recommendedTracks.clear();
     }
 
-    private List<RecommendedTrack> rm1(List<Document> topK, Track[] seeds, List<String> uniqueTracks, Map<Integer, Float> precomputed){
+    private List<RecommendedTrack> rm1(List<Document> topK, Track[] seeds, List<String> uniqueTracks, Map<Integer, Float> precomputed) {
         List<RecommendedTrack> rs = new ArrayList<>();
 
         for (String track_uri : uniqueTracks) {
@@ -198,15 +205,32 @@ public class PrfQueryExpansion implements Closeable {
 
     private float rf(String track, String[] tracks) {
 
-        String[] temp = new String[] {track};
+        Set<String> trackSet = new HashSet<>(Arrays.asList(tracks));
+
+        if (trackSet.contains(track))
+
+            return 1 / trackSet.size();
+        else return 0f;
+
+    }
+
+    private float rf_dirichlet(String track, String[] tracks, double mu) throws IOException {
 
         Set<String> trackSet = new HashSet<>(Arrays.asList(tracks));
-        Set<String> seedSet = new HashSet<>(Arrays.asList(temp));
 
-        Set<String> intersect = new HashSet<>(trackSet);
-        intersect.retainAll(seedSet);
+        int cwd = (trackSet.contains(track)) ? 1 : 0;
 
-        return (float) intersect.size() / trackSet.size();
+        Term term = new Term("track_uris", track);
+
+        TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
+        float playlistFreqOfTrack = (float) termStatistics.docFreq() / 1_000_000L;
+
+        float rValue = (float) (cwd + mu * playlistFreqOfTrack) / (float) (trackSet.size() + mu);
+
+        if(rValue > 0)
+            return rValue;
+        else throw new RuntimeException("smooted probability should not be zero.");
+
     }
 
     private static synchronized void export(int playlistID, List<RecommendedTrack> tracks, PrintWriter out) {
