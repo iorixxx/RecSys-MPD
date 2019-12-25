@@ -122,7 +122,6 @@ public class PrfQueryExpansion implements Closeable {
             seeds.add(trackURI);
         }
 
-        HashSet<String> candidates = new HashSet<>();
 
         Query query = queryParser.parse(QueryParserBase.escape(builder.toString().trim()));
 
@@ -138,7 +137,8 @@ public class PrfQueryExpansion implements Closeable {
 
         List<Document> topK = new ArrayList<>();
 
-        Map<Integer, Float> precomputed = new HashMap<>();
+        Map<Integer, Double> precomputed = new HashMap<>();
+        HashSet<String> candidates = new HashSet<>();
 
         for (ScoreDoc hit : hits) {
             int docID = hit.doc;
@@ -151,13 +151,9 @@ public class PrfQueryExpansion implements Closeable {
 
             String[] trackURIs = whiteSpaceSplitter.split(doc.get("track_uris"));
 
-            for (int i = 0; i < trackURIs.length; i++) {
+            candidates.addAll(Arrays.asList(trackURIs));
 
-                String trackURI = trackURIs[i];
-                if (!seeds.contains(trackURI)) candidates.add(trackURI);
-            }
-
-            float seed_prf = 1;
+            double seed_prf = 1.0;
 
             for (Track seed : tracks) {
                 seed_prf *= rf(seed.track_uri, trackURIs);
@@ -166,7 +162,7 @@ public class PrfQueryExpansion implements Closeable {
             precomputed.put(Integer.parseInt(doc.get("id")), seed_prf);
         }
 
-        List<RecommendedTrack> recommendedTracks = rm1(topK, tracks, new ArrayList<>(candidates), precomputed);
+        List<RecommendedTrack> recommendedTracks = rm1(topK, candidates, precomputed);
 
         CustomSorter cs = new RM1();
 
@@ -179,17 +175,18 @@ public class PrfQueryExpansion implements Closeable {
         recommendedTracks.clear();
     }
 
-    private List<RecommendedTrack> rm1(List<Document> topK, Track[] seeds, List<String> uniqueTracks, Map<Integer, Float> precomputed) {
+    private List<RecommendedTrack> rm1(List<Document> topK, Set<String> uniqueTracks, Map<Integer, Double> precomputed) {
+
         List<RecommendedTrack> rs = new ArrayList<>();
 
         for (String track_uri : uniqueTracks) {
 
-            float prf = 0;
+            double prf = 0;
 
             for (Document document : topK) {
                 String[] trackURIs = whiteSpaceSplitter.split(document.get("track_uris"));
 
-                float track_prf = rf(track_uri, trackURIs);
+                double track_prf = rf(track_uri, trackURIs);
 
                 prf += (track_prf * precomputed.get(Integer.parseInt(document.get("id"))));
             }
@@ -203,33 +200,30 @@ public class PrfQueryExpansion implements Closeable {
         return rs;
     }
 
-    private float rf(String track, String[] tracks) {
-
-        Set<String> trackSet = new HashSet<>(Arrays.asList(tracks));
-
-        if (trackSet.contains(track))
-
-            return 1 / trackSet.size();
-        else return 0f;
-
+    private double rf(String track, String[] tracks) {
+        if (Arrays.asList(tracks).contains(track))
+            return 1D / tracks.length;
+        else
+            return 0D;
     }
 
-    private float rf_dirichlet(String track, String[] tracks, double mu) throws IOException {
+    private double rf_laplace(String track, String[] tracks) {
+        int cwd = (Arrays.asList(tracks).contains(track)) ? 1 : 0;
+        return (double) (cwd + 1) / (tracks.length + 1);
+    }
 
-        Set<String> trackSet = new HashSet<>(Arrays.asList(tracks));
-
-        int cwd = (trackSet.contains(track)) ? 1 : 0;
+    private double rf_dirichlet(String track, String[] tracks, double mu) throws IOException {
 
         Term term = new Term("track_uris", track);
-
         TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
-        float playlistFreqOfTrack = (float) termStatistics.docFreq() / 1_000_000L;
+        double playlistFreqOfTrack = (double) termStatistics.docFreq() / 1_000_000L;
 
-        float rValue = (float) (cwd + mu * playlistFreqOfTrack) / (float) (trackSet.size() + mu);
+        int cwd = (Arrays.asList(tracks).contains(track)) ? 1 : 0;
+        double rValue = (cwd + mu * playlistFreqOfTrack) / (tracks.length + mu);
 
-        if(rValue > 0)
+        if (rValue > 0)
             return rValue;
-        else throw new RuntimeException("smooted probability should not be zero.");
+        else throw new RuntimeException("smoothed probability should cannot be zero!");
 
     }
 
